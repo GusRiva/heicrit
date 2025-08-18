@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeiCrit - Critical Apparatus Editor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>HeiCrit</h1>
+            <p>Critical Apparatus Editor</p>
+        </header>
+        
+        <main>
+            <div class="toolbar">
+                <button id="openFile">Open File</button>
+                <button id="saveFile">Save File</button>
+                <button id="newFile">New File</button>
+            </div>
+            
+            <div class="workspace">
+                <div class="file-panel">
+                    <h3>Files</h3>
+                    <div id="fileList"></div>
+                </div>
+                
+                <div class="editor-panel">
+                    <div class="editor-header">
+                        <span id="currentFile">No file selected</span>
+                    </div>
+                    <textarea id="editor" placeholder="Open or create a file to start editing..."></textarea>
+                </div>
+            </div>
+        </main>
+        
+        <div id="status">Ready</div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

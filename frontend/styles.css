@@ -1,0 +1,143 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f5f5f5;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+header p {
+    color: #ecf0f1;
+    font-size: 0.9rem;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+.toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.toolbar button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.toolbar button:hover {
+    background: #f8f9fa;
+}
+
+.workspace {
+    flex: 1;
+    display: flex;
+    gap: 1rem;
+    min-height: 0;
+}
+
+.file-panel {
+    width: 250px;
+    background: white;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.file-panel h3 {
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.editor-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.editor-header {
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 0.25rem 0.25rem 0 0;
+    font-weight: 500;
+}
+
+#editor {
+    flex: 1;
+    border: none;
+    padding: 1rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+}
+
+#status {
+    background: #34495e;
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+#fileList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.file-item {
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.file-item:hover {
+    background: #f8f9fa;
+}
+
+.file-item.selected {
+    background: #007bff;
+    color: white;
+}
