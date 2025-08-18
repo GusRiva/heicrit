@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HeiCrit - Critical Apparatus Editor</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-xml.min.js"></script>
 </head>
 <body>
     <div id="app">
@@ -16,21 +19,27 @@
         <main>
             <div class="toolbar">
                 <button id="openFile">Open File</button>
+                <button id="openApparatusFile">Open Apparatus File</button>
                 <button id="saveFile">Save File</button>
-                <button id="newFile">New File</button>
+                <button id="saveAsFile">Save As</button>
             </div>
             
             <div class="workspace">
-                <div class="file-panel">
-                    <h3>Files</h3>
-                    <div id="fileList"></div>
-                </div>
-                
                 <div class="editor-panel">
                     <div class="editor-header">
                         <span id="currentFile">No file selected</span>
                     </div>
-                    <textarea id="editor" placeholder="Open or create a file to start editing..."></textarea>
+                    
+                    <!-- XML Editor Container -->
+                    <div id="xml-editor-container" class="view-container">
+                        <textarea id="editor-textarea" placeholder="Open or create a file to start editing..."></textarea>
+                        <pre id="editor-highlight"><code id="editor-code" class="language-xml"></code></pre>
+                    </div>
+                    
+                    <!-- Apparatus Display Container -->
+                    <div id="apparatus-container" class="view-container" style="display: none;">
+                        <div id="apparatus-content"></div>
+                    </div>
                 </div>
             </div>
         </main>

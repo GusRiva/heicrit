@@ -72,19 +72,6 @@ main {
     min-height: 0;
 }
 
-.file-panel {
-    width: 250px;
-    background: white;
-    border-radius: 0.25rem;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.file-panel h3 {
-    margin-bottom: 1rem;
-    color: #2c3e50;
-}
-
 .editor-panel {
     flex: 1;
     display: flex;
@@ -102,8 +89,38 @@ main {
     font-weight: 500;
 }
 
-#editor {
+/* View Container Base Styles */
+.view-container {
     flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* XML Editor Container */
+#xml-editor-container {
+    /* Inherits from .view-container */
+}
+
+/* Apparatus Display Container */
+#apparatus-container {
+    /* Inherits from .view-container */
+    overflow-y: auto;
+}
+
+#apparatus-content {
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+#editor-textarea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     border: none;
     padding: 1rem;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -111,6 +128,185 @@ main {
     line-height: 1.5;
     resize: none;
     outline: none;
+    background: transparent;
+    color: transparent;
+    caret-color: #333;
+    z-index: 2;
+}
+
+#editor-highlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 1rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: auto;
+    background: transparent;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#editor-code {
+    display: block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Override Prism.js colors for better XML highlighting */
+.token.tag {
+    color: #0066cc;
+}
+
+.token.attr-name {
+    color: #cc6600;
+}
+
+.token.attr-value {
+    color: #009900;
+}
+
+.token.punctuation {
+    color: #0066cc;
+}
+
+.token.comment {
+    color: #999999;
+    font-style: italic;
+}
+
+/* Apparatus Display Styles */
+.apparatus-display {
+    padding: 1rem;
+    line-height: 1.6;
+    color: #333;
+}
+
+.apparatus-header {
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 1rem;
+}
+
+.apparatus-header h2 {
+    color: #2c3e50;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.apparatus-header p {
+    color: #666;
+    margin: 0;
+    font-style: italic;
+}
+
+.apparatus-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.apparatus-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.apparatus-entry-simple {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-family: monospace;
+}
+
+.apparatus-entry {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    background: #f8f9fa;
+    overflow: hidden;
+}
+
+.apparatus-entry-header {
+    background: #2c3e50;
+    color: white;
+    padding: 0.75rem 1rem;
+}
+
+.apparatus-entry-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.apparatus-content {
+    padding: 1rem;
+}
+
+.apparatus-lemma {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
+}
+
+.apparatus-readings {
+    margin-bottom: 1rem;
+}
+
+.apparatus-readings ul {
+    margin: 0.5rem 0 0 1rem;
+    padding: 0;
+}
+
+.apparatus-readings li {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background: #fff3e0;
+    border-radius: 0.25rem;
+    border-left: 3px solid #ff9800;
+}
+
+.attributes {
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-left: 0.5rem;
+}
+
+.apparatus-xml {
+    margin-top: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+}
+
+.apparatus-xml summary {
+    padding: 0.5rem;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+
+.apparatus-xml summary:hover {
+    background: #e9ecef;
+}
+
+.xml-content {
+    margin: 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border: none;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    overflow-x: auto;
+    white-space: pre-wrap;
 }
 
 #status {
@@ -120,24 +316,3 @@ main {
     font-size: 0.9rem;
 }
 
-#fileList {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.file-item {
-    padding: 0.5rem;
-    cursor: pointer;
-    border-radius: 0.25rem;
-    transition: background-color 0.2s;
-}
-
-.file-item:hover {
-    background: #f8f9fa;
-}
-
-.file-item.selected {
-    background: #007bff;
-    color: white;
-}

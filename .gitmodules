@@ -1,0 +1,3 @@
+[submodule "heipy"]
+	path = heipy
+	url = https://gitlab.ub.uni-heidelberg.de/editions/heipy.git

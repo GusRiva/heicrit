@@ -4,3 +4,4 @@ lxml==5.1.0
 xmlschema==3.0.2
 pytest==8.0.0
 python-dotenv==1.0.0
+-e ./heipy
