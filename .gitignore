@@ -23,6 +23,7 @@ yarn-error.log*
 # Electron
 dist/
 build/
+squashfs-root/
 
 # IDE
 .vscode/
@@ -37,3 +38,4 @@ Thumbs.db
 # Project specific
 *.xml.backup
 temp_files/
+/test_data/*

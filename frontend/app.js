@@ -5,6 +5,8 @@ class HeiCritApp {
         this.currentFile = null;
         this.textarea = null;
         this.highlightCode = null;
+        this.apparatusData = null;
+        this.synopticMapData = null;
         this.init();
     }
 
@@ -19,6 +21,7 @@ class HeiCritApp {
     bindEvents() {
         document.getElementById('openFile').addEventListener('click', () => this.openFile());
         document.getElementById('openApparatusFile').addEventListener('click', () => this.openApparatusFile());
+        document.getElementById('openSynopticMap').addEventListener('click', () => this.openSynopticMap());
         document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
         document.getElementById('saveAsFile').addEventListener('click', () => this.saveAsFile());
     }
@@ -174,6 +177,28 @@ class HeiCritApp {
         input.click();
     }
 
+    openSynopticMap() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xml,.tei';
+        
+        // Clear the input value to ensure change event fires even for same file
+        input.value = '';
+        
+        input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    this.processSynopticMapFile(content, file.name);
+                };
+                reader.readAsText(file);
+            }
+        });
+        input.click();
+    }
+
     async processApparatusFile(content, filename) {
         try {
             this.updateStatus('Processing apparatus file...');
@@ -189,6 +214,24 @@ class HeiCritApp {
         } catch (error) {
             console.error('Failed to process apparatus file:', error);
             this.showErrorPopup('Apparatus File Error', `Failed to process apparatus file: ${error.message}`);
+        }
+    }
+
+    async processSynopticMapFile(content, filename) {
+        try {
+            this.updateStatus('Processing synoptic map file...');
+            
+            // Basic client-side XML validation first
+            if (!this.validateXML(content)) {
+                return; // Error popup will be shown by validateXML
+            }
+            
+            // Send file to backend for processing
+            await this.sendSynopticMapToBackend(content, filename);
+            
+        } catch (error) {
+            console.error('Failed to process synoptic map file:', error);
+            this.showErrorPopup('Synoptic Map File Error', `Failed to process synoptic map file: ${error.message}`);
         }
     }
 
@@ -234,15 +277,98 @@ class HeiCritApp {
         }
     }
 
-    handleApparatusProcessingResult(result, filename) {
-        if (result.apparatus_entries && result.apparatus_entries.length > 0) {
-            // Display apparatus entries in classical format
-            this.displayApparatusEntries(result.apparatus_entries, filename);
-            this.updateStatus(`Loaded ${result.apparatus_count} apparatus entries from ${filename}`);
-        } else {
-            this.updateStatus(`No apparatus entries found in ${filename}`);
-            this.showErrorPopup('No Apparatus Found', 'The file does not contain any <app> elements.');
+    async sendSynopticMapToBackend(content, filename) {
+        try {
+            this.updateStatus('Processing synoptic map with heipy...');
+            
+            const processResponse = await this.apiRequest('/synoptic/process', {
+                method: 'POST',
+                body: JSON.stringify({
+                    content: content,
+                    filename: filename
+                })
+            });
+
+            if (processResponse.success) {
+                this.handleSynopticMapProcessingResult(processResponse, filename);
+            } else {
+                this.showErrorPopup('Processing Error', processResponse.message || 'Unknown error occurred');
+            }
+
+        } catch (error) {
+            console.error('Backend communication failed:', error);
+            this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
         }
+    }
+
+    handleApparatusProcessingResult(result, filename) {
+        // Store apparatus data
+        this.apparatusData = {
+            entries: result.apparatus_entries || [],
+            filename: filename,
+            count: result.apparatus_count || 0
+        };
+        
+        // Refresh display with both apparatus and synoptic map data
+        this.refreshDisplay();
+    }
+
+    handleSynopticMapProcessingResult(result, filename) {
+        // Store synoptic map data
+        this.synopticMapData = {
+            synoptic_map: result.synoptic_map || {},
+            filename: filename,
+            count: result.synoptic_map_count || 0
+        };
+        
+        // Refresh display with both apparatus and synoptic map data
+        this.refreshDisplay();
+    }
+
+    refreshDisplay() {
+        const apparatusEntries = this.apparatusData ? this.apparatusData.entries : [];
+        const synopticMap = this.synopticMapData ? this.synopticMapData.synoptic_map : {};
+        
+        // Merge apparatus entries with synoptic map to show complete list
+        const completeEntries = this.mergeApparatusWithSynopticMap(apparatusEntries, synopticMap);
+        
+        if (completeEntries.length > 0) {
+            // Display all entries (from synoptic map) with apparatus data where available
+            this.displayApparatusEntries(completeEntries, this.getCurrentDisplayFilename());
+            
+            const apparatusCount = this.apparatusData ? this.apparatusData.count : 0;
+            const totalLocations = Object.keys(synopticMap).length;
+            const statusMessage = this.getStatusMessage(apparatusCount, totalLocations);
+            this.updateStatus(statusMessage);
+        } else if (apparatusEntries.length > 0) {
+            // Only apparatus data, no synoptic map
+            this.displayApparatusEntries(apparatusEntries, this.apparatusData.filename);
+            this.updateStatus(`Loaded ${this.apparatusData.count} apparatus entries from ${this.apparatusData.filename}`);
+        } else {
+            this.updateStatus('No data loaded');
+        }
+    }
+
+    getCurrentDisplayFilename() {
+        if (this.apparatusData && this.synopticMapData) {
+            return `${this.apparatusData.filename} + ${this.synopticMapData.filename}`;
+        } else if (this.apparatusData) {
+            return this.apparatusData.filename;
+        } else if (this.synopticMapData) {
+            return this.synopticMapData.filename;
+        }
+        return 'No files loaded';
+    }
+
+    getStatusMessage(apparatusCount, totalLocations) {
+        if (this.apparatusData && this.synopticMapData) {
+            return `Loaded ${apparatusCount} apparatus entries from ${totalLocations} locations (apparatus + synoptic map)`;
+        } else if (this.apparatusData) {
+            return `Loaded ${apparatusCount} apparatus entries (apparatus only)`;
+        } else if (this.synopticMapData) {
+            return `Loaded ${totalLocations} locations (synoptic map only)`;
+        }
+        return 'No data loaded';
     }
 
     displaySimpleApparatusList(locAttributes, filename, count) {
@@ -382,45 +508,64 @@ class HeiCritApp {
             </div>
             <div class="classical-apparatus">`;
 
-        apparatusEntries.forEach(entry => {
-            html += '<div class="classical-entry">';
+        // Group entries by loc
+        const groupedEntries = this.groupEntriesByLoc(apparatusEntries);
+        
+        // Process each location group
+        Object.keys(groupedEntries).forEach(loc => {
+            const entries = groupedEntries[loc];
             
-            // Format: **loc** lemma ] reading1 *witnesses* ; reading2 *witnesses*
+            html += '<div class="classical-entry-group">';
             
-            // Line number (loc) in bold
-            const loc = entry.loc || '(no loc)';
+            // Show location only once for the group
             html += `<strong class="apparatus-loc">${this.escapeHtml(loc)}</strong>`;
             
-            // Lemma content
-            if (entry.lemma && entry.lemma.text) {
-                html += ` ${this.escapeHtml(entry.lemma.text)}`;
-            }
-            
-            // Closing bracket
-            html += ' ]';
-            
-            // Readings with witnesses
-            if (entry.readings && entry.readings.length > 0) {
-                const readingParts = [];
+            // Process each entry in this location group
+            entries.forEach((entry) => {
+                html += '<div class="classical-subentry';
+                if (entry.is_placeholder) {
+                    html += ' placeholder-entry';
+                }
+                html += '">';
                 
-                entry.readings.forEach(reading => {
-                    let readingPart = ` ${this.escapeHtml(reading.text)}`;
-                    
-                    // Add witnesses in italics
-                    if (reading.wit) {
-                        // Clean up witness list (remove # symbols and extra spaces)
-                        const witnesses = reading.wit.replace(/#/g, '').trim().split(/\s+/).join(' ');
-                        if (witnesses) {
-                            readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(witnesses)}</em>`;
-                        }
+                // Handle placeholder entries (no apparatus data)
+                if (entry.is_placeholder) {
+                    html += ' <span class="no-apparatus">(no apparatus)</span>';
+                } else {
+                    // Lemma content
+                    if (entry.lemma && entry.lemma.text) {
+                        html += ` ${this.escapeHtml(entry.lemma.text)}`;
                     }
                     
-                    readingParts.push(readingPart);
-                });
+                    // Closing bracket
+                    html += ' ]';
+                    
+                    // Readings with witnesses
+                    if (entry.readings && entry.readings.length > 0) {
+                        const readingParts = [];
+                        
+                        entry.readings.forEach(reading => {
+                            let readingPart = ` ${this.escapeHtml(reading.text)}`;
+                            
+                            // Add witnesses in italics
+                            if (reading.wit) {
+                                // Clean up witness list (remove # symbols and extra spaces)
+                                const witnesses = reading.wit.replace(/#/g, '').trim().split(/\s+/).join(' ');
+                                if (witnesses) {
+                                    readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(witnesses)}</em>`;
+                                }
+                            }
+                            
+                            readingParts.push(readingPart);
+                        });
+                        
+                        // Join readings with semicolons
+                        html += readingParts.join(' ;');
+                    }
+                }
                 
-                // Join readings with semicolons
-                html += readingParts.join(' ;');
-            }
+                html += '</div>';
+            });
             
             html += '</div>';
         });
@@ -430,6 +575,66 @@ class HeiCritApp {
         </div>`;
 
         return html;
+    }
+
+    mergeApparatusWithSynopticMap(apparatusEntries, synopticMap) {
+        // Create a map of apparatus entries by loc for quick lookup
+        const apparatusMap = {};
+        apparatusEntries.forEach(entry => {
+            const loc = entry.loc;
+            if (loc) {
+                if (!apparatusMap[loc]) {
+                    apparatusMap[loc] = [];
+                }
+                apparatusMap[loc].push(entry);
+            }
+        });
+        
+        // Create complete entries list based on synoptic map
+        const completeEntries = [];
+        
+        // If we have synoptic map, use all n values as potential entries
+        if (Object.keys(synopticMap).length > 0) {
+            Object.keys(synopticMap).forEach(n => {
+                if (apparatusMap[n]) {
+                    // This location has apparatus data
+                    apparatusMap[n].forEach(entry => {
+                        completeEntries.push({
+                            ...entry,
+                            synoptic_data: synopticMap[n]
+                        });
+                    });
+                } else {
+                    // This location has no apparatus data, create placeholder
+                    completeEntries.push({
+                        loc: n,
+                        lemma: null,
+                        readings: [],
+                        synoptic_data: synopticMap[n],
+                        is_placeholder: true
+                    });
+                }
+            });
+        } else {
+            // No synoptic map, just return apparatus entries as before
+            return apparatusEntries;
+        }
+        
+        return completeEntries;
+    }
+
+    groupEntriesByLoc(apparatusEntries) {
+        const grouped = {};
+        
+        apparatusEntries.forEach(entry => {
+            const loc = entry.loc || '(no loc)';
+            if (!grouped[loc]) {
+                grouped[loc] = [];
+            }
+            grouped[loc].push(entry);
+        });
+        
+        return grouped;
     }
 
     escapeHtml(text) {

@@ -317,14 +317,30 @@ main {
     max-width: 800px;
 }
 
-.classical-entry {
-    margin-bottom: 1rem;
+.classical-entry-group {
+    margin-bottom: 2rem;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #ddd;
 }
 
-.classical-entry:last-child {
+.classical-entry-group:last-child {
     border-bottom: none;
+}
+
+.classical-subentry {
+    display: inline-block;
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    word-spacing: 0.1em;
+}
+
+.classical-subentry:first-child {
+    margin-left: 0;
+}
+
+.classical-subentry:not(:first-child) {
+    margin-left: 3rem;
+    margin-top: 0.3rem;
 }
 
 .apparatus-loc {
@@ -339,9 +355,14 @@ main {
     margin-left: 0.2rem;
 }
 
-/* Ensure proper spacing around punctuation */
-.classical-entry {
-    word-spacing: 0.1em;
+.placeholder-entry {
+    opacity: 0.6;
+}
+
+.no-apparatus {
+    color: #999;
+    font-style: italic;
+    font-size: 0.9em;
 }
 
 #status {
