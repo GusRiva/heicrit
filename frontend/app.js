@@ -7,6 +7,7 @@ class HeiCritApp {
         this.highlightCode = null;
         this.apparatusData = null;
         this.synopticMapData = null;
+        this.projectFiles = new Map(); // Store all project files
         this.init();
     }
 
@@ -20,8 +21,7 @@ class HeiCritApp {
 
     bindEvents() {
         document.getElementById('openFile').addEventListener('click', () => this.openFile());
-        document.getElementById('openApparatusFile').addEventListener('click', () => this.openApparatusFile());
-        document.getElementById('openSynopticMap').addEventListener('click', () => this.openSynopticMap());
+        document.getElementById('openProjectDirectory').addEventListener('click', () => this.openProjectDirectory());
         document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
         document.getElementById('saveAsFile').addEventListener('click', () => this.saveAsFile());
     }
@@ -155,48 +155,92 @@ class HeiCritApp {
         input.click();
     }
 
-    openApparatusFile() {
+    openProjectDirectory() {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.xml,.tei';
+        input.webkitdirectory = true; // Allow directory selection
+        input.multiple = true;
         
-        // Clear the input value to ensure change event fires even for same file
+        // Clear the input value to ensure change event fires even for same directory
         input.value = '';
         
         input.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const content = e.target.result;
-                    this.processApparatusFile(content, file.name);
-                };
-                reader.readAsText(file);
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                this.processProjectDirectory(files);
             }
         });
         input.click();
     }
 
-    openSynopticMap() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.xml,.tei';
+    async processProjectDirectory(files) {
+        try {
+            this.updateStatus('Processing project directory...');
+            
+            // Store all files in the project
+            this.projectFiles.clear();
+            
+            // Read all files and store them
+            const fileReadPromises = files.map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        // Use the webkitRelativePath to preserve directory structure
+                        const relativePath = file.webkitRelativePath || file.name;
+                        this.projectFiles.set(relativePath, {
+                            content: e.target.result,
+                            file: file,
+                            path: relativePath
+                        });
+                        resolve();
+                    };
+                    reader.readAsText(file);
+                });
+            });
+            
+            // Wait for all files to be read
+            await Promise.all(fileReadPromises);
+            
+            this.updateStatus(`Loaded ${this.projectFiles.size} files from project directory`);
+            
+            // Auto-detect and process apparatus and synoptic map files
+            await this.autoProcessProjectFiles();
+            
+        } catch (error) {
+            console.error('Failed to process project directory:', error);
+            this.showErrorPopup('Project Directory Error', `Failed to process project directory: ${error.message}`);
+        }
+    }
+
+    async autoProcessProjectFiles() {
+        // Look for apparatus files in apparatus/ directory
+        const apparatusFiles = Array.from(this.projectFiles.entries())
+            .filter(([path, fileData]) => path.includes('/apparatus/') && path.endsWith('.xml'))
+            .map(([path, fileData]) => ({ path, ...fileData }));
         
-        // Clear the input value to ensure change event fires even for same file
-        input.value = '';
+        // Look for synoptic map files in synopses/ directory
+        const synopticFiles = Array.from(this.projectFiles.entries())
+            .filter(([path, fileData]) => path.includes('/synopses/') && path.endsWith('.xml'))
+            .map(([path, fileData]) => ({ path, ...fileData }));
         
-        input.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const content = e.target.result;
-                    this.processSynopticMapFile(content, file.name);
-                };
-                reader.readAsText(file);
-            }
-        });
-        input.click();
+        // Process apparatus file if found
+        if (apparatusFiles.length > 0) {
+            const apparatusFile = apparatusFiles[0]; // Use first apparatus file found
+            console.log(`Processing apparatus file: ${apparatusFile.path}`);
+            await this.processApparatusFileFromProject(apparatusFile.content, apparatusFile.path);
+        }
+        
+        // Process synoptic map if found
+        if (synopticFiles.length > 0) {
+            const synopticFile = synopticFiles[0]; // Use first synoptic file found
+            console.log(`Processing synoptic map: ${synopticFile.path}`);
+            await this.processSynopticMapFileFromProject(synopticFile.content, synopticFile.path);
+        }
+        
+        if (apparatusFiles.length === 0 && synopticFiles.length === 0) {
+            this.updateStatus('No apparatus or synoptic map files found in project directory');
+            this.showErrorPopup('No Files Found', 'No apparatus files found in apparatus/ directory or synoptic map files found in synopses/ directory.');
+        }
     }
 
     async processApparatusFile(content, filename) {
@@ -233,6 +277,97 @@ class HeiCritApp {
             console.error('Failed to process synoptic map file:', error);
             this.showErrorPopup('Synoptic Map File Error', `Failed to process synoptic map file: ${error.message}`);
         }
+    }
+
+    async processApparatusFileFromProject(content, filepath) {
+        try {
+            this.updateStatus('Processing apparatus file from project...');
+            
+            // Basic client-side XML validation first
+            if (!this.validateXML(content)) {
+                return; // Error popup will be shown by validateXML
+            }
+            
+            // Send file to backend with project context for relative path resolution
+            await this.sendApparatusToBackendWithProject(content, filepath);
+            
+        } catch (error) {
+            console.error('Failed to process apparatus file:', error);
+            this.showErrorPopup('Apparatus File Error', `Failed to process apparatus file: ${error.message}`);
+        }
+    }
+
+    async processSynopticMapFileFromProject(content, filepath) {
+        try {
+            this.updateStatus('Processing synoptic map from project...');
+            
+            // Basic client-side XML validation first
+            if (!this.validateXML(content)) {
+                return; // Error popup will be shown by validateXML
+            }
+            
+            // Send file to backend for processing
+            await this.sendSynopticMapToBackend(content, filepath);
+            
+        } catch (error) {
+            console.error('Failed to process synoptic map file:', error);
+            this.showErrorPopup('Synoptic Map File Error', `Failed to process synoptic map file: ${error.message}`);
+        }
+    }
+
+    async sendApparatusToBackendWithProject(content, filepath) {
+        try {
+            // First validate the file with backend
+            this.updateStatus('Validating apparatus file structure...');
+            
+            const validationResponse = await this.apiRequest('/apparatus/validate', {
+                method: 'POST',
+                body: JSON.stringify({
+                    content: content,
+                    filename: filepath
+                })
+            });
+
+            if (!validationResponse.valid) {
+                const messages = validationResponse.messages.join('\n');
+                this.showErrorPopup('Invalid Apparatus File', messages);
+                return;
+            }
+
+            // If validation passes, process the file with project context
+            this.updateStatus('Processing apparatus file with project context...');
+            
+            const processResponse = await this.apiRequest('/apparatus/process-with-project', {
+                method: 'POST',
+                body: JSON.stringify({
+                    content: content,
+                    filepath: filepath,
+                    project_files: this.getProjectFileList()
+                })
+            });
+
+            if (processResponse.success) {
+                this.handleApparatusProcessingResult(processResponse, filepath);
+            } else {
+                this.showErrorPopup('Processing Error', processResponse.message || 'Unknown error occurred');
+            }
+
+        } catch (error) {
+            console.error('Backend communication failed:', error);
+            this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
+        }
+    }
+
+    getProjectFileList() {
+        // Return a list of available files in the project for path resolution
+        const fileList = {};
+        for (const [path, fileData] of this.projectFiles) {
+            fileList[path] = {
+                content: fileData.content,
+                size: fileData.file.size
+            };
+        }
+        return fileList;
     }
 
     async sendApparatusToBackend(content, filename) {
@@ -308,6 +443,15 @@ class HeiCritApp {
             filename: filename,
             count: result.apparatus_count || 0
         };
+        
+        // If this result also contains synoptic map data (from project processing), store it
+        if (result.synoptic_map && Object.keys(result.synoptic_map).length > 0) {
+            this.synopticMapData = {
+                synoptic_map: result.synoptic_map,
+                filename: `${filename} (embedded)`,
+                count: result.synoptic_map_count || 0
+            };
+        }
         
         // Refresh display with both apparatus and synoptic map data
         this.refreshDisplay();
