@@ -7,7 +7,11 @@ class HeiCritApp {
         this.highlightCode = null;
         this.apparatusData = null;
         this.synopticMapData = null;
+        this.mainTextData = null; // Store main text data
         this.projectFiles = new Map(); // Store all project files
+        this.currentEntryIndex = 0; // Track current apparatus entry for pagination
+        this.groupedEntries = {}; // Store grouped entries by location
+        this.entryKeys = []; // Store ordered keys for navigation
         this.init();
     }
 
@@ -24,6 +28,10 @@ class HeiCritApp {
         document.getElementById('openProjectDirectory').addEventListener('click', () => this.openProjectDirectory());
         document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
         document.getElementById('saveAsFile').addEventListener('click', () => this.saveAsFile());
+        
+        // Apparatus navigation events
+        document.getElementById('apparatus-prev').addEventListener('click', () => this.showPreviousEntry());
+        document.getElementById('apparatus-next').addEventListener('click', () => this.showNextEntry());
     }
 
     setupEditor() {
@@ -453,7 +461,15 @@ class HeiCritApp {
             };
         }
         
-        // Refresh display with both apparatus and synoptic map data
+        // Store main text data if available
+        if (result.main_text) {
+            this.mainTextData = {
+                content: result.main_text,
+                filename: filename
+            };
+        }
+        
+        // Refresh display with apparatus, synoptic map, and main text data
         this.refreshDisplay();
     }
 
@@ -573,16 +589,135 @@ class HeiCritApp {
         // Switch to apparatus view
         this.showApparatusView();
         
-        // Create HTML display of apparatus entries in classical format
-        let htmlContent = this.generateClassicalApparatusHTML(apparatusEntries, filename);
+        // Display main text if available
+        this.displayMainText();
         
-        // Set content in apparatus container
-        const apparatusContent = document.getElementById('apparatus-content');
-        apparatusContent.innerHTML = htmlContent;
+        // Store and group entries for pagination
+        this.groupedEntries = this.groupEntriesByLoc(apparatusEntries);
+        this.entryKeys = Object.keys(this.groupedEntries);
+        this.currentEntryIndex = 0;
+        
+        // Show navigation if we have multiple entries
+        const navigation = document.querySelector('.apparatus-navigation');
+        if (this.entryKeys.length > 1) {
+            navigation.style.display = 'flex';
+        } else {
+            navigation.style.display = 'none';
+        }
+        
+        // Display the current entry
+        this.updateApparatusDisplay();
         
         // Update current file reference
         this.currentFile = filename;
         document.getElementById('currentFile').textContent = `${filename} (${apparatusEntries.length} apparatus entries)`;
+    }
+
+    updateApparatusDisplay() {
+        if (this.entryKeys.length === 0) {
+            document.getElementById('apparatus-content').innerHTML = '<p>No apparatus entries to display</p>';
+            return;
+        }
+
+        // Get current entry location and data
+        const currentLoc = this.entryKeys[this.currentEntryIndex];
+        const currentEntries = this.groupedEntries[currentLoc];
+
+        // Generate HTML for current entry only
+        let htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries);
+        
+        // Set content in apparatus container
+        document.getElementById('apparatus-content').innerHTML = htmlContent;
+        
+        // Update counter and navigation buttons
+        this.updateNavigationControls();
+    }
+
+    generateSingleEntryHTML(loc, entries) {
+        let html = `
+        <div class="apparatus-display">
+            <div class="classical-apparatus">
+                <div class="classical-entry-group">`;
+
+        // Show location as clickable button
+        html += `<button class="apparatus-loc-button" data-loc="${this.escapeHtml(loc)}" onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
+        
+        // Process each entry in this location group
+        entries.forEach((entry) => {
+            html += '<div class="classical-subentry';
+            if (entry.is_placeholder) {
+                html += ' placeholder-entry';
+            }
+            html += '">';
+            
+            // Handle placeholder entries (no apparatus data)
+            if (entry.is_placeholder) {
+                html += ' <span class="no-apparatus">(no apparatus)</span>';
+            } else {
+                // Lemma content
+                if (entry.lemma && entry.lemma.text) {
+                    html += ` ${this.escapeHtml(entry.lemma.text)}`;
+                }
+                
+                // Closing bracket
+                html += ' ]';
+                
+                // Readings with witnesses
+                if (entry.readings && entry.readings.length > 0) {
+                    const readingParts = [];
+                    
+                    entry.readings.forEach(reading => {
+                        let readingPart = ` ${this.escapeHtml(reading.text)}`;
+                        
+                        // Add witnesses in italics
+                        if (reading.wit) {
+                            // Clean up witness list (remove # symbols and extra spaces)
+                            const witnesses = reading.wit.replace(/#/g, '').trim().split(/\s+/).join(' ');
+                            if (witnesses) {
+                                readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(witnesses)}</em>`;
+                            }
+                        }
+                        
+                        readingParts.push(readingPart);
+                    });
+                    
+                    // Join readings with semicolons
+                    html += readingParts.join(' ;');
+                }
+            }
+            
+            html += '</div>';
+        });
+        
+        html += `
+                </div>
+            </div>
+        </div>`;
+        
+        return html;
+    }
+
+    updateNavigationControls() {
+        const counter = document.getElementById('apparatus-counter');
+        const prevBtn = document.getElementById('apparatus-prev');
+        const nextBtn = document.getElementById('apparatus-next');
+        
+        // Update counter
+        counter.textContent = `${this.currentEntryIndex + 1} / ${this.entryKeys.length}`;
+        
+        // Update button states
+        prevBtn.disabled = this.currentEntryIndex === 0;
+        nextBtn.disabled = this.currentEntryIndex === this.entryKeys.length - 1;
+    }
+
+    displayMainText() {
+        const mainTextContent = document.getElementById('main-text-content');
+        
+        if (this.mainTextData && this.mainTextData.content) {
+            mainTextContent.textContent = this.mainTextData.content;
+        } else {
+            mainTextContent.innerHTML = '<em class="no-main-text">No main text available</em>';
+        }
     }
 
     generateApparatusHTML(apparatusEntries, filename) {
@@ -661,8 +796,8 @@ class HeiCritApp {
             
             html += '<div class="classical-entry-group">';
             
-            // Show location only once for the group
-            html += `<strong class="apparatus-loc">${this.escapeHtml(loc)}</strong>`;
+            // Show location as clickable button
+            html += `<button class="apparatus-loc-button" data-loc="${this.escapeHtml(loc)}" onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
             
             // Process each entry in this location group
             entries.forEach((entry) => {
@@ -962,8 +1097,61 @@ class HeiCritApp {
             }, 3000);
         }
     }
+
+    showLocationDetails(loc) {
+        const detailsContent = document.getElementById('apparatus-details-content');
+        
+        // Find entries for this location
+        const apparatusEntries = this.apparatusData ? this.apparatusData.entries : [];
+        const synopticMap = this.synopticMapData ? this.synopticMapData.synoptic_map : {};
+        
+        // Get apparatus entry for this location
+        const locationEntries = apparatusEntries.filter(entry => entry.loc === loc);
+        
+        // Get synoptic map data for this location
+        const synopticData = synopticMap[loc];
+        
+        let message = `<strong>Location: ${this.escapeHtml(loc)}</strong><br><br>`;
+        
+        if (locationEntries.length > 0) {
+            message += `<strong>Apparatus entries:</strong> ${locationEntries.length}<br>`;
+            locationEntries.forEach((entry, index) => {
+                if (entry.lemma) {
+                    message += `Entry ${index + 1}: "${this.escapeHtml(entry.lemma.text)}"<br>`;
+                }
+                if (entry.readings && entry.readings.length > 0) {
+                    message += `Readings: ${entry.readings.length}<br>`;
+                }
+            });
+        } else {
+            message += 'No apparatus entries for this location<br>';
+        }
+        
+        if (synopticData) {
+            message += `<br><strong>Synoptic map data:</strong><br>`;
+            message += `Targets: ${synopticData.target ? synopticData.target.join(', ') : 'none'}<br>`;
+        } else {
+            message += '<br>No synoptic map data for this location<br>';
+        }
+        
+        detailsContent.innerHTML = message;
+    }
+
+    showPreviousEntry() {
+        if (this.currentEntryIndex > 0) {
+            this.currentEntryIndex--;
+            this.updateApparatusDisplay();
+        }
+    }
+
+    showNextEntry() {
+        if (this.currentEntryIndex < this.entryKeys.length - 1) {
+            this.currentEntryIndex++;
+            this.updateApparatusDisplay();
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new HeiCritApp();
+    window.heiCritApp = new HeiCritApp();
 });

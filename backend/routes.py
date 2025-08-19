@@ -236,9 +236,10 @@ def process_apparatus_file_with_project():
         except Exception as xml_error:
             return jsonify({'error': f'Invalid XML: {str(xml_error)}'}), 400
         
-        # Extract apparatus entries and resolve synoptic map from project
+        # Extract apparatus entries, resolve synoptic map, and extract main text from project
         try:
             synoptic_map = {}
+            main_text_content = None
             
             # Find listApp element and extract corresp attribute
             list_app = root.find('.//tei:listApp', namespaces=ns)
@@ -247,6 +248,9 @@ def process_apparatus_file_with_project():
                 if corresp:
                     # Resolve corresp path within project files
                     synoptic_map = resolve_synoptic_map_from_project(corresp, filepath, project_files)
+            
+            # Extract main text from Leithandschrift witness
+            main_text_content = extract_leithandschrift_text(root, filepath, project_files)
             
             # Find all app elements in the document
             app_elements = root.xpath('.//tei:app', namespaces=ns)
@@ -290,7 +294,8 @@ def process_apparatus_file_with_project():
                 'apparatus_count': len(apparatus_entries),
                 'apparatus_entries': apparatus_entries,
                 'synoptic_map': synoptic_map,
-                'synoptic_map_count': len(synoptic_map)
+                'synoptic_map_count': len(synoptic_map),
+                'main_text': main_text_content
             }
             
         except Exception as processing_error:
@@ -378,6 +383,101 @@ def parse_synoptic_map_content(content):
     except Exception as e:
         print(f"Error parsing synoptic map content: {str(e)}")
         return {}
+
+def extract_leithandschrift_text(root, apparatus_filepath, project_files):
+    """
+    Extract main text from the Leithandschrift witness
+    """
+    try:
+        # Find witness with ana="hc:Leithandschrift"
+        leithandschrift_witness = root.find('.//tei:witness[@ana="hc:Leithandschrift"]', namespaces=ns)
+        if leithandschrift_witness is None:
+            return None
+        
+        # Get ptr target path
+        ptr_element = leithandschrift_witness.find('.//tei:ptr', namespaces=ns)
+        if ptr_element is None:
+            return None
+        
+        target_path = ptr_element.get('target')
+        if not target_path:
+            return None
+        
+        # Resolve the target path within project files
+        text_content = resolve_text_file_from_project(target_path, apparatus_filepath, project_files)
+        return text_content
+        
+    except Exception as e:
+        print(f"Error extracting Leithandschrift text: {str(e)}")
+        return None
+
+def resolve_text_file_from_project(target_path, apparatus_filepath, project_files):
+    """
+    Resolve text file from project files using relative path resolution
+    """
+    try:
+        # Get the directory of the apparatus file
+        apparatus_dir = '/'.join(apparatus_filepath.split('/')[:-1])
+        
+        # Resolve the relative target path
+        if target_path.startswith('../'):
+            # Handle relative paths like ../texts/AH_A.xml
+            path_parts = apparatus_dir.split('/') if apparatus_dir else []
+            target_parts = target_path.split('/')
+            
+            for part in target_parts:
+                if part == '..':
+                    if path_parts:
+                        path_parts.pop()
+                elif part and part != '.':
+                    path_parts.append(part)
+            
+            resolved_path = '/'.join(path_parts)
+        else:
+            # Handle absolute or simple relative paths
+            resolved_path = target_path
+        
+        # Look for the file in project_files
+        for project_path, file_data in project_files.items():
+            if project_path.endswith(resolved_path) or project_path == resolved_path:
+                # Parse the text file and extract text content
+                return parse_text_file_content(file_data['content'])
+        
+        # If exact match not found, try fuzzy matching
+        for project_path, file_data in project_files.items():
+            if resolved_path in project_path or project_path.endswith(resolved_path.split('/')[-1]):
+                return parse_text_file_content(file_data['content'])
+        
+        print(f"Text file not found: {resolved_path}")
+        return None
+        
+    except Exception as e:
+        print(f"Error resolving text file: {str(e)}")
+        return None
+
+def parse_text_file_content(content):
+    """
+    Parse text file content and extract the text element
+    """
+    try:
+        from io import BytesIO
+        parser = HeiEditionsParser()
+        content_bytes = content.encode('utf-8')
+        doc = et.parse(BytesIO(content_bytes), parser)
+        root = doc.getroot()
+        
+        # Extract text element content
+        text_element = root.find('.//tei:text', namespaces=ns)
+        if text_element is not None:
+            # Get all text content from the text element
+            text_content = ''.join(text_element.itertext()).strip()
+            return text_content
+        
+        return None
+        
+    except Exception as e:
+        print(f"Error parsing text file content: {str(e)}")
+        return None
 
 @api.route('/apparatus/validate', methods=['POST'])
 def validate_apparatus_file():

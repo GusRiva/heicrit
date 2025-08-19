@@ -38,7 +38,27 @@
                     
                     <!-- Apparatus Display Container -->
                     <div id="apparatus-container" class="view-container" style="display: none;">
-                        <div id="apparatus-content"></div>
+                        <div class="apparatus-layout">
+                            <div id="main-text-panel" class="text-panel">
+                                <h3>Main Text (Leithandschrift)</h3>
+                                <div id="main-text-content"></div>
+                            </div>
+                            <div id="apparatus-panel" class="apparatus-panel">
+                                <div class="apparatus-header-controls">
+                                    <h3>Critical Apparatus</h3>
+                                    <div class="apparatus-navigation" style="display: none;">
+                                        <button id="apparatus-prev" class="nav-button">← Previous</button>
+                                        <span id="apparatus-counter" class="entry-counter">1 / 1</span>
+                                        <button id="apparatus-next" class="nav-button">Next →</button>
+                                    </div>
+                                </div>
+                                <div id="apparatus-content"></div>
+                                <div id="apparatus-details" class="apparatus-details">
+                                    <h4>Details</h4>
+                                    <div id="apparatus-details-content">Click on a location number to see details</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

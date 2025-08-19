@@ -110,7 +110,6 @@ main {
 
 #apparatus-content {
     width: 100%;
-    height: 100%;
     padding: 1rem;
     box-sizing: border-box;
 }
@@ -363,6 +362,160 @@ main {
     color: #999;
     font-style: italic;
     font-size: 0.9em;
+}
+
+/* Apparatus Layout with Main Text */
+.apparatus-layout {
+    display: flex;
+    height: 100%;
+    gap: 1rem;
+}
+
+.text-panel {
+    flex: 1;
+    background: #f8f9fa;
+    border-right: 2px solid #dee2e6;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.text-panel h3 {
+    color: #2c3e50;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 1.1rem;
+}
+
+.apparatus-panel {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#apparatus-content {
+    flex: 0 0 auto; /* Don't grow, don't shrink, auto size to content */
+    margin-bottom: 1rem;
+}
+
+.apparatus-header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.apparatus-panel h3 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.apparatus-navigation {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.nav-button:hover {
+    background: #0056b3;
+}
+
+.nav-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.entry-counter {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-width: 4rem;
+    text-align: center;
+}
+
+#main-text-content {
+    font-family: 'Times New Roman', Times, serif;
+    line-height: 1.8;
+    font-size: 16px;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.no-main-text {
+    color: #999;
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+/* Apparatus Details Panel */
+.apparatus-details {
+    flex: 1; /* Take remaining space */
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid #dee2e6;
+    background: #f8f9fa;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.apparatus-details h4 {
+    color: #2c3e50;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+}
+
+#apparatus-details-content {
+    flex: 1; /* Take remaining space in details panel */
+    color: #666;
+    font-style: italic;
+    padding: 0.5rem;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    min-height: 3rem;
+    overflow-y: auto;
+}
+
+/* Clickable location buttons */
+.apparatus-loc-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: inherit;
+    margin-right: 0.3rem;
+    transition: background-color 0.2s;
+}
+
+.apparatus-loc-button:hover {
+    background: #0056b3;
+}
+
+.apparatus-loc-button:active {
+    background: #004085;
 }
 
 #status {
