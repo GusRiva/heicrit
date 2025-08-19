@@ -106,9 +106,33 @@ def process_apparatus_file():
             
             apparatus_entries = []
             
-            for app in app_elements:
-                apparatus_entries.append(app.get('loc'))    
-            
+            for i, app in enumerate(app_elements):
+                entry = {
+                    'id': i + 1,
+                    'loc': app.get('loc'),
+                    'lemma': None,
+                    'readings': []
+                }
+                
+                # Extract lemma
+                lem_element = app.find('.//tei:lem', namespaces=ns)
+                if lem_element is not None:
+                    entry['lemma'] = {
+                        'text': ''.join(lem_element.itertext()).strip(),
+                        'attributes': dict(lem_element.attrib)
+                    }
+                
+                # Extract readings
+                rdg_elements = app.xpath('.//tei:rdg', namespaces=ns)
+                for rdg in rdg_elements:
+                    reading = {
+                        'text': ''.join(rdg.itertext()).strip(),
+                        'wit': rdg.get('wit', ''),
+                        'attributes': dict(rdg.attrib)
+                    }
+                    entry['readings'].append(reading)
+                
+                apparatus_entries.append(entry)
             
             result = {
                 'success': True,
@@ -145,9 +169,6 @@ def validate_apparatus_file():
         
         if not content:
             return jsonify({'error': 'No content provided'}), 400
-        
-        # TODO: Add your specific TEI apparatus validation logic here
-        # This is where you'll implement validation using heipy
         
         # Basic validation for now
         is_valid = True

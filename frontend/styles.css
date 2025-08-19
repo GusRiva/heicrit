@@ -309,6 +309,41 @@ main {
     white-space: pre-wrap;
 }
 
+/* Classical Apparatus Styles */
+.classical-apparatus {
+    font-family: 'Times New Roman', Times, serif;
+    line-height: 1.8;
+    font-size: 16px;
+    max-width: 800px;
+}
+
+.classical-entry {
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.classical-entry:last-child {
+    border-bottom: none;
+}
+
+.apparatus-loc {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-right: 0.3rem;
+}
+
+.apparatus-witnesses {
+    font-style: italic;
+    color: #666;
+    margin-left: 0.2rem;
+}
+
+/* Ensure proper spacing around punctuation */
+.classical-entry {
+    word-spacing: 0.1em;
+}
+
 #status {
     background: #34495e;
     color: white;

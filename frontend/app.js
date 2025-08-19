@@ -156,6 +156,10 @@ class HeiCritApp {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.xml,.tei';
+        
+        // Clear the input value to ensure change event fires even for same file
+        input.value = '';
+        
         input.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -172,17 +176,13 @@ class HeiCritApp {
 
     async processApparatusFile(content, filename) {
         try {
-            console.log('Processing apparatus file:', filename);
-            console.log('Content length:', content.length);
             this.updateStatus('Processing apparatus file...');
             
             // Basic client-side XML validation first
             if (!this.validateXML(content)) {
-                console.log('XML validation failed');
                 return; // Error popup will be shown by validateXML
             }
             
-            console.log('XML validation passed, sending to backend...');
             // Send file to backend for validation and processing
             await this.sendApparatusToBackend(content, filename);
             
@@ -195,7 +195,6 @@ class HeiCritApp {
     async sendApparatusToBackend(content, filename) {
         try {
             // First validate the file with backend
-            console.log('Validating with backend...');
             this.updateStatus('Validating apparatus file structure...');
             
             const validationResponse = await this.apiRequest('/apparatus/validate', {
@@ -206,8 +205,6 @@ class HeiCritApp {
                 })
             });
 
-            console.log('Validation response:', validationResponse);
-
             if (!validationResponse.valid) {
                 const messages = validationResponse.messages.join('\n');
                 this.showErrorPopup('Invalid Apparatus File', messages);
@@ -215,7 +212,6 @@ class HeiCritApp {
             }
 
             // If validation passes, process the file
-            console.log('Processing with backend...');
             this.updateStatus('Processing apparatus file with heipy...');
             
             const processResponse = await this.apiRequest('/apparatus/process', {
@@ -226,14 +222,9 @@ class HeiCritApp {
                 })
             });
 
-            console.log('Process response:', processResponse);
-
             if (processResponse.success) {
-                console.log('Processing successful, handling result...');
                 this.handleApparatusProcessingResult(processResponse, filename);
-                
             } else {
-                console.log('Processing failed:', processResponse.message);
                 this.showErrorPopup('Processing Error', processResponse.message || 'Unknown error occurred');
             }
 
@@ -244,18 +235,11 @@ class HeiCritApp {
     }
 
     handleApparatusProcessingResult(result, filename) {
-        console.log('Processing result:', result);
-        console.log('Apparatus entries:', result.apparatus_entries);
-        console.log('Apparatus count:', result.apparatus_count);
-        
         if (result.apparatus_entries && result.apparatus_entries.length > 0) {
-            console.log('Calling displaySimpleApparatusList...');
-            // Display apparatus entries (now just loc attributes)
-            this.displaySimpleApparatusList(result.apparatus_entries, filename, result.apparatus_count);
+            // Display apparatus entries in classical format
+            this.displayApparatusEntries(result.apparatus_entries, filename);
             this.updateStatus(`Loaded ${result.apparatus_count} apparatus entries from ${filename}`);
-            console.log('Display function called');
         } else {
-            console.log('No apparatus entries found');
             this.updateStatus(`No apparatus entries found in ${filename}`);
             this.showErrorPopup('No Apparatus Found', 'The file does not contain any <app> elements.');
         }
@@ -305,25 +289,26 @@ class HeiCritApp {
 
     showXmlEditorView() {
         // Show XML editor, hide apparatus view
-        console.log('Switching to XML editor view');
         document.getElementById('xml-editor-container').style.display = 'block';
         document.getElementById('apparatus-container').style.display = 'none';
     }
 
     showApparatusView() {
         // Show apparatus view, hide XML editor
-        console.log('Switching to apparatus view');
         document.getElementById('xml-editor-container').style.display = 'none';
         document.getElementById('apparatus-container').style.display = 'block';
     }
 
     displayApparatusEntries(apparatusEntries, filename) {
-        // Create HTML display of apparatus entries
-        let htmlContent = this.generateApparatusHTML(apparatusEntries, filename);
+        // Switch to apparatus view
+        this.showApparatusView();
         
-        // Update the editor with the apparatus display
-        this.textarea.value = ''; // Clear the textarea (we're showing HTML instead)
-        this.highlightCode.innerHTML = htmlContent;
+        // Create HTML display of apparatus entries in classical format
+        let htmlContent = this.generateClassicalApparatusHTML(apparatusEntries, filename);
+        
+        // Set content in apparatus container
+        const apparatusContent = document.getElementById('apparatus-content');
+        apparatusContent.innerHTML = htmlContent;
         
         // Update current file reference
         this.currentFile = filename;
@@ -379,6 +364,65 @@ class HeiCritApp {
                 </details>
             </div>
         </div>`;
+        });
+
+        html += `
+            </div>
+        </div>`;
+
+        return html;
+    }
+
+    generateClassicalApparatusHTML(apparatusEntries, filename) {
+        let html = `
+        <div class="apparatus-display">
+            <div class="apparatus-header">
+                <h2>Critical Apparatus: ${filename}</h2>
+                <p>Found ${apparatusEntries.length} apparatus entries</p>
+            </div>
+            <div class="classical-apparatus">`;
+
+        apparatusEntries.forEach(entry => {
+            html += '<div class="classical-entry">';
+            
+            // Format: **loc** lemma ] reading1 *witnesses* ; reading2 *witnesses*
+            
+            // Line number (loc) in bold
+            const loc = entry.loc || '(no loc)';
+            html += `<strong class="apparatus-loc">${this.escapeHtml(loc)}</strong>`;
+            
+            // Lemma content
+            if (entry.lemma && entry.lemma.text) {
+                html += ` ${this.escapeHtml(entry.lemma.text)}`;
+            }
+            
+            // Closing bracket
+            html += ' ]';
+            
+            // Readings with witnesses
+            if (entry.readings && entry.readings.length > 0) {
+                const readingParts = [];
+                
+                entry.readings.forEach(reading => {
+                    let readingPart = ` ${this.escapeHtml(reading.text)}`;
+                    
+                    // Add witnesses in italics
+                    if (reading.wit) {
+                        // Clean up witness list (remove # symbols and extra spaces)
+                        const witnesses = reading.wit.replace(/#/g, '').trim().split(/\s+/).join(' ');
+                        if (witnesses) {
+                            readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(witnesses)}</em>`;
+                        }
+                    }
+                    
+                    readingParts.push(readingPart);
+                });
+                
+                // Join readings with semicolons
+                html += readingParts.join(' ;');
+            }
+            
+            html += '</div>';
         });
 
         html += `
