@@ -234,14 +234,12 @@ class HeiCritApp {
         // Process apparatus file if found
         if (apparatusFiles.length > 0) {
             const apparatusFile = apparatusFiles[0]; // Use first apparatus file found
-            console.log(`Processing apparatus file: ${apparatusFile.path}`);
             await this.processApparatusFileFromProject(apparatusFile.content, apparatusFile.path);
         }
         
         // Process synoptic map if found
         if (synopticFiles.length > 0) {
             const synopticFile = synopticFiles[0]; // Use first synoptic file found
-            console.log(`Processing synoptic map: ${synopticFile.path}`);
             await this.processSynopticMapFileFromProject(synopticFile.content, synopticFile.path);
         }
         
@@ -345,11 +343,11 @@ class HeiCritApp {
             // If validation passes, process the file with project context
             this.updateStatus('Processing apparatus file with project context...');
             
-            const processResponse = await this.apiRequest('/apparatus/process-with-project', {
+            const processResponse = await this.apiRequest('/project/open', {
                 method: 'POST',
                 body: JSON.stringify({
-                    content: content,
-                    filepath: filepath,
+                    apparatus_content: content,
+                    apparatus_filepath: filepath,
                     project_files: this.getProjectFileList()
                 })
             });
@@ -531,48 +529,6 @@ class HeiCritApp {
         return 'No data loaded';
     }
 
-    displaySimpleApparatusList(locAttributes, filename, count) {
-        console.log('displaySimpleApparatusList called with:', locAttributes, filename, count);
-        
-        // Switch to apparatus view
-        this.showApparatusView();
-        
-        // Create simple HTML display of loc attributes
-        let htmlContent = `
-        <div class="apparatus-display">
-            <div class="apparatus-header">
-                <h2>Apparatus Entries from ${filename}</h2>
-                <p>Found ${count} apparatus entries</p>
-            </div>
-            <div class="apparatus-list">
-                <ul>`;
-
-        locAttributes.forEach((loc, index) => {
-            htmlContent += `
-                <li class="apparatus-entry-simple">
-                    <strong>Entry ${index + 1}:</strong> loc="${loc || '(no loc attribute)'}"
-                </li>`;
-        });
-
-        htmlContent += `
-                </ul>
-            </div>
-        </div>`;
-        
-        console.log('Generated HTML content:', htmlContent.substring(0, 200) + '...');
-        
-        // Set content in apparatus container
-        const apparatusContent = document.getElementById('apparatus-content');
-        console.log('Setting apparatus content...');
-        apparatusContent.innerHTML = htmlContent;
-        console.log('Apparatus content set successfully');
-        
-        // Update current file reference
-        this.currentFile = filename;
-        document.getElementById('currentFile').textContent = `${filename} (${count} apparatus entries)`;
-        console.log('Display completed');
-    }
-
     showXmlEditorView() {
         // Show XML editor, hide apparatus view
         document.getElementById('xml-editor-container').style.display = 'block';
@@ -593,7 +549,7 @@ class HeiCritApp {
         this.displayMainText();
         
         // Store and group entries for pagination
-        this.groupedEntries = this.groupEntriesByLoc(apparatusEntries);
+        this.groupedEntries = this.groupEntriesByCorresp(apparatusEntries);
         this.entryKeys = Object.keys(this.groupedEntries);
         this.currentEntryIndex = 0;
         
@@ -619,9 +575,10 @@ class HeiCritApp {
             return;
         }
 
-        // Get current entry location and data
-        const currentLoc = this.entryKeys[this.currentEntryIndex];
-        const currentEntries = this.groupedEntries[currentLoc];
+        // Get current entry corresp and data
+        const currentCorresp = this.entryKeys[this.currentEntryIndex];
+        const currentEntries = this.groupedEntries[currentCorresp];
+        const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
         // Generate HTML for current entry only
         let htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries);
@@ -634,13 +591,18 @@ class HeiCritApp {
     }
 
     generateSingleEntryHTML(loc, entries) {
+        console.log(entries);
+        const corresp = entries.length > 0 && entries[0].corresp ? entries[0].corresp : '';
         let html = `
         <div class="apparatus-display">
             <div class="classical-apparatus">
                 <div class="classical-entry-group">`;
 
         // Show location as clickable button
-        html += `<button class="apparatus-loc-button" data-loc="${this.escapeHtml(loc)}" onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
+        html += `<button class="apparatus-loc-button" 
+                                data-loc="${this.escapeHtml(loc)}" 
+                                data-corresp="${this.escapeHtml(corresp)}" 
+                                onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
         
         // Process each entry in this location group
         entries.forEach((entry) => {
@@ -787,17 +749,18 @@ class HeiCritApp {
             </div>
             <div class="classical-apparatus">`;
 
-        // Group entries by loc
-        const groupedEntries = this.groupEntriesByLoc(apparatusEntries);
+        // Group entries by corresp
+        const groupedEntries = this.groupEntriesByCorresp(apparatusEntries);
         
-        // Process each location group
-        Object.keys(groupedEntries).forEach(loc => {
-            const entries = groupedEntries[loc];
+        // Process each corresp group
+        Object.keys(groupedEntries).forEach(corresp => {
+            const entries = groupedEntries[corresp];
+            const loc = entries.length > 0 && entries[0].loc ? entries[0].loc : '';
             
             html += '<div class="classical-entry-group">';
             
             // Show location as clickable button
-            html += `<button class="apparatus-loc-button" data-loc="${this.escapeHtml(loc)}" onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
+            html += `<button class="apparatus-loc-button" data-loc="${this.escapeHtml(loc)}" data-corresp="${this.escapeHtml(corresp)}" onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
             
             // Process each entry in this location group
             entries.forEach((entry) => {
@@ -900,6 +863,20 @@ class HeiCritApp {
         }
         
         return completeEntries;
+    }
+
+    groupEntriesByCorresp(apparatusEntries) {
+        const grouped = {};
+        
+        apparatusEntries.forEach(entry => {
+            const corresp = entry.corresp || '(no corresp)';
+            if (!grouped[corresp]) {
+                grouped[corresp] = [];
+            }
+            grouped[corresp].push(entry);
+        });
+        
+        return grouped;
     }
 
     groupEntriesByLoc(apparatusEntries) {
