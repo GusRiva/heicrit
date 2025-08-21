@@ -4,12 +4,110 @@ from lxml import etree as et
 try:
     from heipy.parsers import HeiEditionsParser
     from heipy.namespaces import ns
+    from heipy.heipipe.pipeline_library.synoptic import HeiCritPipe
     import heipy.validation
     HEIPY_AVAILABLE = True
 except ImportError:
     HEIPY_AVAILABLE = False
 
 api = Blueprint('api', __name__)
+
+# Global sigla mapping variable
+sigla_mapping = {}
+
+def load_sigla_mapping_from_project(project_directory):
+    """
+    Load sigla mapping from pipelines/config.py in the project directory
+    Returns the mapping dictionary or empty dict if not found
+    """
+    global sigla_mapping
+    
+    try:
+        config_path = os.path.join(project_directory, 'pipelines', 'config.py')
+        if not os.path.exists(config_path):
+            print(f"WARNING: Could not find pipelines/config.py in project directory: {project_directory}")
+            sigla_mapping = {}
+            return {}
+        
+        # Read and execute the config file to extract the mapping
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config_content = f.read()
+        
+        # Use exec to safely extract the mapping variable
+        namespace = {}
+        exec(config_content, namespace)
+        
+        mapping = namespace.get('mapping', None)
+        if mapping is None:
+            print(f"WARNING: No 'mapping' variable found in {config_path}")
+            sigla_mapping = {}
+            return {}
+        
+        if not isinstance(mapping, dict):
+            print(f"WARNING: 'mapping' variable is not a dictionary in {config_path}")
+            sigla_mapping = {}
+            return {}
+        
+        if len(mapping) == 0:
+            print(f"WARNING: 'mapping' dictionary is empty in {config_path}")
+        
+        sigla_mapping = mapping
+        print(f"Loaded sigla mapping with {len(mapping)} entries from {config_path}")
+        return mapping
+        
+    except Exception as e:
+        print(f"ERROR: Failed to load sigla mapping from {project_directory}: {str(e)}")
+        sigla_mapping = {}
+        return {}
+
+def load_sigla_mapping_from_project_files(project_files):
+    """
+    Load sigla mapping from pipelines/config.py within the project files
+    """
+    global sigla_mapping
+    
+    try:
+        # Look for pipelines/config.py in the project files
+        config_content = None
+        config_path = None
+        
+        for file_path, file_data in project_files.items():
+            if file_path.endswith('pipelines/config.py') or file_path == 'pipelines/config.py':
+                config_content = file_data['content']
+                config_path = file_path
+                break
+        
+        if config_content is None:
+            print("WARNING: Could not find pipelines/config.py in project files")
+            sigla_mapping = {}
+            return {}
+        
+        # Use exec to safely extract the mapping variable
+        namespace = {}
+        exec(config_content, namespace)
+        
+        mapping = namespace.get('mapping', None)
+        if mapping is None:
+            print(f"WARNING: No 'mapping' variable found in {config_path}")
+            sigla_mapping = {}
+            return {}
+        
+        if not isinstance(mapping, dict):
+            print(f"WARNING: 'mapping' variable is not a dictionary in {config_path}")
+            sigla_mapping = {}
+            return {}
+        
+        if len(mapping) == 0:
+            print(f"WARNING: 'mapping' dictionary is empty in {config_path}")
+        
+        sigla_mapping = mapping
+        print(f"Loaded sigla mapping with {len(mapping)} entries from {config_path}")
+        return mapping
+        
+    except Exception as e:
+        print(f"ERROR: Failed to load sigla mapping from project files: {str(e)}")
+        sigla_mapping = {}
+        return {}
 
 def parse_synoptic_map(corresp_path, base_dir):
     """
@@ -223,6 +321,19 @@ def process_apparatus_file_with_project():
         filepath = data.get('filepath', 'apparatus.xml')
         project_files = data.get('project_files', {})
         
+        # Extract project root directory from file paths to load sigla mapping
+        if project_files:
+            # Get the common root directory from the project files
+            file_paths = list(project_files.keys())
+            if file_paths:
+                # Find the common root directory (typically the first part before '/')
+                first_path = file_paths[0]
+                project_root = first_path.split('/')[0] if '/' in first_path else ''
+                if project_root:
+                    # Use a dummy path since we don't have the actual filesystem path
+                    # The sigla mapping will be loaded from the project files instead
+                    load_sigla_mapping_from_project_files(project_files)
+        
         if not content:
             return jsonify({'error': 'No content provided'}), 400
         
@@ -248,7 +359,6 @@ def process_apparatus_file_with_project():
                 if corresp:
                     # Resolve corresp path within project files
                     synoptic_map = resolve_synoptic_map_from_project(corresp, filepath, project_files)
-            
             # Extract main text from Leithandschrift witness
             main_text_content = extract_leithandschrift_text(root, filepath, project_files)
             
@@ -440,13 +550,13 @@ def resolve_text_file_from_project(target_path, apparatus_filepath, project_file
         # Look for the file in project_files
         for project_path, file_data in project_files.items():
             if project_path.endswith(resolved_path) or project_path == resolved_path:
-                # Parse the text file and extract text content
-                return parse_text_file_content(file_data['content'])
+                # Parse the text file content
+                return parse_main_text_file_content(file_data['content'])
         
         # If exact match not found, try fuzzy matching
         for project_path, file_data in project_files.items():
             if resolved_path in project_path or project_path.endswith(resolved_path.split('/')[-1]):
-                return parse_text_file_content(file_data['content'])
+                return parse_main_text_file_content(file_data['content'])
         
         print(f"Text file not found: {resolved_path}")
         return None
@@ -455,28 +565,17 @@ def resolve_text_file_from_project(target_path, apparatus_filepath, project_file
         print(f"Error resolving text file: {str(e)}")
         return None
 
-def parse_text_file_content(content):
+def parse_main_text_file_content(content):
     """
-    Parse text file content and extract the text element
+    Parse text file using HeiCritPipe and return the result
     """
     try:
-        from io import BytesIO
-        parser = HeiEditionsParser()
-        content_bytes = content.encode('utf-8')
-        doc = et.parse(BytesIO(content_bytes), parser)
-        root = doc.getroot()
-        
-        # Extract text element content
-        text_element = root.find('.//tei:text', namespaces=ns)
-        if text_element is not None:
-            # Get all text content from the text element
-            text_content = ''.join(text_element.itertext()).strip()
-            return text_content
-        
-        return None
+        pipeline = HeiCritPipe()
+        result = pipeline.execute(content)
+        return result
         
     except Exception as e:
-        print(f"Error parsing text file content: {str(e)}")
+        print(f"Error parsing text file with HeiCritPipe: {str(e)}")
         return None
 
 @api.route('/apparatus/validate', methods=['POST'])
@@ -585,4 +684,18 @@ def process_synoptic_map_file():
         
     except Exception as e:
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
+
+@api.route('/sigla-mapping', methods=['GET'])
+def get_sigla_mapping():
+    """
+    Get the current sigla mapping dictionary
+    """
+    try:
+        return jsonify({
+            'success': True,
+            'sigla_mapping': sigla_mapping,
+            'count': len(sigla_mapping)
+        })
+    except Exception as e:
+        return jsonify({'error': f'Failed to get sigla mapping: {str(e)}'}), 500
 

@@ -714,7 +714,7 @@ class HeiCritApp {
         const mainTextContent = document.getElementById('main-text-content');
         
         if (this.mainTextData && this.mainTextData.content) {
-            mainTextContent.textContent = this.mainTextData.content;
+            mainTextContent.innerHTML = this.mainTextData.content;
         } else {
             mainTextContent.innerHTML = '<em class="no-main-text">No main text available</em>';
         }
@@ -1098,7 +1098,7 @@ class HeiCritApp {
         }
     }
 
-    showLocationDetails(loc) {
+    async showLocationDetails(loc) {
         const detailsContent = document.getElementById('apparatus-details-content');
         
         // Find entries for this location
@@ -1112,6 +1112,23 @@ class HeiCritApp {
         const synopticData = synopticMap[loc];
         
         let message = `<strong>Location: ${this.escapeHtml(loc)}</strong><br><br>`;
+        
+        // Fetch and display sigla mapping
+        try {
+            const siglaResponse = await this.apiRequest('/sigla-mapping');
+            if (siglaResponse.success && siglaResponse.sigla_mapping) {
+                message += `<strong>Sigla Mapping (${siglaResponse.count} entries):</strong><br>`;
+                const mapping = siglaResponse.sigla_mapping;
+                for (const [filename, data] of Object.entries(mapping)) {
+                    message += `${this.escapeHtml(filename)}: ${this.escapeHtml(data.siglum)} (${this.escapeHtml(data.synoptic_pre)})<br>`;
+                }
+                message += '<br>';
+            } else {
+                message += '<strong>Sigla Mapping:</strong> Not loaded or empty<br><br>';
+            }
+        } catch (error) {
+            message += '<strong>Sigla Mapping:</strong> Error loading<br><br>';
+        }
         
         if (locationEntries.length > 0) {
             message += `<strong>Apparatus entries:</strong> ${locationEntries.length}<br>`;
