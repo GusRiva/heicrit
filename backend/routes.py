@@ -1,13 +1,13 @@
 from flask import Blueprint, request, jsonify
 import os
 from lxml import etree as et
-from heipy.parsers import HeiEditionsParser
-from heipy.namespaces import ns
-from heipy.heipipe.pipeline_library.synoptic import HeiCritPipe
-from heipy.heipipe.step_library.heicrit import append_synoptic_links
 
+from heipy.namespaces import ns
+from heipy.heipipe.steps import PythonStep
 
 from load_functions import load_sigla_mapping, load_synoptic_map, parse_xml_heieditions
+from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
+
 
 api = Blueprint('api', __name__)
 
@@ -140,8 +140,10 @@ def open_project():
                     # Store in global variable
                     global synoptic_map_data
                     synoptic_map_data = synoptic_map
-            # Extract main text from Leithandschrift witness
-            main_text_content = extract_leithandschrift_text(apparatus_root, apparatus_filepath, project_files)
+            # Extract sigla and main text from Leithandschrift witness
+            leiths_path = extract_leithandschrift_path(apparatus_root)
+            
+            main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             
             # Find all app elements in the document
             app_elements = apparatus_root.xpath('.//tei:app', namespaces=ns)
@@ -176,7 +178,7 @@ def open_project():
                     entry['readings'].append(reading)
                 
                 apparatus_entries.append(entry)
-            print(apparatus_entries)
+            
             result = {
                 'success': True,
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
@@ -238,15 +240,17 @@ def find_file_in_project(resolved_path, project_files):
     
     return None
 
-def extract_leithandschrift_text(root, apparatus_filepath, project_files):
-    """
-    Extract main text from the Leithandschrift witness
-    """
+
+def extract_leithandschrift_path(root: et.Element):
+    """Extract the siglum info for the leiths."""
     try:
         # Find witness with ana="hc:Leithandschrift"
         leithandschrift_witness = root.find('.//tei:witness[@ana="hc:Leithandschrift"]', namespaces=ns)
         if leithandschrift_witness is None:
             return None
+        
+        # Get the siglum
+        
         
         # Get ptr target path
         ptr_element = leithandschrift_witness.find('.//tei:ptr', namespaces=ns)
@@ -257,13 +261,12 @@ def extract_leithandschrift_text(root, apparatus_filepath, project_files):
         if not target_path:
             return None
         
-        # Resolve the target path within project files
-        text_content = resolve_text_file_from_project(target_path, apparatus_filepath, project_files)
-        return text_content
+        return target_path
         
     except Exception as e:
-        print(f"Error extracting Leithandschrift text: {str(e)}")
+        print(f"Error extracting Leithandschrift siglum info: {str(e)}")
         return None
+
 
 def resolve_text_file_from_project(target_path, apparatus_filepath, project_files):
     """
@@ -289,8 +292,10 @@ def parse_main_text_file_content(content):
     """
     try:
         pipeline = HeiCritPipe()
-        pipeline.add_step(append_synoptic_links.get_step(), before_step= 'create_html',
-                          parameters= {'sigla_mapping': sigla_mapping, 'synoptic_map': synoptic_map_data})
+        pipeline.add_step(PythonStep(append_synoptic_links_funct, name="heicrit_append_synoptic_links"), 
+                          before_step= 'create_html',
+                          parameters= {'sigla_mapping': sigla_mapping, 
+                                       'synoptic_map': synoptic_map_data})
         result = pipeline.execute(content)
         return result
         

@@ -154,7 +154,7 @@ def parse_synoptic_map(corresp_path=None, base_dir=None, content=None)-> dict:
                 # Split target by whitespace and clean up
                 target_list = [t.strip() for t in target.split() if t.strip()]
                 synoptic_map[n] = {
-                    'n': n,
+                    # 'n': n,
                     'target': target_list
                 }
         

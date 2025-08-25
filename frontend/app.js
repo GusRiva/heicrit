@@ -574,7 +574,6 @@ class HeiCritApp {
     }
 
     generateSingleEntryHTML(loc, entries) {
-        console.log(entries);
         const corresp = entries.length > 0 && entries[0].corresp ? entries[0].corresp : '';
         let html = `
         <div class="apparatus-display">
