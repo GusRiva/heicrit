@@ -1,14 +1,13 @@
 from flask import Blueprint, request, jsonify
 import os
 from lxml import etree as et
-try:
-    from heipy.parsers import HeiEditionsParser
-    from heipy.namespaces import ns
-    from heipy.heipipe.pipeline_library.synoptic import HeiCritPipe
-    from heipy.heipipe.step_library.heicrit import append_synoptic_links
-    HEIPY_AVAILABLE = True
-except ImportError:
-    HEIPY_AVAILABLE = False
+from heipy.parsers import HeiEditionsParser
+from heipy.namespaces import ns
+from heipy.heipipe.pipeline_library.synoptic import HeiCritPipe
+from heipy.heipipe.step_library.heicrit import append_synoptic_links
+
+
+from load_functions import load_sigla_mapping, load_synoptic_map, parse_xml_heieditions
 
 api = Blueprint('api', __name__)
 
@@ -16,126 +15,20 @@ api = Blueprint('api', __name__)
 sigla_mapping = {}
 synoptic_map_data = {}
 
-def load_sigla_mapping(project_directory=None, project_files=None):
-    """
-    Load sigla mapping from pipelines/config.py
-    Can load from either a project directory or project files dictionary
-    Returns the mapping dictionary or empty dict if not found
-    """
-    global sigla_mapping
-    
-    try:
-        config_content = None
-        config_path = None
-        
-        if project_directory:
-            # Load from filesystem
-            config_path = os.path.join(project_directory, 'pipelines', 'config.py')
-            if not os.path.exists(config_path):
-                print(f"Warning: Could not find pipelines/config.py in project directory: {project_directory}")
-                sigla_mapping = {}
-                return {}
-            
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config_content = f.read()
-        
-        elif project_files:
-            # Load from project files dictionary
-            for file_path, file_data in project_files.items():
-                if file_path.endswith('pipelines/config.py') or file_path == 'pipelines/config.py':
-                    config_content = file_data['content']
-                    config_path = file_path
-                    break
-            
-            if config_content is None:
-                print("Warning: Could not find pipelines/config.py in project files")
-                sigla_mapping = {}
-                return {}
-        
-        else:
-            raise ValueError("Either project_directory or project_files must be provided")
-        
-        # Use exec to safely extract the mapping variable
-        namespace = {}
-        exec(config_content, namespace)
-        
-        mapping = namespace.get('mapping', None)
-        if mapping is None:
-            print(f"Warning: No 'mapping' variable found in {config_path}")
-            sigla_mapping = {}
-            return {}
-        
-        if not isinstance(mapping, dict):
-            print(f"Warning: 'mapping' variable is not a dictionary in {config_path}")
-            sigla_mapping = {}
-            return {}
-        
-        if len(mapping) == 0:
-            print(f"Warning: 'mapping' dictionary is empty in {config_path}")
-        
-        sigla_mapping = mapping
-        print(f"Loaded sigla mapping with {len(mapping)} entries from {config_path}")
-        return mapping
-        
-    except Exception as e:
-        error_source = project_directory if project_directory else "project files"
-        print(f"Error: Failed to load sigla mapping from {error_source}: {str(e)}")
-        sigla_mapping = {}
-        return {}
 
-def parse_synoptic_map(corresp_path=None, base_dir=None, content=None)-> dict:
+@api.route('/sigla-mapping', methods=['GET'])
+def get_sigla_mapping():
     """
-    Parse synoptic map file and extract link elements with n and target attributes.
-    Can parse from file path or direct content string.
-    Returns a dictionary with n as key and target list as value.
+    Get the current sigla mapping dictionary
     """
     try:
-        if content:
-            # Parse from content string
-            xml_content = content
-        elif corresp_path:
-            # Parse from file path
-            if not os.path.isabs(corresp_path):
-                corresp_path = os.path.join(base_dir, corresp_path)
-            
-            corresp_path = os.path.abspath(corresp_path)
-            if not os.path.exists(corresp_path):
-                return {}
-            
-            with open(corresp_path, 'r', encoding='utf-8') as f:
-                xml_content = f.read()
-        else:
-            return {}
-        
-        # Parse the synoptic map XML
-        from io import BytesIO
-        parser = HeiEditionsParser()
-        content_bytes = xml_content.encode('utf-8')
-        doc = et.parse(BytesIO(content_bytes), parser)
-        root = doc.getroot()
-        
-        # Extract link elements
-        link_elements = root.xpath('.//tei:link', namespaces=ns)
-        
-        synoptic_map = {}
-        
-        for link in link_elements:
-            n = link.get('n')
-            target = link.get('target', '')
-            
-            if n:
-                # Split target by whitespace and clean up
-                target_list = [t.strip() for t in target.split() if t.strip()]
-                synoptic_map[n] = {
-                    'n': n,
-                    'target': target_list
-                }
-        
-        return synoptic_map
-        
+        return jsonify({
+            'success': True,
+            'sigla_mapping': sigla_mapping,
+            'count': len(sigla_mapping)
+        })
     except Exception as e:
-        print(f"Error parsing synoptic map: {str(e)}")
-        return {}
+        return jsonify({'error': f'Failed to get sigla mapping: {str(e)}'}), 500
 
 @api.route('/files', methods=['GET'])
 def list_files():
@@ -202,10 +95,8 @@ def open_project():
         'project_files': {path: {content: str, size: int}, ...}
     }
     """
-    try:
-        if not HEIPY_AVAILABLE:
-            return jsonify({'error': 'heipy library not available'}), 500
-            
+    global sigla_mapping 
+    try:    
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -223,20 +114,14 @@ def open_project():
                 first_path = file_paths[0]
                 project_root = first_path.split('/')[0] if '/' in first_path else ''
                 if project_root:
-                    # Use a dummy path since we don't have the actual filesystem path
-                    # The sigla mapping will be loaded from the project files instead
-                    load_sigla_mapping(project_files=project_files)
+                    sigla_mapping = load_sigla_mapping(project_files=project_files)
         
         if not apparatus_content:
             return jsonify({'error': 'No apparatus content provided'}), 400
         
         # Parse XML using HeiEditionsParser
         try:
-            from io import BytesIO
-            parser = HeiEditionsParser()
-            content_bytes = apparatus_content.encode('utf-8')
-            doc = et.parse(BytesIO(content_bytes), parser)
-            root = doc.getroot()
+            apparatus_root = parse_xml_heieditions(apparatus_content)
         except Exception as xml_error:
             return jsonify({'error': f'Invalid XML: {str(xml_error)}'}), 400
         
@@ -246,20 +131,20 @@ def open_project():
             main_text_content = None
             
             # Find listApp element and extract corresp attribute
-            list_app = root.find('.//tei:listApp', namespaces=ns)
+            list_app = apparatus_root.find('.//tei:listApp', namespaces=ns)
             if list_app is not None:
                 corresp = list_app.get('corresp')
                 if corresp:
                     # Resolve corresp path within project files
-                    synoptic_map = resolve_synoptic_map_from_project(corresp, apparatus_filepath, project_files)
+                    synoptic_map = load_synoptic_map(corresp, apparatus_filepath, project_files)
                     # Store in global variable
                     global synoptic_map_data
                     synoptic_map_data = synoptic_map
             # Extract main text from Leithandschrift witness
-            main_text_content = extract_leithandschrift_text(root, apparatus_filepath, project_files)
+            main_text_content = extract_leithandschrift_text(apparatus_root, apparatus_filepath, project_files)
             
             # Find all app elements in the document
-            app_elements = root.xpath('.//tei:app', namespaces=ns)
+            app_elements = apparatus_root.xpath('.//tei:app', namespaces=ns)
             
             apparatus_entries = []
             
@@ -291,13 +176,12 @@ def open_project():
                     entry['readings'].append(reading)
                 
                 apparatus_entries.append(entry)
-            
+            print(apparatus_entries)
             result = {
                 'success': True,
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
                 'apparatus_filepath': apparatus_filepath,
                 'content_length': len(apparatus_content),
-                'heipy_available': HEIPY_AVAILABLE,
                 'apparatus_count': len(apparatus_entries),
                 'apparatus_entries': apparatus_entries,
                 'synoptic_map': synoptic_map,
@@ -313,94 +197,6 @@ def open_project():
     except Exception as e:
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
 
-
-@api.route('/apparatus/process', methods=['POST'])
-def process_apparatus_file():
-    """
-    Process a TEI apparatus file using heipy
-    Expected JSON payload: {
-        'content': 'XML content as string',
-        'filename': 'original filename'
-    }
-    """
-    try:
-        if not HEIPY_AVAILABLE:
-            return jsonify({'error': 'heipy library not available'}), 500
-            
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-            
-        content = data.get('content')
-        filename = data.get('filename', 'apparatus.xml')
-        
-        if not content:
-            return jsonify({'error': 'No content provided'}), 400
-        
-        # Parse XML using HeiEditionsParser
-        try:
-            from io import BytesIO
-            parser = HeiEditionsParser()
-            # Convert string to bytes for proper XML parsing with encoding declaration
-            content_bytes = content.encode('utf-8')
-            doc = et.parse(BytesIO(content_bytes), parser)
-            root = doc.getroot()
-        except Exception as xml_error:
-            return jsonify({'error': f'Invalid XML: {str(xml_error)}'}), 400
-        
-        # Extract apparatus entries (synoptic map is handled separately now)
-        try:
-            
-            # Find all app elements in the document
-            app_elements = root.xpath('.//tei:app', namespaces=ns)
-            
-            apparatus_entries = []
-            
-            for i, app in enumerate(app_elements):
-                entry = {
-                    'id': i + 1,
-                    'loc': app.get('loc'),
-                    'lemma': None,
-                    'readings': []
-                }
-                
-                # Extract lemma
-                lem_element = app.find('.//tei:lem', namespaces=ns)
-                if lem_element is not None:
-                    entry['lemma'] = {
-                        'text': ''.join(lem_element.itertext()).strip(),
-                        'attributes': dict(lem_element.attrib)
-                    }
-                
-                # Extract readings
-                rdg_elements = app.xpath('.//tei:rdg', namespaces=ns)
-                for rdg in rdg_elements:
-                    reading = {
-                        'text': ''.join(rdg.itertext()).strip(),
-                        'wit': rdg.get('wit', ''),
-                        'attributes': dict(rdg.attrib)
-                    }
-                    entry['readings'].append(reading)
-                
-                apparatus_entries.append(entry)
-            
-            result = {
-                'success': True,
-                'message': f'Found {len(apparatus_entries)} apparatus entries',
-                'filename': filename,
-                'content_length': len(content),
-                'heipy_available': HEIPY_AVAILABLE,
-                'apparatus_count': len(apparatus_entries),
-                'apparatus_entries': apparatus_entries
-            }
-            
-        except Exception as processing_error:
-            return jsonify({'error': f'Failed to extract apparatus entries: {str(processing_error)}'}), 500
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({'error': f'Processing failed: {str(e)}'}), 500
 
 def resolve_relative_path(target_path, base_filepath):
     """
@@ -441,24 +237,6 @@ def find_file_in_project(resolved_path, project_files):
             return file_data
     
     return None
-
-def resolve_synoptic_map_from_project(corresp_path, apparatus_filepath, project_files):
-    """
-    Resolve synoptic map from project files using relative path resolution
-    """
-    try:
-        resolved_path = resolve_relative_path(corresp_path, apparatus_filepath)
-        file_data = find_file_in_project(resolved_path, project_files)
-        
-        if file_data:
-            return parse_synoptic_map(content=file_data['content'])
-        
-        print(f"Synoptic map not found: {resolved_path}")
-        return {}
-        
-    except Exception as e:
-        print(f"Error resolving synoptic map: {str(e)}")
-        return {}
 
 def extract_leithandschrift_text(root, apparatus_filepath, project_files):
     """
@@ -525,10 +303,7 @@ def validate_apparatus_file():
     """
     Validate if a file is a proper TEI apparatus file
     """
-    try:
-        if not HEIPY_AVAILABLE:
-            return jsonify({'error': 'heipy library not available'}), 500
-            
+    try:    
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -550,7 +325,6 @@ def validate_apparatus_file():
         result = {
             'valid': is_valid,
             'messages': validation_messages,
-            'heipy_available': HEIPY_AVAILABLE
         }
         
         return jsonify(result)
@@ -567,10 +341,7 @@ def process_synoptic_map_file():
         'filename': 'original filename'
     }
     """
-    try:
-        if not HEIPY_AVAILABLE:
-            return jsonify({'error': 'heipy library not available'}), 500
-            
+    try:    
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -581,13 +352,8 @@ def process_synoptic_map_file():
         if not content:
             return jsonify({'error': 'No content provided'}), 400
         
-        # Parse XML using HeiEditionsParser
         try:
-            from io import BytesIO
-            parser = HeiEditionsParser()
-            content_bytes = content.encode('utf-8')
-            doc = et.parse(BytesIO(content_bytes), parser)
-            root = doc.getroot()
+            root = parse_xml_heieditions(content)
         except Exception as xml_error:
             return jsonify({'error': f'Invalid XML: {str(xml_error)}'}), 400
         
@@ -619,7 +385,6 @@ def process_synoptic_map_file():
                 'message': f'Found {len(synoptic_map)} synoptic map entries',
                 'filename': filename,
                 'content_length': len(content),
-                'heipy_available': HEIPY_AVAILABLE,
                 'synoptic_map_count': len(synoptic_map),
                 'synoptic_map': synoptic_map
             }
@@ -632,17 +397,4 @@ def process_synoptic_map_file():
     except Exception as e:
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
 
-@api.route('/sigla-mapping', methods=['GET'])
-def get_sigla_mapping():
-    """
-    Get the current sigla mapping dictionary
-    """
-    try:
-        return jsonify({
-            'success': True,
-            'sigla_mapping': sigla_mapping,
-            'count': len(sigla_mapping)
-        })
-    except Exception as e:
-        return jsonify({'error': f'Failed to get sigla mapping: {str(e)}'}), 500
 

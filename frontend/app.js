@@ -267,23 +267,6 @@ class HeiCritApp {
         }
     }
 
-    async processSynopticMapFile(content, filename) {
-        try {
-            this.updateStatus('Processing synoptic map file...');
-            
-            // Basic client-side XML validation first
-            if (!this.validateXML(content)) {
-                return; // Error popup will be shown by validateXML
-            }
-            
-            // Send file to backend for processing
-            await this.sendSynopticMapToBackend(content, filename);
-            
-        } catch (error) {
-            console.error('Failed to process synoptic map file:', error);
-            this.showErrorPopup('Synoptic Map File Error', `Failed to process synoptic map file: ${error.message}`);
-        }
-    }
 
     async processApparatusFileFromProject(content, filepath) {
         try {
@@ -472,7 +455,7 @@ class HeiCritApp {
     }
 
     handleSynopticMapProcessingResult(result, filename) {
-        // Store synoptic map data
+        // Store synoptic map data        
         this.synopticMapData = {
             synoptic_map: result.synoptic_map || {},
             filename: filename,
