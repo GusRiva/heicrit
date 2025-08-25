@@ -381,10 +381,23 @@ def process_synoptic_map_file():
                 if n:
                     # Split target by whitespace and clean up
                     target_list = [t.strip() for t in target.split() if t.strip()]
-                    synoptic_map[n] = {
-                        'n': n,
-                        'target': target_list
-                    }
+                    
+                    # Find the corresp that matches the expected format (e.g., "a:l_5")
+                    # This should match the logic from load_functions.py
+                    corresp_entries = [x for x in target_list if ':l_' in x]
+                    if len(corresp_entries) > 0:
+                        # Use the first corresp format as key (e.g., "a:l_5")
+                        corresp_key = corresp_entries[0]
+                        synoptic_map[corresp_key] = {
+                            'n': n,
+                            'target': target_list
+                        }
+                    else:
+                        # Fallback to using n as key if no corresp format found
+                        synoptic_map[n] = {
+                            'n': n,
+                            'target': target_list
+                        }
             
             # Store in global variable
             synoptic_map_data = synoptic_map

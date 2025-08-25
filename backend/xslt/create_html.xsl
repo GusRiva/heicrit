@@ -36,8 +36,8 @@
 
     <xsl:template match="tei:l | tei:p">
         <div>
-            <xsl:attribute name="data-container-id" select="@xml:id"/>
             <span class="tei-container-n">    
+                <xsl:attribute name="data-container-id" select="@xml:id"/>
                 <xsl:value-of select="@n"/>
             </span>
             <xsl:apply-templates select="node()"/>

@@ -419,6 +419,7 @@ main {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .nav-button {
@@ -447,6 +448,45 @@ main {
     font-weight: 500;
     min-width: 4rem;
     text-align: center;
+}
+
+.goto-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.goto-input {
+    width: 60px;
+    padding: 0.3rem;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.goto-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.goto-button {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.goto-button:hover {
+    background: #218838;
 }
 
 #main-text-content {

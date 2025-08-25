@@ -32,6 +32,14 @@ class HeiCritApp {
         // Apparatus navigation events
         document.getElementById('apparatus-prev').addEventListener('click', () => this.showPreviousEntry());
         document.getElementById('apparatus-next').addEventListener('click', () => this.showNextEntry());
+        document.getElementById('goto-loc-button').addEventListener('click', () => this.goToLocNumber());
+        
+        // Allow Enter key in the goto input
+        document.getElementById('goto-loc-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.goToLocNumber();
+            }
+        });
     }
 
     setupEditor() {
@@ -537,6 +545,19 @@ class HeiCritApp {
         
         
         this.entryKeys = Object.keys(this.groupedEntries);
+        
+        // Sort entry keys by the 'loc' value in alphanumerical order
+        this.entryKeys.sort((a, b) => {
+            const locA = this.groupedEntries[a][0]?.loc || '';
+            const locB = this.groupedEntries[b][0]?.loc || '';
+            
+            // Convert to numbers for proper numerical sorting
+            const numA = parseInt(locA) || 0;
+            const numB = parseInt(locB) || 0;
+            
+            return numA - numB;
+        });
+        
         this.currentEntryIndex = 0;
         
         // Show navigation if we have multiple entries
@@ -556,6 +577,11 @@ class HeiCritApp {
     }
 
     updateApparatusDisplay() {
+        console.log('Updating apparatus display...');
+        console.log('Entry keys:', this.entryKeys);
+        console.log('Current entry index:', this.currentEntryIndex);
+        console.log('Grouped entries:', this.groupedEntries);
+        
         if (this.entryKeys.length === 0) {
             document.getElementById('apparatus-content').innerHTML = '<p>No apparatus entries to display</p>';
             return;
@@ -566,8 +592,14 @@ class HeiCritApp {
         const currentEntries = this.groupedEntries[currentCorresp];
         const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
+        console.log('Current corresp:', currentCorresp);
+        console.log('Current entries:', currentEntries);
+        console.log('Current loc:', currentLoc);
+
         // Generate HTML for current entry only
         let htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries);
+        
+        console.log('Generated HTML:', htmlContent);
         
         // Set content in apparatus container
         document.getElementById('apparatus-content').innerHTML = htmlContent;
@@ -577,6 +609,8 @@ class HeiCritApp {
     }
 
     generateSingleEntryHTML(loc, entries) {
+        console.log('Generating HTML for loc:', loc, 'entries:', entries);
+        
         const corresp = entries.length > 0 && entries[0].corresp ? entries[0].corresp : '';
         let html = `
         <div class="apparatus-display">
@@ -590,7 +624,8 @@ class HeiCritApp {
                                 onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
         
         // Process each entry in this location group
-        entries.forEach((entry) => {
+        entries.forEach((entry, index) => {
+            console.log(`Processing entry ${index}:`, entry);
             html += '<div class="classical-subentry';
             if (entry.is_placeholder) {
                 html += ' placeholder-entry';
@@ -805,40 +840,50 @@ class HeiCritApp {
     }
 
     mergeApparatusWithSynopticMap(apparatusEntries, synopticMap) {
-        // Create a map of apparatus entries by corresp and loc for quick lookup
+        console.log('Merging apparatus with synoptic map:');
+        console.log('Apparatus entries:', apparatusEntries);
+        console.log('Synoptic map:', synopticMap);
+        
+        // Create a map of apparatus entries by corresp for quick lookup
         const apparatusMap = {};
         apparatusEntries.forEach(entry => {
             const corresp = entry.corresp;
-            if (corresp) {
-                if (!apparatusMap[corresp]) {
-                    apparatusMap[corresp] = [];
+            if (corresp !== undefined && corresp !== null) {
+                // Convert to string to match synoptic map keys
+                const correspKey = String(corresp);
+                if (!apparatusMap[correspKey]) {
+                    apparatusMap[correspKey] = [];
                 }
-                apparatusMap[corresp].push(entry);
+                apparatusMap[correspKey].push(entry);
             }
         });
+        
+        console.log('Apparatus map by corresp:', apparatusMap);
         
         // Create complete entries list based on synoptic map
         const completeEntries = [];
         
-        // If we have synoptic map, use all n values as potential entries
+        // If we have synoptic map, use all corresp values as potential entries
         if (Object.keys(synopticMap).length > 0) {
-            Object.keys(synopticMap).forEach(c => {
-                if (apparatusMap[c]) {
-                    // This location has apparatus data
-                    apparatusMap[c].forEach(entry => {
+            Object.keys(synopticMap).forEach(corresp => {
+                const correspKey = String(corresp);
+                if (apparatusMap[correspKey]) {
+                    // This corresp has apparatus data
+                    apparatusMap[correspKey].forEach(entry => {
                         completeEntries.push({
                             ...entry,
-                            synoptic_data: synopticMap[c]
+                            synoptic_data: synopticMap[corresp]
                         });
                     });
                 } else {
-                    // This location has no apparatus data, create placeholder
+                    // This corresp has no apparatus data, create placeholder
+                    const synopticData = synopticMap[corresp];
                     completeEntries.push({
-                        corresp: c,
-                        loc: synopticMap[c]['n'],
+                        corresp: corresp,
+                        loc: synopticData.n || synopticData['n'] || corresp,
                         lemma: null,
                         readings: [],
-                        synoptic_data: synopticMap[c],
+                        synoptic_data: synopticData,
                         is_placeholder: true
                     });
                 }
@@ -848,15 +893,15 @@ class HeiCritApp {
             return apparatusEntries;
         }
         
+        console.log('Complete entries after merge:', completeEntries);
         return completeEntries;
     }
 
     groupEntriesByCorresp(apparatusEntries) {
+        console.log('Grouping entries by corresp:', apparatusEntries);
         const grouped = {};
         
         apparatusEntries.forEach(entry => {
-            console.log(entry);
-            
             const corresp = entry.corresp || '(no corresp)';
             if (!grouped[corresp]) {
                 grouped[corresp] = [];
@@ -864,6 +909,7 @@ class HeiCritApp {
             grouped[corresp].push(entry);
         });
         
+        console.log('Grouped entries by corresp:', grouped);
         return grouped;
     }
 
@@ -1130,6 +1176,38 @@ class HeiCritApp {
         if (this.currentEntryIndex < this.entryKeys.length - 1) {
             this.currentEntryIndex++;
             this.updateApparatusDisplay();
+        }
+    }
+
+    goToLocNumber() {
+        const input = document.getElementById('goto-loc-input');
+        const locNumber = input.value.trim();
+        
+        if (!locNumber) {
+            return;
+        }
+        
+        // Find the entry with the matching loc number
+        const targetIndex = this.entryKeys.findIndex(corresp => {
+            const entries = this.groupedEntries[corresp];
+            if (entries && entries.length > 0) {
+                const loc = entries[0].loc;
+                return loc === locNumber || loc === String(locNumber);
+            }
+            return false;
+        });
+        
+        if (targetIndex !== -1) {
+            this.currentEntryIndex = targetIndex;
+            this.updateApparatusDisplay();
+            // Clear the input after successful navigation
+            input.value = '';
+        } else {
+            // Show feedback for invalid loc number
+            input.style.border = '2px solid red';
+            setTimeout(() => {
+                input.style.border = '';
+            }, 1000);
         }
     }
 }
