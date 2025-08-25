@@ -127,23 +127,28 @@ def open_project():
         
         # Extract apparatus entries, resolve synoptic map, and extract main text from project
         try:
-            synoptic_map = {}
+            # Extract sigla and main text from Leithandschrift witness
+            leiths_path = extract_leithandschrift_path(apparatus_root)
             main_text_content = None
+            main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
+            mapping_for_leiths = sigla_mapping.get(leiths_path.split('/')[-1])
+            if mapping_for_leiths is None:
+                print("Could not find a configuration for the Leithandschrift in pipelines/config.py")
+                return
+            synoptic_prefix = mapping_for_leiths.get('synoptic_pre')
             
+            synoptic_map = {}
             # Find listApp element and extract corresp attribute
             list_app = apparatus_root.find('.//tei:listApp', namespaces=ns)
             if list_app is not None:
                 corresp = list_app.get('corresp')
                 if corresp:
                     # Resolve corresp path within project files
-                    synoptic_map = load_synoptic_map(corresp, apparatus_filepath, project_files)
+                    synoptic_map = load_synoptic_map(corresp, apparatus_filepath, project_files, synoptic_prefix = synoptic_prefix)
                     # Store in global variable
                     global synoptic_map_data
                     synoptic_map_data = synoptic_map
-            # Extract sigla and main text from Leithandschrift witness
-            leiths_path = extract_leithandschrift_path(apparatus_root)
             
-            main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             
             # Find all app elements in the document
             app_elements = apparatus_root.xpath('.//tei:app', namespaces=ns)
@@ -179,6 +184,8 @@ def open_project():
                 
                 apparatus_entries.append(entry)
             
+            
+            
             result = {
                 'success': True,
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
@@ -186,8 +193,8 @@ def open_project():
                 'content_length': len(apparatus_content),
                 'apparatus_count': len(apparatus_entries),
                 'apparatus_entries': apparatus_entries,
-                'synoptic_map': synoptic_map,
-                'synoptic_map_count': len(synoptic_map),
+                'synoptic_map': synoptic_map_data,
+                'synoptic_map_count': len(synoptic_map_data),
                 'main_text': main_text_content
             }
             
@@ -247,10 +254,7 @@ def extract_leithandschrift_path(root: et.Element):
         # Find witness with ana="hc:Leithandschrift"
         leithandschrift_witness = root.find('.//tei:witness[@ana="hc:Leithandschrift"]', namespaces=ns)
         if leithandschrift_witness is None:
-            return None
-        
-        # Get the siglum
-        
+            return None        
         
         # Get ptr target path
         ptr_element = leithandschrift_witness.find('.//tei:ptr', namespaces=ns)

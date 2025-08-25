@@ -533,6 +533,9 @@ class HeiCritApp {
         
         // Store and group entries for pagination
         this.groupedEntries = this.groupEntriesByCorresp(apparatusEntries);
+        // console.log(this.groupedEntries);
+        
+        
         this.entryKeys = Object.keys(this.groupedEntries);
         this.currentEntryIndex = 0;
         
@@ -802,15 +805,15 @@ class HeiCritApp {
     }
 
     mergeApparatusWithSynopticMap(apparatusEntries, synopticMap) {
-        // Create a map of apparatus entries by loc for quick lookup
+        // Create a map of apparatus entries by corresp and loc for quick lookup
         const apparatusMap = {};
         apparatusEntries.forEach(entry => {
-            const loc = entry.loc;
-            if (loc) {
-                if (!apparatusMap[loc]) {
-                    apparatusMap[loc] = [];
+            const corresp = entry.corresp;
+            if (corresp) {
+                if (!apparatusMap[corresp]) {
+                    apparatusMap[corresp] = [];
                 }
-                apparatusMap[loc].push(entry);
+                apparatusMap[corresp].push(entry);
             }
         });
         
@@ -819,22 +822,23 @@ class HeiCritApp {
         
         // If we have synoptic map, use all n values as potential entries
         if (Object.keys(synopticMap).length > 0) {
-            Object.keys(synopticMap).forEach(n => {
-                if (apparatusMap[n]) {
+            Object.keys(synopticMap).forEach(c => {
+                if (apparatusMap[c]) {
                     // This location has apparatus data
-                    apparatusMap[n].forEach(entry => {
+                    apparatusMap[c].forEach(entry => {
                         completeEntries.push({
                             ...entry,
-                            synoptic_data: synopticMap[n]
+                            synoptic_data: synopticMap[c]
                         });
                     });
                 } else {
                     // This location has no apparatus data, create placeholder
                     completeEntries.push({
-                        loc: n,
+                        corresp: c,
+                        loc: synopticMap[c]['n'],
                         lemma: null,
                         readings: [],
-                        synoptic_data: synopticMap[n],
+                        synoptic_data: synopticMap[c],
                         is_placeholder: true
                     });
                 }
@@ -851,6 +855,8 @@ class HeiCritApp {
         const grouped = {};
         
         apparatusEntries.forEach(entry => {
+            console.log(entry);
+            
             const corresp = entry.corresp || '(no corresp)';
             if (!grouped[corresp]) {
                 grouped[corresp] = [];

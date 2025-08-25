@@ -115,7 +115,7 @@ def load_sigla_mapping(project_directory=None, project_files=None):
         return {}
 
 
-def parse_synoptic_map(corresp_path=None, base_dir=None, content=None)-> dict:
+def parse_synoptic_map(corresp_path=None, base_dir=None, content=None, synoptic_prefix=None)-> dict:
     """
     Parse synoptic map file and extract link elements with n and target attributes.
     Can parse from file path or direct content string.
@@ -149,14 +149,19 @@ def parse_synoptic_map(corresp_path=None, base_dir=None, content=None)-> dict:
         for link in link_elements:
             n = link.get('n')
             target = link.get('target', '')
+            target_list = [t.strip() for t in target.split() if t.strip()]
+            corresp_in_leiths = [x for x in target_list if x.startswith(f"{synoptic_prefix}:") ]
+            if len(corresp_in_leiths) < 1:
+                # TODO: Add a better warning
+                print(f"Could not find the corresponding line for the Leithandschrift {synoptic_prefix} for the link in the synoptic map with the number {n} and the target {target}")
+                continue
             
-            if n:
-                # Split target by whitespace and clean up
-                target_list = [t.strip() for t in target.split() if t.strip()]
-                synoptic_map[n] = {
-                    # 'n': n,
-                    'target': target_list
-                }
+            # Split target by whitespace and clean up
+            synoptic_map[corresp_in_leiths[0]] = {
+                'n': n,
+                'target': target_list
+            }
+        
         
         return synoptic_map
         
@@ -165,7 +170,7 @@ def parse_synoptic_map(corresp_path=None, base_dir=None, content=None)-> dict:
         return {}
 
 
-def load_synoptic_map(corresp_path, apparatus_filepath, project_files):
+def load_synoptic_map(corresp_path, apparatus_filepath, project_files, synoptic_prefix):
     """
     Resolve synoptic map from project files using relative path resolution
     """
@@ -174,7 +179,7 @@ def load_synoptic_map(corresp_path, apparatus_filepath, project_files):
         file_data = find_file_in_project(resolved_path, project_files)
         
         if file_data:
-            return parse_synoptic_map(content=file_data['content'])
+            return parse_synoptic_map(content=file_data['content'], synoptic_prefix=synoptic_prefix)
         
         print(f"Synoptic map not found: {resolved_path}")
         return {}
