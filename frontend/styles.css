@@ -357,8 +357,9 @@ main {
     word-wrap: break-word;
     resize: none;
     outline: none;
-    background: rgba(255,0,0,0.2); /* Temporary: red background to see where textarea is */
-    color: #000; /* Temporary: visible text */
+    min-height: 100%;
+    background: transparent;
+    color: transparent;
     caret-color: #000;
     z-index: 2;
     box-sizing: border-box;
@@ -383,6 +384,7 @@ main {
     white-space: pre-wrap !important;
     word-wrap: break-word;
     overflow: auto;
+    min-height: 100%;
     background: transparent;
     pointer-events: none;
     z-index: 1;

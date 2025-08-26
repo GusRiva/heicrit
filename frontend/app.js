@@ -222,9 +222,15 @@ class HeiCritApp {
         // Sync textarea input with syntax highlighting
         textarea.addEventListener('input', debouncedHighlight);
 
-        textarea.addEventListener('scroll', () => {
-            this.syncScroll(textarea, highlightCode);
-        });
+        // Enhanced scroll synchronization
+        const syncScrollNow = () => this.syncScroll(textarea, highlightCode);
+        
+        textarea.addEventListener('scroll', syncScrollNow);
+        
+        // Also sync on various events that might affect scrolling
+        textarea.addEventListener('input', syncScrollNow);
+        textarea.addEventListener('keyup', syncScrollNow);
+        window.addEventListener('resize', syncScrollNow);
 
         textarea.addEventListener('keydown', (e) => {
             // Handle tab key for indentation
@@ -305,15 +311,24 @@ class HeiCritApp {
         
         const content = textarea.value;
         
-        // Only update if content changed
-        if (highlightCode.textContent === content) return;
+        // Skip the content change check for now to ensure proper updates
+        // if (highlightCode.textContent === content) return;
         
-        // Ensure identical whitespace handling
-        highlightCode.textContent = content;
-        // Force preserve empty lines by adding a zero-width space if line is empty
-        if (content.includes('\n\n')) {
-            highlightCode.textContent = content.replace(/\n\n/g, '\n\u200B\n');
+        // Ensure identical whitespace handling including trailing lines
+        let processedContent = content;
+        
+        // Handle empty lines with zero-width spaces
+        if (processedContent.includes('\n\n')) {
+            processedContent = processedContent.replace(/\n\n/g, '\n\u200B\n');
         }
+        
+        // Ensure trailing newline consistency
+        // If textarea ends with newline, make sure highlight also shows that empty line
+        if (processedContent.endsWith('\n')) {
+            processedContent += '\u200B'; // Add zero-width space to preserve trailing line
+        }
+        
+        highlightCode.textContent = processedContent;
         
         // Ensure the language class is set for XML
         if (!highlightCode.classList.contains('language-xml')) {
@@ -330,8 +345,19 @@ class HeiCritApp {
         if (!textarea || !highlightCode) return;
         const highlight = highlightCode.parentElement;
         if (highlight) {
-            highlight.scrollTop = textarea.scrollTop;
-            highlight.scrollLeft = textarea.scrollLeft;
+            // Force immediate scroll sync with bounds checking
+            requestAnimationFrame(() => {
+                // Constrain scroll position to prevent over-scrolling
+                const maxScrollTop = Math.min(
+                    textarea.scrollHeight - textarea.clientHeight,
+                    highlight.scrollHeight - highlight.clientHeight
+                );
+                
+                const scrollTop = Math.min(textarea.scrollTop, maxScrollTop);
+                
+                highlight.scrollTop = scrollTop;
+                highlight.scrollLeft = textarea.scrollLeft;
+            });
         }
     }
 

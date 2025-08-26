@@ -13,18 +13,23 @@ App for creating critical apparatus for scholarly editions. Works as both web ap
 ✅ Interactive location buttons with details panel
 ✅ Paginated apparatus entry navigation
 ⏳ Apparatus processing functions and display (ongoing)
-⏳ Electron wrapper (not started)
+⏳ Electron wrapper (tested)
 
 ## Architecture
 - **Backend**: Flask API with heipy for TEI parsing (runs on localhost:5000)
 - **Frontend**: HTML/CSS/JS web interface with classical apparatus display
-- **Desktop**: Electron wrapper (planned)
+- **Desktop**: Electron wrapper 
 
 ## How to Run
-1. Install dependencies: `pip install -r requirements.txt`
-2. Start backend: `cd backend && python app.py`
-3. Open frontend: Open `frontend/index.html` in browser
-4. Use "Open Project Directory" to load TEI apparatus projects
+1. Activate virtual environment: `source venv/bin/activate`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Start backend: `cd backend && python app.py`
+4. Open frontend: Open `frontend/index.html` in browser
+5. Use "Open Project Directory" to load TEI apparatus projects
+
+## Development Notes
+- Always activate virtual environment first: `source venv/bin/activate`
+- Test backend imports: `python -c "import routes; print('Backend loaded')"`
 
 ## Key Features
 - **Directory Upload**: Upload entire project directories with automatic file detection
