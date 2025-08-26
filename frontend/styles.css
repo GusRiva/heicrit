@@ -1,3 +1,16 @@
+/* Web font optimization */
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-display: swap; /* Improve loading performance */
+}
+
+/* Ensure consistent text rendering across all browsers */
+* {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -21,18 +34,94 @@ body {
 header {
     background: #2c3e50;
     color: white;
-    padding: 1rem;
-    text-align: center;
+    padding: 0;
+    border-bottom: 1px solid #34495e;
 }
 
-header h1 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+/* Navbar styling */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 1rem;
+    min-height: 40px;
 }
 
-header p {
-    color: #ecf0f1;
+.navbar-left {
+    display: flex;
+    gap: 0;
+}
+
+.navbar-title {
     font-size: 0.9rem;
+    font-weight: 500;
+    color: #ecf0f1;
+}
+
+/* Dropdown styling */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-toggle {
+    background: none;
+    border: none;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.dropdown-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 1000;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.dropdown-menu button:hover:not(:disabled) {
+    background: #f8f9fa;
+}
+
+.dropdown-menu button:disabled {
+    color: #999;
+    cursor: not-allowed;
+}
+
+.dropdown-divider {
+    margin: 0.25rem 0;
+    border: none;
+    border-top: 1px solid #eee;
 }
 
 main {
@@ -45,31 +134,159 @@ main {
 
 .toolbar {
     display: flex;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background: white;
-    border-radius: 0.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.4rem 0.5rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    min-height: 36px;
 }
 
-.toolbar button {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    background: white;
+.toolbar-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid transparent;
+    background: none;
     border-radius: 0.25rem;
     cursor: pointer;
-    transition: background-color 0.2s;
+    color: #495057;
+    transition: all 0.2s;
 }
 
-.toolbar button:hover {
-    background: #f8f9fa;
+.toolbar-icon:hover {
+    background: #e9ecef;
+    border-color: #ced4da;
+    color: #212529;
+}
+
+.toolbar-icon:active {
+    background: #dee2e6;
+    transform: translateY(1px);
+}
+
+.toolbar-icon svg {
+    width: 16px;
+    height: 16px;
 }
 
 .workspace {
     flex: 1;
     display: flex;
-    gap: 1rem;
+    flex-direction: column;
     min-height: 0;
+}
+
+/* Tab system */
+.tab-bar {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    min-height: 32px;
+}
+
+.tab-list {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    height: 32px;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    height: 32px;
+    background: #e9ecef;
+    border-right: 1px solid #dee2e6;
+    border-top: 2px solid transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #495057;
+    min-width: 120px;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    background: #dee2e6;
+}
+
+.tab.active {
+    background: white;
+    border-top-color: #007bff;
+    color: #212529;
+}
+
+.tab-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tab-close {
+    margin-left: 0.5rem;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.5;
+    color: #6c757d;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+
+.tab-close:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.tab-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+.empty-workspace {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #6c757d;
+    text-align: center;
+}
+
+.empty-workspace p {
+    margin: 0.5rem 0;
+}
+
+.empty-workspace strong {
+    color: #495057;
 }
 
 .editor-panel {
@@ -98,8 +315,14 @@ main {
 }
 
 /* XML Editor Container */
-#xml-editor-container {
+#xml-editor-container,
+.xml-editor-container,
+[id^="xml-editor-container"] {
     /* Inherits from .view-container */
+    /* Ensure proper stacking context for overlay editor */
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 /* Apparatus Display Container */
@@ -114,45 +337,67 @@ main {
     box-sizing: border-box;
 }
 
-#editor-textarea {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-    padding: 1rem;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 14px;
-    line-height: 1.5;
+[id^="editor-textarea"] {
+    position: absolute !important;
+    top: 0px !important;
+    left: 0px !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border: 0 !important;
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    font-family: monospace !important;
+    font-size: 18px !important;
+    line-height: 1.5 !important;
+    letter-spacing: 0 !important;
+    word-spacing: normal !important;
+    font-variant: normal !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word;
     resize: none;
     outline: none;
-    background: transparent;
-    color: transparent;
-    caret-color: #333;
+    background: rgba(255,0,0,0.2); /* Temporary: red background to see where textarea is */
+    color: #000; /* Temporary: visible text */
+    caret-color: #000;
     z-index: 2;
+    box-sizing: border-box;
 }
 
-#editor-highlight {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 1rem;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 14px;
-    line-height: 1.5;
+[id^="editor-highlight"] {
+    position: absolute !important;
+    top: 0px !important;
+    left: 0px !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border: 0 !important;
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    font-family: monospace !important;
+    font-size: 18px !important;
+    line-height: 1.5 !important;
+    letter-spacing: 0 !important;
+    word-spacing: normal !important;
+    font-variant: normal !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word;
     overflow: auto;
     background: transparent;
     pointer-events: none;
     z-index: 1;
+    box-sizing: border-box;
 }
 
-#editor-code {
-    display: block;
-    white-space: pre-wrap;
+[id^="editor-code"] {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    white-space: pre-wrap !important;
     word-wrap: break-word;
 }
 
@@ -684,5 +929,82 @@ main {
     color: white;
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+}
+
+/* Loading popup overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(2px);
+}
+
+.loading-popup {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    min-width: 300px;
+    max-width: 400px;
+}
+
+.loading-popup h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.loading-popup p {
+    margin: 0 0 1.5rem 0;
+    color: #666;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-steps {
+    text-align: left;
+    margin: 1rem 0;
+}
+
+.loading-step {
+    padding: 0.3rem 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.loading-step.active {
+    color: #007bff;
+    font-weight: 500;
+}
+
+.loading-step.completed {
+    color: #28a745;
+}
+
+.loading-step.completed::before {
+    content: "✓ ";
+    color: #28a745;
+    font-weight: bold;
 }
 

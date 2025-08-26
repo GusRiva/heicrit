@@ -9,37 +9,460 @@ class HeiCritApp {
         this.synopticMapData = null;
         this.mainTextData = null; // Store main text data
         this.projectFiles = new Map(); // Store all project files
-        this.currentEntryIndex = 0; // Track current apparatus entry for pagination
-        this.groupedEntries = {}; // Store grouped entries by location
-        this.entryKeys = []; // Store ordered keys for navigation
+        this.groupedEntries = {}; // Store grouped entries by location (legacy)
+        
+        // Tab management
+        this.tabs = new Map(); // Store tab data: id -> {type, title, content, data}
+        this.activeTabId = null;
+        this.nextTabId = 1;
+        
         this.init();
     }
 
     init() {
-        this.textarea = document.getElementById('editor-textarea');
-        this.highlightCode = document.getElementById('editor-code');
         this.bindEvents();
-        this.setupEditor();
         this.updateStatus('Ready');
     }
 
+    // Tab Management Methods
+    createTab(type, title, content = null, data = null) {
+        const tabId = `tab-${this.nextTabId++}`;
+        const tab = {
+            id: tabId,
+            type: type, // 'project', 'file'
+            title: title,
+            content: content,
+            data: data
+        };
+        
+        this.tabs.set(tabId, tab);
+        this.renderTabs();
+        this.switchToTab(tabId);
+        return tabId;
+    }
+
+    closeTab(tabId) {
+        if (!this.tabs.has(tabId)) return;
+        
+        this.tabs.delete(tabId);
+        
+        // Remove tab panel
+        const panel = document.getElementById(`panel-${tabId}`);
+        if (panel) panel.remove();
+        
+        // If this was the active tab, switch to another
+        if (this.activeTabId === tabId) {
+            const remainingTabs = Array.from(this.tabs.keys());
+            if (remainingTabs.length > 0) {
+                this.switchToTab(remainingTabs[0]);
+            } else {
+                this.activeTabId = null;
+                this.showEmptyWorkspace();
+            }
+        }
+        
+        this.renderTabs();
+    }
+
+    switchToTab(tabId) {
+        if (!this.tabs.has(tabId)) return;
+        
+        // Hide all tab panels
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        
+        // Show target panel
+        let panel = document.getElementById(`panel-${tabId}`);
+        if (!panel) {
+            panel = this.createTabPanel(tabId);
+        }
+        panel.classList.add('active');
+        
+        this.activeTabId = tabId;
+        this.renderTabs();
+        
+        // Update UI based on tab type
+        const tab = this.tabs.get(tabId);
+        this.setupTabContent(tab);
+    }
+
+    createTabPanel(tabId) {
+        const tab = this.tabs.get(tabId);
+        const panel = document.createElement('div');
+        panel.id = `panel-${tabId}`;
+        panel.className = 'tab-panel';
+        
+        if (tab.type === 'project') {
+            panel.innerHTML = `
+                <!-- Apparatus Display Container -->
+                <div class="view-container apparatus-container">
+                    <div class="apparatus-layout">
+                        <div class="text-panel">
+                            <h3>Main Text (Leithandschrift)</h3>
+                            <div id="main-text-content-${tabId}"></div>
+                        </div>
+                        <div class="apparatus-panel">
+                            <div class="apparatus-header-controls">
+                                <h3>Critical Apparatus</h3>
+                                <div class="apparatus-navigation" style="display: none;" id="apparatus-navigation-${tabId}">
+                                    <button class="nav-button apparatus-prev" data-tab="${tabId}">← Previous</button>
+                                    <span class="entry-counter apparatus-counter" id="apparatus-counter-${tabId}">1 / 1</span>
+                                    <button class="nav-button apparatus-next" data-tab="${tabId}">Next →</button>
+                                    
+                                    <div class="goto-controls">
+                                        <span>Go to:</span>
+                                        <input type="text" class="goto-input apparatus-goto-input" data-tab="${tabId}" placeholder="loc">
+                                        <button class="goto-button apparatus-goto-button" data-tab="${tabId}">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="apparatus-content" id="apparatus-content-${tabId}">
+                                <p>No apparatus entries loaded</p>
+                            </div>
+                            
+                            <div class="apparatus-details">
+                                <h4>Location Details</h4>
+                                <div id="apparatus-details-content-${tabId}">
+                                    Click on a location number to see details
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (tab.type === 'file') {
+            panel.innerHTML = `
+                <!-- Recreate original working structure -->
+                <div id="xml-editor-container-${tabId}" style="position: relative; width: 100%; height: 100%;">
+                    <textarea id="editor-textarea-${tabId}" placeholder="Open or create a file to start editing..." spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                    <pre id="editor-highlight-${tabId}"><code id="editor-code-${tabId}" class="language-xml"></code></pre>
+                </div>
+            `;
+        }
+        
+        document.getElementById('tabContent').appendChild(panel);
+        return panel;
+    }
+
+    setupTabContent(tab) {
+        if (tab.type === 'file') {
+            // Setup editor for file tab
+            const textarea = document.getElementById(`editor-textarea-${tab.id}`);
+            const highlightCode = document.getElementById(`editor-code-${tab.id}`);
+            
+            if (textarea && tab.content) {
+                textarea.value = tab.content;
+                // Simple immediate highlighting like before tabs
+                this.updateHighlighting(textarea, highlightCode);
+                this.setupEditorEvents(textarea, highlightCode, tab.id);
+            }
+        } else if (tab.type === 'project') {
+            // Setup project view
+            this.setupProjectTabEvents(tab.id);
+            if (tab.data) {
+                this.loadProjectDataIntoTab(tab.id, tab.data);
+            }
+        }
+    }
+
+    renderTabs() {
+        const tabList = document.getElementById('tabList');
+        tabList.innerHTML = '';
+        
+        for (const [tabId, tab] of this.tabs) {
+            const tabElement = document.createElement('div');
+            tabElement.className = `tab ${this.activeTabId === tabId ? 'active' : ''}`;
+            tabElement.innerHTML = `
+                <span class="tab-title">${tab.title}</span>
+                <button class="tab-close" data-tab-id="${tabId}">×</button>
+            `;
+            
+            tabElement.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('tab-close')) {
+                    this.switchToTab(tabId);
+                }
+            });
+            
+            tabElement.querySelector('.tab-close').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeTab(tabId);
+            });
+            
+            tabList.appendChild(tabElement);
+        }
+    }
+
+    showEmptyWorkspace() {
+        document.getElementById('tabContent').innerHTML = `
+            <div class="empty-workspace">
+                <p>No files or projects open</p>
+                <p>Use <strong>File → Open Project Directory</strong> or <strong>File → Open File</strong> to get started</p>
+            </div>
+        `;
+    }
+
+    setupEditorEvents(textarea, highlightCode, tabId) {
+        if (!textarea || !highlightCode) return;
+        
+        // Prevent duplicate event listeners
+        if (textarea.dataset.eventsSetup) return;
+        textarea.dataset.eventsSetup = 'true';
+
+        // Debounce highlighting updates for better performance
+        let highlightTimer;
+        const debouncedHighlight = () => {
+            clearTimeout(highlightTimer);
+            highlightTimer = setTimeout(() => {
+                this.updateHighlighting(textarea, highlightCode);
+            }, 16); // ~60fps refresh rate
+        };
+
+        // Sync textarea input with syntax highlighting
+        textarea.addEventListener('input', debouncedHighlight);
+
+        textarea.addEventListener('scroll', () => {
+            this.syncScroll(textarea, highlightCode);
+        });
+
+        textarea.addEventListener('keydown', (e) => {
+            // Handle tab key for indentation
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                this.insertTab(textarea, highlightCode);
+            }
+        });
+    }
+
+    setupProjectTabEvents(tabId) {
+        // Setup navigation events for this specific project tab
+        const prevBtn = document.querySelector(`button[data-tab="${tabId}"].apparatus-prev`);
+        const nextBtn = document.querySelector(`button[data-tab="${tabId}"].apparatus-next`);
+        const gotoBtn = document.querySelector(`button[data-tab="${tabId}"].apparatus-goto-button`);
+        const gotoInput = document.querySelector(`input[data-tab="${tabId}"].apparatus-goto-input`);
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => this.showPreviousEntry(tabId));
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => this.showNextEntry(tabId));
+        }
+        if (gotoBtn) {
+            gotoBtn.addEventListener('click', () => this.goToLocNumber(tabId));
+        }
+        if (gotoInput) {
+            gotoInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.goToLocNumber(tabId);
+                }
+            });
+        }
+    }
+
+    loadProjectDataIntoTab(tabId, data) {
+        if (!data) return;
+
+        // Load main text
+        const mainTextContent = document.getElementById(`main-text-content-${tabId}`);
+        if (mainTextContent && data.mainTextData && data.mainTextData.content) {
+            mainTextContent.innerHTML = data.mainTextData.content;
+        }
+
+        // Setup apparatus data for this tab
+        const tab = this.tabs.get(tabId);
+        if (tab) {
+            tab.apparatusData = data.apparatusData;
+            tab.synopticMapData = data.synopticMapData;
+            tab.mainTextData = data.mainTextData;
+            tab.apparatusEntries = data.apparatusEntries;
+            tab.currentEntryIndex = 0;
+            tab.groupedEntries = this.groupEntriesByCorresp(data.apparatusEntries);
+            tab.entryKeys = Object.keys(tab.groupedEntries);
+
+            // Sort entry keys by location
+            tab.entryKeys.sort((a, b) => {
+                const locA = tab.groupedEntries[a][0]?.loc || '';
+                const locB = tab.groupedEntries[b][0]?.loc || '';
+                const numA = parseInt(locA) || 0;
+                const numB = parseInt(locB) || 0;
+                return numA - numB;
+            });
+
+            // Display apparatus entries
+            this.updateApparatusDisplay(tabId);
+
+            // Show navigation if needed
+            const navigation = document.getElementById(`apparatus-navigation-${tabId}`);
+            if (navigation && tab.entryKeys.length > 1) {
+                navigation.style.display = 'flex';
+            }
+        }
+    }
+
+    updateHighlighting(textarea, highlightCode) {
+        if (!textarea || !highlightCode) return;
+        
+        const content = textarea.value;
+        
+        // Only update if content changed
+        if (highlightCode.textContent === content) return;
+        
+        // Ensure identical whitespace handling
+        highlightCode.textContent = content;
+        // Force preserve empty lines by adding a zero-width space if line is empty
+        if (content.includes('\n\n')) {
+            highlightCode.textContent = content.replace(/\n\n/g, '\n\u200B\n');
+        }
+        
+        // Ensure the language class is set for XML
+        if (!highlightCode.classList.contains('language-xml')) {
+            highlightCode.classList.add('language-xml');
+        }
+        
+        // Apply Prism.js highlighting
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightElement(highlightCode);
+        }
+    }
+
+    syncScroll(textarea, highlightCode) {
+        if (!textarea || !highlightCode) return;
+        const highlight = highlightCode.parentElement;
+        if (highlight) {
+            highlight.scrollTop = textarea.scrollTop;
+            highlight.scrollLeft = textarea.scrollLeft;
+        }
+    }
+
+    insertTab(textarea, highlightCode) {
+        if (!textarea) return;
+        
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+        
+        textarea.value = value.substring(0, start) + '    ' + value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + 4;
+        this.updateHighlighting(textarea, highlightCode);
+    }
+
+    updateApparatusDisplay(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.entryKeys || tab.entryKeys.length === 0) {
+            const content = document.getElementById(`apparatus-content-${tabId}`);
+            if (content) {
+                content.innerHTML = '<p>No apparatus entries to display</p>';
+            }
+            return;
+        }
+
+        // Get current entry data
+        const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
+        const currentEntries = tab.groupedEntries[currentCorresp];
+        const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
+
+        // Generate HTML for current entry
+        const htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries);
+        
+        // Set content
+        const content = document.getElementById(`apparatus-content-${tabId}`);
+        if (content) {
+            content.innerHTML = htmlContent;
+        }
+
+        // Update navigation controls
+        this.updateNavigationControls(tabId);
+        
+        // Highlight the corresponding synoptic unit
+        if (currentEntries.length > 0) {
+            // Extract container ID from the corresp field (remove prefix if present)
+            const containerId = currentCorresp.includes(':') ? currentCorresp.split(':')[1] : currentCorresp;
+            this.highlightSynopticUnit(containerId);
+        }
+    }
+
+    updateNavigationControls(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
+        const counter = document.getElementById(`apparatus-counter-${tabId}`);
+        const prevBtn = document.querySelector(`button[data-tab="${tabId}"].apparatus-prev`);
+        const nextBtn = document.querySelector(`button[data-tab="${tabId}"].apparatus-next`);
+        
+        if (counter) {
+            counter.textContent = `${tab.currentEntryIndex + 1} / ${tab.entryKeys.length}`;
+        }
+        
+        if (prevBtn) {
+            prevBtn.disabled = tab.currentEntryIndex === 0;
+        }
+        if (nextBtn) {
+            nextBtn.disabled = tab.currentEntryIndex === tab.entryKeys.length - 1;
+        }
+    }
+
+    showPreviousEntry(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
+        if (tab.currentEntryIndex > 0) {
+            tab.currentEntryIndex--;
+            this.updateApparatusDisplay(tabId);
+        }
+    }
+
+    showNextEntry(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
+        if (tab.currentEntryIndex < tab.entryKeys.length - 1) {
+            tab.currentEntryIndex++;
+            this.updateApparatusDisplay(tabId);
+        }
+    }
+
+    goToLocNumber(tabId) {
+        const input = document.querySelector(`input[data-tab="${tabId}"].apparatus-goto-input`);
+        const tab = this.tabs.get(tabId);
+        
+        if (!input || !tab) return;
+        
+        const locNumber = input.value.trim();
+        if (!locNumber) return;
+
+        // Find the entry with matching loc number
+        const targetIndex = tab.entryKeys.findIndex(corresp => {
+            const entries = tab.groupedEntries[corresp];
+            if (entries && entries.length > 0) {
+                const loc = entries[0].loc;
+                return loc === locNumber || loc === String(locNumber);
+            }
+            return false;
+        });
+
+        if (targetIndex !== -1) {
+            tab.currentEntryIndex = targetIndex;
+            this.updateApparatusDisplay(tabId);
+            input.value = '';
+        } else {
+            // Show feedback for invalid loc number
+            input.style.border = '2px solid red';
+            setTimeout(() => {
+                input.style.border = '';
+            }, 1000);
+        }
+    }
+
     bindEvents() {
+        // Navbar dropdown menu events
         document.getElementById('openFile').addEventListener('click', () => this.openFile());
         document.getElementById('openProjectDirectory').addEventListener('click', () => this.openProjectDirectory());
         document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
         document.getElementById('saveAsFile').addEventListener('click', () => this.saveAsFile());
         
-        // Apparatus navigation events
-        document.getElementById('apparatus-prev').addEventListener('click', () => this.showPreviousEntry());
-        document.getElementById('apparatus-next').addEventListener('click', () => this.showNextEntry());
-        document.getElementById('goto-loc-button').addEventListener('click', () => this.goToLocNumber());
-        
-        // Allow Enter key in the goto input
-        document.getElementById('goto-loc-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.goToLocNumber();
-            }
-        });
+        // Toolbar icon events
+        document.getElementById('openProjectDirectoryIcon').addEventListener('click', () => this.openProjectDirectory());
         
         // Add click handler for any element with data-container-id attribute
         document.addEventListener('click', (e) => {
@@ -52,46 +475,6 @@ class HeiCritApp {
         });
     }
 
-    setupEditor() {
-        // Sync textarea input with syntax highlighting
-        this.textarea.addEventListener('input', () => {
-            this.updateHighlighting();
-        });
-
-        this.textarea.addEventListener('scroll', () => {
-            this.syncScroll();
-        });
-
-        this.textarea.addEventListener('keydown', (e) => {
-            // Handle tab key for indentation
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                this.insertTab();
-            }
-        });
-    }
-
-    updateHighlighting() {
-        const content = this.textarea.value;
-        this.highlightCode.textContent = content;
-        Prism.highlightElement(this.highlightCode);
-    }
-
-    syncScroll() {
-        const highlight = document.getElementById('editor-highlight');
-        highlight.scrollTop = this.textarea.scrollTop;
-        highlight.scrollLeft = this.textarea.scrollLeft;
-    }
-
-    insertTab() {
-        const start = this.textarea.selectionStart;
-        const end = this.textarea.selectionEnd;
-        const value = this.textarea.value;
-        
-        this.textarea.value = value.substring(0, start) + '    ' + value.substring(end);
-        this.textarea.selectionStart = this.textarea.selectionEnd = start + 4;
-        this.updateHighlighting();
-    }
 
     async apiRequest(endpoint, options = {}) {
         try {
@@ -119,12 +502,11 @@ class HeiCritApp {
             this.updateStatus('Loading file...');
             const data = await this.apiRequest(`/file/${encodeURIComponent(filepath)}`);
             
-            // Switch to XML editor view for regular files
-            this.showXmlEditorView();
+            // File content will be displayed in the tab
             
             this.textarea.value = data.content;
-            this.updateHighlighting();
-            document.getElementById('currentFile').textContent = data.filename;
+            // File content highlighting now handled in tab-specific editor
+            // File name is now displayed in the tab title
             this.currentFile = filepath;
             
             this.updateStatus(`Loaded: ${data.filename}`);
@@ -166,13 +548,12 @@ class HeiCritApp {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    // Switch to XML editor view for regular files
-                    this.showXmlEditorView();
+                    // Create a new tab for the file
+                    const tabId = this.createTab('file', file.name, e.target.result, {
+                        filename: file.name,
+                        filepath: file.name
+                    });
                     
-                    this.textarea.value = e.target.result;
-                    this.updateHighlighting();
-                    document.getElementById('currentFile').textContent = file.name;
-                    this.currentFile = file.name;
                     this.updateStatus(`Opened: ${file.name}`);
                 };
                 reader.readAsText(file);
@@ -201,6 +582,9 @@ class HeiCritApp {
 
     async processProjectDirectory(files) {
         try {
+            // Show loading popup
+            this.showLoadingPopup();
+            this.updateLoadingStep('step-reading', 'active');
             this.updateStatus('Processing project directory...');
             
             // Store all files in the project
@@ -227,6 +611,7 @@ class HeiCritApp {
             // Wait for all files to be read
             await Promise.all(fileReadPromises);
             
+            this.updateLoadingStep('step-reading', 'completed');
             this.updateStatus(`Loaded ${this.projectFiles.size} files from project directory`);
             
             // Auto-detect and process apparatus and synoptic map files
@@ -250,20 +635,35 @@ class HeiCritApp {
         
         // Process apparatus file if found
         if (apparatusFiles.length > 0) {
+            this.updateLoadingStep('step-processing', 'active');
             const apparatusFile = apparatusFiles[0]; // Use first apparatus file found
             await this.processApparatusFileFromProject(apparatusFile.content, apparatusFile.path);
+            this.updateLoadingStep('step-processing', 'completed');
         }
         
-        // Process synoptic map if found
+        // Process synoptic map if found  
         if (synopticFiles.length > 0) {
+            this.updateLoadingStep('step-synoptic', 'active');
             const synopticFile = synopticFiles[0]; // Use first synoptic file found
             await this.processSynopticMapFileFromProject(synopticFile.content, synopticFile.path);
+            this.updateLoadingStep('step-synoptic', 'completed');
         }
         
         if (apparatusFiles.length === 0 && synopticFiles.length === 0) {
             this.updateStatus('No apparatus or synoptic map files found in project directory');
             this.showErrorPopup('No Files Found', 'No apparatus files found in apparatus/ directory or synoptic map files found in synopses/ directory.');
+            return;
         }
+        
+        // Complete remaining steps
+        this.updateLoadingStep('step-maintext', 'completed');
+        this.updateLoadingStep('step-display', 'active');
+        
+        // Small delay to show the final step
+        setTimeout(() => {
+            this.updateLoadingStep('step-display', 'completed');
+            this.hideLoadingPopup();
+        }, 500);
     }
 
     async processApparatusFile(content, filename) {
@@ -484,18 +884,29 @@ class HeiCritApp {
         // Merge apparatus entries with synoptic map to show complete list
         const completeEntries = this.mergeApparatusWithSynopticMap(apparatusEntries, synopticMap);
         
-        if (completeEntries.length > 0) {
-            // Display all entries (from synoptic map) with apparatus data where available
-            this.displayApparatusEntries(completeEntries, this.getCurrentDisplayFilename());
+        if (completeEntries.length > 0 || apparatusEntries.length > 0) {
+            // Create or update project tab
+            const projectName = this.getCurrentDisplayFilename();
+            
+            // Close existing project tab if any
+            const existingProjectTab = Array.from(this.tabs.values()).find(tab => tab.type === 'project');
+            if (existingProjectTab) {
+                this.closeTab(existingProjectTab.id);
+            }
+            
+            // Create new project tab
+            const tabId = this.createTab('project', projectName, null, {
+                apparatusEntries: completeEntries.length > 0 ? completeEntries : apparatusEntries,
+                apparatusData: this.apparatusData,
+                synopticMapData: this.synopticMapData,
+                mainTextData: this.mainTextData,
+                filename: projectName
+            });
             
             const apparatusCount = this.apparatusData ? this.apparatusData.count : 0;
             const totalLocations = Object.keys(synopticMap).length;
             const statusMessage = this.getStatusMessage(apparatusCount, totalLocations);
             this.updateStatus(statusMessage);
-        } else if (apparatusEntries.length > 0) {
-            // Only apparatus data, no synoptic map
-            this.displayApparatusEntries(apparatusEntries, this.apparatusData.filename);
-            this.updateStatus(`Loaded ${this.apparatusData.count} apparatus entries from ${this.apparatusData.filename}`);
         } else {
             this.updateStatus('No data loaded');
         }
@@ -523,87 +934,7 @@ class HeiCritApp {
         return 'No data loaded';
     }
 
-    showXmlEditorView() {
-        // Show XML editor, hide apparatus view
-        document.getElementById('xml-editor-container').style.display = 'block';
-        document.getElementById('apparatus-container').style.display = 'none';
-    }
 
-    showApparatusView() {
-        // Show apparatus view, hide XML editor
-        document.getElementById('xml-editor-container').style.display = 'none';
-        document.getElementById('apparatus-container').style.display = 'block';
-    }
-
-    displayApparatusEntries(apparatusEntries, filename) {
-        // Switch to apparatus view
-        this.showApparatusView();
-        
-        // Display main text if available
-        this.displayMainText();
-        
-        // Store and group entries for pagination
-        this.groupedEntries = this.groupEntriesByCorresp(apparatusEntries);
-        
-        
-        this.entryKeys = Object.keys(this.groupedEntries);
-        
-        // Sort entry keys by the 'loc' value in alphanumerical order
-        this.entryKeys.sort((a, b) => {
-            const locA = this.groupedEntries[a][0]?.loc || '';
-            const locB = this.groupedEntries[b][0]?.loc || '';
-            
-            // Convert to numbers for proper numerical sorting
-            const numA = parseInt(locA) || 0;
-            const numB = parseInt(locB) || 0;
-            
-            return numA - numB;
-        });
-        
-        this.currentEntryIndex = 0;
-        
-        // Show navigation if we have multiple entries
-        const navigation = document.querySelector('.apparatus-navigation');
-        if (this.entryKeys.length > 1) {
-            navigation.style.display = 'flex';
-        } else {
-            navigation.style.display = 'none';
-        }
-        
-        // Display the current entry
-        this.updateApparatusDisplay();
-        
-        // Update current file reference
-        this.currentFile = filename;
-        document.getElementById('currentFile').textContent = `${filename} (${apparatusEntries.length} apparatus entries)`;
-    }
-
-    updateApparatusDisplay() {
-        
-        if (this.entryKeys.length === 0) {
-            document.getElementById('apparatus-content').innerHTML = '<p>No apparatus entries to display</p>';
-            return;
-        }
-
-        // Get current entry corresp and data
-        const currentCorresp = this.entryKeys[this.currentEntryIndex];
-        const currentEntries = this.groupedEntries[currentCorresp];
-        const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
-
-
-        // Generate HTML for current entry only
-        let htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries);
-        
-        
-        // Set content in apparatus container
-        document.getElementById('apparatus-content').innerHTML = htmlContent;
-        
-        // Update counter and navigation buttons
-        this.updateNavigationControls();
-        
-        // Highlight the corresponding synoptic unit in main text
-        this.highlightCurrentSynopticUnit();
-    }
 
     generateSingleEntryHTML(loc, entries) {
         
@@ -675,27 +1006,29 @@ class HeiCritApp {
     }
 
     updateNavigationControls() {
-        const counter = document.getElementById('apparatus-counter');
-        const prevBtn = document.getElementById('apparatus-prev');
-        const nextBtn = document.getElementById('apparatus-next');
+        if (!this.activeTabId) return;
+        const tab = this.tabs.get(this.activeTabId);
+        if (!tab) return;
+        
+        const counter = document.getElementById(`apparatus-counter-${this.activeTabId}`);
+        const prevBtn = document.querySelector(`button[data-tab="${this.activeTabId}"].apparatus-prev`);
+        const nextBtn = document.querySelector(`button[data-tab="${this.activeTabId}"].apparatus-next`);
         
         // Update counter
-        counter.textContent = `${this.currentEntryIndex + 1} / ${this.entryKeys.length}`;
+        if (counter && tab.entryKeys) {
+            counter.textContent = `${tab.currentEntryIndex + 1} / ${tab.entryKeys.length}`;
+        }
         
         // Update button states
-        prevBtn.disabled = this.currentEntryIndex === 0;
-        nextBtn.disabled = this.currentEntryIndex === this.entryKeys.length - 1;
-    }
-
-    displayMainText() {
-        const mainTextContent = document.getElementById('main-text-content');
-        
-        if (this.mainTextData && this.mainTextData.content) {
-            mainTextContent.innerHTML = this.mainTextData.content;
-        } else {
-            mainTextContent.innerHTML = '<em class="no-main-text">No main text available</em>';
+        if (prevBtn && tab.entryKeys) {
+            prevBtn.disabled = tab.currentEntryIndex === 0;
+        }
+        if (nextBtn && tab.entryKeys) {
+            nextBtn.disabled = tab.currentEntryIndex === tab.entryKeys.length - 1;
         }
     }
+
+    // Old displayMainText method removed - now handled per tab in loadProjectDataIntoTab
 
     generateApparatusHTML(apparatusEntries, filename) {
         let html = `
@@ -973,7 +1306,7 @@ class HeiCritApp {
                 await writable.close();
                 
                 this.currentFile = fileHandle.name;
-                document.getElementById('currentFile').textContent = fileHandle.name;
+                // File name is now displayed in the tab title
                 this.updateStatus(`File saved as: ${fileHandle.name}`);
             } else {
                 // Fallback to download for browsers without File System Access API
@@ -1009,7 +1342,7 @@ class HeiCritApp {
         
         // Update current file reference if save was successful
         this.currentFile = filename;
-        document.getElementById('currentFile').textContent = filename;
+        // File name is now displayed in the tab title
         this.updateStatus(`File saved as: ${filename}`);
     }
     
@@ -1037,7 +1370,57 @@ class HeiCritApp {
         }
     }
     
+    showLoadingPopup() {
+        // Remove existing loading popup if present
+        const existingPopup = document.querySelector('.loading-overlay');
+        if (existingPopup) {
+            existingPopup.remove();
+        }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div class="loading-popup">
+                <h3>Loading Project</h3>
+                <p>Processing TEI files and building apparatus...</p>
+                <div class="loading-spinner"></div>
+                <div class="loading-steps">
+                    <div class="loading-step" id="step-reading">Reading project files</div>
+                    <div class="loading-step" id="step-processing">Processing apparatus</div>
+                    <div class="loading-step" id="step-synoptic">Loading synoptic map</div>
+                    <div class="loading-step" id="step-maintext">Generating main text</div>
+                    <div class="loading-step" id="step-display">Preparing display</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    updateLoadingStep(stepId, status = 'active') {
+        const step = document.getElementById(stepId);
+        if (step) {
+            // Remove previous status classes
+            step.classList.remove('active', 'completed');
+            // Add new status
+            if (status === 'completed') {
+                step.classList.add('completed');
+            } else if (status === 'active') {
+                step.classList.add('active');
+            }
+        }
+    }
+
+    hideLoadingPopup() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
     showErrorPopup(title, message) {
+        // Hide loading popup if showing
+        this.hideLoadingPopup();
+        
         // Create a simple error modal
         const modal = document.createElement('div');
         modal.style.cssText = `
@@ -1097,7 +1480,8 @@ class HeiCritApp {
     }
 
     async showLocationDetails(loc) {
-        const detailsContent = document.getElementById('apparatus-details-content');
+        if (!this.activeTabId) return;
+        const detailsContent = document.getElementById(`apparatus-details-content-${this.activeTabId}`);
         
         // Find entries for this location
         const apparatusEntries = this.apparatusData ? this.apparatusData.entries : [];
@@ -1149,74 +1533,40 @@ class HeiCritApp {
             message += '<br>No synoptic map data for this location<br>';
         }
         
-        detailsContent.innerHTML = message;
-    }
-
-    showPreviousEntry() {
-        if (this.currentEntryIndex > 0) {
-            this.currentEntryIndex--;
-            this.updateApparatusDisplay();
+        if (detailsContent) {
+            detailsContent.innerHTML = message;
         }
     }
 
-    showNextEntry() {
-        if (this.currentEntryIndex < this.entryKeys.length - 1) {
-            this.currentEntryIndex++;
-            this.updateApparatusDisplay();
-        }
-    }
-
-    goToLocNumber() {
-        const input = document.getElementById('goto-loc-input');
-        const locNumber = input.value.trim();
-        
-        if (!locNumber) {
-            return;
-        }
-        
-        // Find the entry with the matching loc number
-        const targetIndex = this.entryKeys.findIndex(corresp => {
-            const entries = this.groupedEntries[corresp];
-            if (entries && entries.length > 0) {
-                const loc = entries[0].loc;
-                return loc === locNumber || loc === String(locNumber);
-            }
-            return false;
-        });
-        
-        if (targetIndex !== -1) {
-            this.currentEntryIndex = targetIndex;
-            this.updateApparatusDisplay();
-            // Clear the input after successful navigation
-            input.value = '';
-        } else {
-            // Show feedback for invalid loc number
-            input.style.border = '2px solid red';
-            setTimeout(() => {
-                input.style.border = '';
-            }, 1000);
-        }
-    }
+    // Old global navigation methods removed - now handled per tab
 
     goToCorrespEntry(containerId) {
         if (!containerId) {
             return;
         }
         
+        // Find active project tab
+        const activeTab = this.tabs.get(this.activeTabId);
+        if (!activeTab || activeTab.type !== 'project') {
+            // If no active project tab, just highlight the synoptic unit
+            this.highlightSynopticUnit(containerId);
+            return;
+        }
+        
         // Find the entry with the matching corresp (ignoring prefix)
-        // containerId is like "l_5", corresp is like "a:l_5"
-        const targetIndex = this.entryKeys.findIndex(corresp => {
+        // containerId is like "l_5", corresp is like "a:l_5"  
+        const targetIndex = activeTab.entryKeys.findIndex(corresp => {
             // Extract the part after the colon (if present)
             const correspSuffix = corresp.includes(':') ? corresp.split(':')[1] : corresp;
             return correspSuffix === containerId;
         });
         
         if (targetIndex !== -1) {
-            this.currentEntryIndex = targetIndex;
-            this.updateApparatusDisplay();
+            activeTab.currentEntryIndex = targetIndex;
+            this.updateApparatusDisplay(activeTab.id);
             
             // Scroll to the apparatus panel if it's not visible
-            const apparatusPanel = document.getElementById('apparatus-panel');
+            const apparatusPanel = document.querySelector('.apparatus-panel');
             if (apparatusPanel) {
                 apparatusPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
@@ -1226,13 +1576,22 @@ class HeiCritApp {
     }
 
     highlightSynopticUnit(containerId) {
-        // Remove existing highlights
+        // Remove existing highlights in all tabs
         document.querySelectorAll('.synoptic-unit.active').forEach(unit => {
             unit.classList.remove('active');
         });
 
+        // If we have an active tab, look within that tab's content
+        let searchContext = document;
+        if (this.activeTabId) {
+            const tabPanel = document.getElementById(`tab-panel-${this.activeTabId}`);
+            if (tabPanel) {
+                searchContext = tabPanel;
+            }
+        }
+
         // Find and highlight the synoptic unit containing the element with this container ID
-        const targetElement = document.querySelector(`[data-container-id="${containerId}"]`);
+        const targetElement = searchContext.querySelector(`[data-container-id="${containerId}"]`);
         if (targetElement) {
             const synopticUnit = targetElement.closest('.synoptic-unit');
             if (synopticUnit) {
@@ -1243,19 +1602,6 @@ class HeiCritApp {
         }
     }
 
-    highlightCurrentSynopticUnit() {
-        if (this.entryKeys.length === 0) return;
-        
-        // Get the current entry's container ID
-        const currentCorresp = this.entryKeys[this.currentEntryIndex];
-        const currentEntries = this.groupedEntries[currentCorresp];
-        
-        if (currentEntries && currentEntries.length > 0) {
-            // Extract container ID (remove prefix if present)
-            const containerId = currentCorresp.includes(':') ? currentCorresp.split(':')[1] : currentCorresp;
-            this.highlightSynopticUnit(containerId);
-        }
-    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

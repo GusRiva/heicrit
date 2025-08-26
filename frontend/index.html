@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HeiCrit - Critical Apparatus Editor</title>
+    <!-- Web Font for consistent monospace rendering -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
@@ -12,57 +16,54 @@
 <body>
     <div id="app">
         <header>
-            <h1>HeiCrit</h1>
-            <p>Critical Apparatus Editor</p>
+            <nav class="navbar">
+                <div class="navbar-left">
+                    <div class="dropdown">
+                        <button class="dropdown-toggle">File</button>
+                        <div class="dropdown-menu">
+                            <button id="openProjectDirectory">Open Project Directory</button>
+                            <button id="openFile">Open File</button>
+                            <hr class="dropdown-divider">
+                            <button id="saveFile">Save File</button>
+                            <button id="saveAsFile">Save As</button>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle">Edit</button>
+                        <div class="dropdown-menu">
+                            <button disabled>Undo</button>
+                            <button disabled>Redo</button>
+                            <hr class="dropdown-divider">
+                            <button disabled>Find</button>
+                            <button disabled>Replace</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="navbar-title">HeiCrit Critical Apparatus Editor</div>
+            </nav>
         </header>
         
         <main>
             <div class="toolbar">
-                <button id="openFile">Open File</button>
-                <button id="openProjectDirectory">Open Project Directory</button>
-                <button id="saveFile">Save File</button>
-                <button id="saveAsFile">Save As</button>
+                <button id="openProjectDirectoryIcon" class="toolbar-icon" title="Open Project Directory">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M1.5 1A1.5 1.5 0 0 0 0 2.5v11A1.5 1.5 0 0 0 1.5 15h13a1.5 1.5 0 0 0 1.5-1.5V4a1.5 1.5 0 0 0-1.5-1.5H7.5L6 1H1.5z"/>
+                    </svg>
+                </button>
             </div>
             
             <div class="workspace">
+                <div class="tab-bar">
+                    <div class="tab-list" id="tabList">
+                        <!-- Tabs will be added dynamically -->
+                    </div>
+                </div>
+                
                 <div class="editor-panel">
-                    <div class="editor-header">
-                        <span id="currentFile">No file selected</span>
-                    </div>
-                    
-                    <!-- XML Editor Container -->
-                    <div id="xml-editor-container" class="view-container">
-                        <textarea id="editor-textarea" placeholder="Open or create a file to start editing..."></textarea>
-                        <pre id="editor-highlight"><code id="editor-code" class="language-xml"></code></pre>
-                    </div>
-                    
-                    <!-- Apparatus Display Container -->
-                    <div id="apparatus-container" class="view-container" style="display: none;">
-                        <div class="apparatus-layout">
-                            <div id="main-text-panel" class="text-panel">
-                                <h3>Main Text (Leithandschrift)</h3>
-                                <div id="main-text-content"></div>
-                            </div>
-                            <div id="apparatus-panel" class="apparatus-panel">
-                                <div class="apparatus-header-controls">
-                                    <h3>Critical Apparatus</h3>
-                                    <div class="apparatus-navigation" style="display: none;">
-                                        <button id="apparatus-prev" class="nav-button">← Previous</button>
-                                        <span id="apparatus-counter" class="entry-counter">1 / 1</span>
-                                        <button id="apparatus-next" class="nav-button">Next →</button>
-                                        <div class="goto-controls">
-                                            <span>Go to:</span>
-                                            <input type="number" id="goto-loc-input" placeholder="loc" min="1" class="goto-input">
-                                            <button id="goto-loc-button" class="goto-button">Go</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="apparatus-content"></div>
-                                <div id="apparatus-details" class="apparatus-details">
-                                    <h4>Details</h4>
-                                    <div id="apparatus-details-content">Click on a location number to see details</div>
-                                </div>
-                            </div>
+                    <div class="tab-content" id="tabContent">
+                        <div class="empty-workspace">
+                            <p>No files or projects open</p>
+                            <p>Use <strong>File → Open Project Directory</strong> or <strong>File → Open File</strong> to get started</p>
                         </div>
                     </div>
                 </div>
