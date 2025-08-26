@@ -41,9 +41,9 @@ class HeiCritApp {
             }
         });
         
-        // Add click handler for tei-container-n spans in main text
+        // Add click handler for any element with data-container-id attribute
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('tei-container-n')) {
+            if (e.target.hasAttribute('data-container-id')) {
                 const containerId = e.target.getAttribute('data-container-id');
                 if (containerId) {
                     this.goToCorrespEntry(containerId);

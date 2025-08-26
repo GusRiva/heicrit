@@ -34,13 +34,22 @@
         </div>    
     </xsl:template>
 
-    <xsl:template match="tei:l | tei:p">
-        <div class="text-line">
-            <span class="tei-container-n">    
+    <xsl:template match="tei:lb">
+        <span class="tei-lb"/>
+    </xsl:template>
+
+    <xsl:template match="tei:l | tei:p | tei:titlePart">
+        <div class="synoptic-unit">
+            <xsl:apply-templates select="tei:gap[@corresp]">
+                <xsl:with-param name="data-container-id" select="@xml:id"/>
+            </xsl:apply-templates>
+            <div class="tei-container-n">    
                 <xsl:attribute name="data-container-id" select="@xml:id"/>
                 <xsl:value-of select="@n"/>
-            </span>
-            <xsl:apply-templates select="node()"/>
+            </div>            
+            <div class="tei-container-content">
+                <xsl:apply-templates select="node() except tei:gap[@corresp]"/>
+            </div>
         </div>
     </xsl:template>
 
@@ -62,11 +71,16 @@
     </xsl:template>
 
     <xsl:template match="tei:gap">
+        <xsl:param name="data-container-id"/>
         <div>
-        <xsl:attribute name="data-link" select="@corresp"></xsl:attribute>
-        <xsl:text>GAP</xsl:text>
+        <xsl:attribute name="class">tei-gap-synoptic</xsl:attribute>
+        <xsl:attribute name="data-container-id" select="$data-container-id"/>
+        <xsl:attribute name="data-link" select="@corresp"/>
+        <xsl:text>◎</xsl:text>
         </div>
     </xsl:template>
+
+    
     
   
   
