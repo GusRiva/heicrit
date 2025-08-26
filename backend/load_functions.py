@@ -69,7 +69,6 @@ def load_sigla_mapping(project_directory=None, project_files=None):
             # Load from filesystem
             config_path = os.path.join(project_directory, 'pipelines', 'config.py')
             if not os.path.exists(config_path):
-                print(f"Warning: Could not find pipelines/config.py in project directory: {project_directory}")
                 return {}
             
             with open(config_path, 'r', encoding='utf-8') as f:
@@ -84,7 +83,6 @@ def load_sigla_mapping(project_directory=None, project_files=None):
                     break
             
             if config_content is None:
-                print("Warning: Could not find pipelines/config.py in project files")
                 return {}
         
         else:
@@ -96,22 +94,14 @@ def load_sigla_mapping(project_directory=None, project_files=None):
         
         mapping = namespace.get('mapping', None)
         if mapping is None:
-            print(f"Warning: No 'mapping' variable found in {config_path}")
             return {}
         
         if not isinstance(mapping, dict):
-            print(f"Warning: 'mapping' variable is not a dictionary in {config_path}")
             return {}
         
-        if len(mapping) == 0:
-            print(f"Warning: 'mapping' dictionary is empty in {config_path}")
-        
-        print(f"Loaded sigla mapping with {len(mapping)} entries from {config_path}")
         return mapping
         
     except Exception as e:
-        error_source = project_directory if project_directory else "project files"
-        print(f"Error: Failed to load sigla mapping from {error_source}: {str(e)}")
         return {}
 
 
@@ -152,8 +142,6 @@ def parse_synoptic_map(corresp_path=None, base_dir=None, content=None, synoptic_
             target_list = [t.strip() for t in target.split() if t.strip()]
             corresp_in_leiths = [x for x in target_list if x.startswith(f"{synoptic_prefix}:") ]
             if len(corresp_in_leiths) < 1:
-                # TODO: Add a better warning
-                print(f"Could not find the corresponding line for the Leithandschrift {synoptic_prefix} for the link in the synoptic map with the number {n} and the target {target}")
                 continue
             
             # Split target by whitespace and clean up
@@ -166,7 +154,6 @@ def parse_synoptic_map(corresp_path=None, base_dir=None, content=None, synoptic_
         return synoptic_map
         
     except Exception as e:
-        print(f"Error parsing synoptic map: {str(e)}")
         return {}
 
 
@@ -181,10 +168,8 @@ def load_synoptic_map(corresp_path, apparatus_filepath, project_files, synoptic_
         if file_data:
             return parse_synoptic_map(content=file_data['content'], synoptic_prefix=synoptic_prefix)
         
-        print(f"Synoptic map not found: {resolved_path}")
         return {}
         
     except Exception as e:
-        print(f"Error resolving synoptic map: {str(e)}")
         return {}
 

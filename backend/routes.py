@@ -4,9 +4,11 @@ from lxml import etree as et
 
 from heipy.namespaces import ns
 from heipy.heipipe.steps import PythonStep
+# from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
 
 from load_functions import load_sigla_mapping, load_synoptic_map, parse_xml_heieditions
 from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
+
 
 
 api = Blueprint('api', __name__)
@@ -127,15 +129,12 @@ def open_project():
         
         # Extract apparatus entries, resolve synoptic map, and extract main text from project
         try:
-            # Extract sigla and main text from Leithandschrift witness
+            # First load synoptic map, then process main text
             leiths_path = extract_leithandschrift_path(apparatus_root)
-            main_text_content = None
-            main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             mapping_for_leiths = sigla_mapping.get(leiths_path.split('/')[-1])
-            if mapping_for_leiths is None:
-                print("Could not find a configuration for the Leithandschrift in pipelines/config.py")
-                return
-            synoptic_prefix = mapping_for_leiths.get('synoptic_pre')
+            synoptic_prefix = None
+            if mapping_for_leiths is not None:
+                synoptic_prefix = mapping_for_leiths.get('synoptic_pre')
             
             synoptic_map = {}
             # Find listApp element and extract corresp attribute
@@ -148,6 +147,10 @@ def open_project():
                     # Store in global variable
                     global synoptic_map_data
                     synoptic_map_data = synoptic_map
+            
+            # Now process main text with synoptic map available
+            main_text_content = None
+            main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             
             
             # Find all app elements in the document
@@ -268,7 +271,6 @@ def extract_leithandschrift_path(root: et.Element):
         return target_path
         
     except Exception as e:
-        print(f"Error extracting Leithandschrift siglum info: {str(e)}")
         return None
 
 
@@ -283,11 +285,9 @@ def resolve_text_file_from_project(target_path, apparatus_filepath, project_file
         if file_data:
             return parse_main_text_file_content(file_data['content'])
         
-        print(f"Text file not found: {resolved_path}")
         return None
         
     except Exception as e:
-        print(f"Error resolving text file: {str(e)}")
         return None
 
 def parse_main_text_file_content(content):
@@ -304,7 +304,6 @@ def parse_main_text_file_content(content):
         return result
         
     except Exception as e:
-        print(f"Error parsing text file with HeiCritPipe: {str(e)}")
         return None
 
 @api.route('/apparatus/validate', methods=['POST'])

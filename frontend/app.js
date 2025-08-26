@@ -40,6 +40,16 @@ class HeiCritApp {
                 this.goToLocNumber();
             }
         });
+        
+        // Add click handler for tei-container-n spans in main text
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tei-container-n')) {
+                const containerId = e.target.getAttribute('data-container-id');
+                if (containerId) {
+                    this.goToCorrespEntry(containerId);
+                }
+            }
+        });
     }
 
     setupEditor() {
@@ -119,7 +129,7 @@ class HeiCritApp {
             
             this.updateStatus(`Loaded: ${data.filename}`);
         } catch (error) {
-            console.error('Failed to load file:', error);
+            this.updateStatus(`Failed to load file: ${error.message}`, 'error');
         }
     }
 
@@ -143,7 +153,7 @@ class HeiCritApp {
             
             this.updateStatus('File saved successfully');
         } catch (error) {
-            console.error('Failed to save file:', error);
+            this.updateStatus(`Failed to save file: ${error.message}`, 'error');
         }
     }
 
@@ -223,7 +233,6 @@ class HeiCritApp {
             await this.autoProcessProjectFiles();
             
         } catch (error) {
-            console.error('Failed to process project directory:', error);
             this.showErrorPopup('Project Directory Error', `Failed to process project directory: ${error.message}`);
         }
     }
@@ -270,7 +279,6 @@ class HeiCritApp {
             await this.sendApparatusToBackend(content, filename);
             
         } catch (error) {
-            console.error('Failed to process apparatus file:', error);
             this.showErrorPopup('Apparatus File Error', `Failed to process apparatus file: ${error.message}`);
         }
     }
@@ -289,7 +297,6 @@ class HeiCritApp {
             await this.sendApparatusToBackendWithProject(content, filepath);
             
         } catch (error) {
-            console.error('Failed to process apparatus file:', error);
             this.showErrorPopup('Apparatus File Error', `Failed to process apparatus file: ${error.message}`);
         }
     }
@@ -307,7 +314,6 @@ class HeiCritApp {
             await this.sendSynopticMapToBackend(content, filepath);
             
         } catch (error) {
-            console.error('Failed to process synoptic map file:', error);
             this.showErrorPopup('Synoptic Map File Error', `Failed to process synoptic map file: ${error.message}`);
         }
     }
@@ -350,7 +356,6 @@ class HeiCritApp {
             }
 
         } catch (error) {
-            console.error('Backend communication failed:', error);
             this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
         }
     }
@@ -404,7 +409,6 @@ class HeiCritApp {
             }
 
         } catch (error) {
-            console.error('Backend communication failed:', error);
             this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
         }
     }
@@ -428,7 +432,6 @@ class HeiCritApp {
             }
 
         } catch (error) {
-            console.error('Backend communication failed:', error);
             this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
         }
     }
@@ -541,7 +544,6 @@ class HeiCritApp {
         
         // Store and group entries for pagination
         this.groupedEntries = this.groupEntriesByCorresp(apparatusEntries);
-        // console.log(this.groupedEntries);
         
         
         this.entryKeys = Object.keys(this.groupedEntries);
@@ -577,10 +579,6 @@ class HeiCritApp {
     }
 
     updateApparatusDisplay() {
-        console.log('Updating apparatus display...');
-        console.log('Entry keys:', this.entryKeys);
-        console.log('Current entry index:', this.currentEntryIndex);
-        console.log('Grouped entries:', this.groupedEntries);
         
         if (this.entryKeys.length === 0) {
             document.getElementById('apparatus-content').innerHTML = '<p>No apparatus entries to display</p>';
@@ -592,14 +590,10 @@ class HeiCritApp {
         const currentEntries = this.groupedEntries[currentCorresp];
         const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
-        console.log('Current corresp:', currentCorresp);
-        console.log('Current entries:', currentEntries);
-        console.log('Current loc:', currentLoc);
 
         // Generate HTML for current entry only
         let htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries);
         
-        console.log('Generated HTML:', htmlContent);
         
         // Set content in apparatus container
         document.getElementById('apparatus-content').innerHTML = htmlContent;
@@ -609,7 +603,6 @@ class HeiCritApp {
     }
 
     generateSingleEntryHTML(loc, entries) {
-        console.log('Generating HTML for loc:', loc, 'entries:', entries);
         
         const corresp = entries.length > 0 && entries[0].corresp ? entries[0].corresp : '';
         let html = `
@@ -625,7 +618,6 @@ class HeiCritApp {
         
         // Process each entry in this location group
         entries.forEach((entry, index) => {
-            console.log(`Processing entry ${index}:`, entry);
             html += '<div class="classical-subentry';
             if (entry.is_placeholder) {
                 html += ' placeholder-entry';
@@ -840,9 +832,6 @@ class HeiCritApp {
     }
 
     mergeApparatusWithSynopticMap(apparatusEntries, synopticMap) {
-        console.log('Merging apparatus with synoptic map:');
-        console.log('Apparatus entries:', apparatusEntries);
-        console.log('Synoptic map:', synopticMap);
         
         // Create a map of apparatus entries by corresp for quick lookup
         const apparatusMap = {};
@@ -858,7 +847,6 @@ class HeiCritApp {
             }
         });
         
-        console.log('Apparatus map by corresp:', apparatusMap);
         
         // Create complete entries list based on synoptic map
         const completeEntries = [];
@@ -893,12 +881,10 @@ class HeiCritApp {
             return apparatusEntries;
         }
         
-        console.log('Complete entries after merge:', completeEntries);
         return completeEntries;
     }
 
     groupEntriesByCorresp(apparatusEntries) {
-        console.log('Grouping entries by corresp:', apparatusEntries);
         const grouped = {};
         
         apparatusEntries.forEach(entry => {
@@ -909,7 +895,6 @@ class HeiCritApp {
             grouped[corresp].push(entry);
         });
         
-        console.log('Grouped entries by corresp:', grouped);
         return grouped;
     }
 
@@ -993,7 +978,6 @@ class HeiCritApp {
             }
         } catch (error) {
             if (error.name !== 'AbortError') {
-                console.error('Save failed:', error);
                 this.updateStatus('Save failed: ' + error.message, 'error');
             }
         }
@@ -1208,6 +1192,31 @@ class HeiCritApp {
             setTimeout(() => {
                 input.style.border = '';
             }, 1000);
+        }
+    }
+
+    goToCorrespEntry(containerId) {
+        if (!containerId) {
+            return;
+        }
+        
+        // Find the entry with the matching corresp (ignoring prefix)
+        // containerId is like "l_5", corresp is like "a:l_5"
+        const targetIndex = this.entryKeys.findIndex(corresp => {
+            // Extract the part after the colon (if present)
+            const correspSuffix = corresp.includes(':') ? corresp.split(':')[1] : corresp;
+            return correspSuffix === containerId;
+        });
+        
+        if (targetIndex !== -1) {
+            this.currentEntryIndex = targetIndex;
+            this.updateApparatusDisplay();
+            
+            // Scroll to the apparatus panel if it's not visible
+            const apparatusPanel = document.getElementById('apparatus-panel');
+            if (apparatusPanel) {
+                apparatusPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
     }
 }

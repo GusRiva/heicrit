@@ -18,7 +18,7 @@
 
   
   
-    <xsl:template match="tei:TEI | tei:text | tei:front">
+    <xsl:template match="tei:TEI | tei:text | tei:front | tei:lg">
         <div>
             <xsl:attribute name="class">
                 <xsl:text>tei-</xsl:text>
@@ -35,7 +35,7 @@
     </xsl:template>
 
     <xsl:template match="tei:l | tei:p">
-        <div>
+        <div class="text-line">
             <span class="tei-container-n">    
                 <xsl:attribute name="data-container-id" select="@xml:id"/>
                 <xsl:value-of select="@n"/>
@@ -59,9 +59,14 @@
                 </xsl:for-each>
             </xsl:attribute>
         </span>
-        
     </xsl:template>
 
+    <xsl:template match="tei:gap">
+        <div>
+        <xsl:attribute name="data-link" select="@corresp"></xsl:attribute>
+        <xsl:text>GAP</xsl:text>
+        </div>
+    </xsl:template>
     
   
   
