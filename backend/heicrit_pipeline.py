@@ -46,43 +46,43 @@ def append_synoptic_links_funct(root, parameters):
     if not synoptic_map:
         return root
     
-    # Create a mapping from xml:id (without prefix) to synoptic_map entry
-    id_to_entry = {}
-    for key, entry in synoptic_map.items():
+    # Create a dictionary of all elements with xml:id: {xml:id: element}
+    elements_by_id = {}
+    for element in root.xpath('//*[@xml:id]'):
+        xml_id = element.get('{http://www.w3.org/XML/1998/namespace}id')
+        if xml_id:
+            elements_by_id[xml_id] = element
+    
+    # Iterate through synoptic_map and find corresponding elements
+    for key, synoptic_entry in synoptic_map.items():
+        # Extract xml:id (remove prefix if present)
         if ':' in key:
             xml_id = key.split(':', 1)[1]  # Get part after first colon
         else:
             xml_id = key
-        id_to_entry[xml_id] = entry
-    
-    if not id_to_entry:
-        return root
-    
-    # Find elements with xml:id that match our targets
-    for xml_id, synoptic_entry in id_to_entry.items():
-        xpath_query = f'//*[@xml:id="{xml_id}"]'
-        matching_elements = root.xpath(xpath_query)
         
-        # Add gap element as first child to each matching element
-        for element in matching_elements:
-            gap = et.Element(prefix_format('tei', 'gap'))
-            
-            # Add corresp attribute with the target value
-            if 'target' in synoptic_entry:
-                target_value = synoptic_entry['target']
-                if isinstance(target_value, list):
-                    # Join list elements with spaces
-                    corresp_value = ' '.join(target_value)
-                else:
-                    corresp_value = str(target_value)
-                gap.set('corresp', corresp_value)
-            
-            # Insert gap before any text content by handling text and tail
-            if element.text and element.text.strip():
-                # If element has text content, move it after the gap
-                gap.tail = element.text
-                element.text = None
-            
-            element.insert(0, gap)  # Insert as first child
+        # Find element in our dictionary
+        element = elements_by_id.get(xml_id)
+        if element is None:
+            continue
+        gap = et.Element(prefix_format('tei', 'gap'))
+        
+        # Add corresp attribute with the target value
+        if 'target' in synoptic_entry:
+            target_value = synoptic_entry['target']
+            if isinstance(target_value, list):
+                # Join list elements with spaces
+                corresp_value = ' '.join(target_value)
+            else:
+                corresp_value = str(target_value)
+            gap.set('corresp', corresp_value)
+        
+        # Insert gap before any text content by handling text and tail
+        if element.text and element.text.strip():
+            # If element has text content, move it after the gap
+            gap.tail = element.text
+            element.text = None
+        
+        element.insert(0, gap)  # Insert as first child
     
     return root

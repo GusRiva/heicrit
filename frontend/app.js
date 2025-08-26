@@ -600,6 +600,9 @@ class HeiCritApp {
         
         // Update counter and navigation buttons
         this.updateNavigationControls();
+        
+        // Highlight the corresponding synoptic unit in main text
+        this.highlightCurrentSynopticUnit();
     }
 
     generateSingleEntryHTML(loc, entries) {
@@ -1217,6 +1220,40 @@ class HeiCritApp {
             if (apparatusPanel) {
                 apparatusPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
+        } else {
+            this.highlightSynopticUnit(containerId);
+        }
+    }
+
+    highlightSynopticUnit(containerId) {
+        // Remove existing highlights
+        document.querySelectorAll('.synoptic-unit.active').forEach(unit => {
+            unit.classList.remove('active');
+        });
+
+        // Find and highlight the synoptic unit containing the element with this container ID
+        const targetElement = document.querySelector(`[data-container-id="${containerId}"]`);
+        if (targetElement) {
+            const synopticUnit = targetElement.closest('.synoptic-unit');
+            if (synopticUnit) {
+                synopticUnit.classList.add('active');
+                // Scroll to make sure it's visible
+                synopticUnit.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }
+
+    highlightCurrentSynopticUnit() {
+        if (this.entryKeys.length === 0) return;
+        
+        // Get the current entry's container ID
+        const currentCorresp = this.entryKeys[this.currentEntryIndex];
+        const currentEntries = this.groupedEntries[currentCorresp];
+        
+        if (currentEntries && currentEntries.length > 0) {
+            // Extract container ID (remove prefix if present)
+            const containerId = currentCorresp.includes(':') ? currentCorresp.split(':')[1] : currentCorresp;
+            this.highlightSynopticUnit(containerId);
         }
     }
 }
