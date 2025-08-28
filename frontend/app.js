@@ -32,10 +32,19 @@ class HeiCritApp {
             type: type, // 'project', 'file'
             title: title,
             content: content,
-            data: data
+            data: data,
+            listeners: [] // Store event listeners for proper cleanup
         };
         
         this.tabs.set(tabId, tab);
+        
+        // Clear empty workspace when creating first tab
+        const tabContent = document.getElementById('tabContent');
+        const emptyWorkspace = tabContent.querySelector('.empty-workspace');
+        if (emptyWorkspace) {
+            emptyWorkspace.remove();
+        }
+        
         this.renderTabs();
         this.switchToTab(tabId);
         return tabId;
@@ -43,6 +52,15 @@ class HeiCritApp {
 
     closeTab(tabId) {
         if (!this.tabs.has(tabId)) return;
+        
+        const tab = this.tabs.get(tabId);
+        
+        // Clean up stored event listeners to prevent memory leaks
+        if (tab && tab.listeners) {
+            tab.listeners.forEach(listener => {
+                listener.target.removeEventListener(listener.event, listener.handler);
+            });
+        }
         
         this.tabs.delete(tabId);
         
@@ -74,17 +92,21 @@ class HeiCritApp {
         
         // Show target panel
         let panel = document.getElementById(`panel-${tabId}`);
+        let isNewPanel = false;
         if (!panel) {
             panel = this.createTabPanel(tabId);
+            isNewPanel = true;
         }
         panel.classList.add('active');
         
         this.activeTabId = tabId;
         this.renderTabs();
         
-        // Update UI based on tab type
-        const tab = this.tabs.get(tabId);
-        this.setupTabContent(tab);
+        // Only setup tab content when panel is first created
+        if (isNewPanel) {
+            const tab = this.tabs.get(tabId);
+            this.setupTabContent(tab);
+        }
     }
 
     createTabPanel(tabId) {
@@ -154,7 +176,17 @@ class HeiCritApp {
             
             if (textarea && tab.content) {
                 textarea.value = tab.content;
-                // Simple immediate highlighting like before tabs
+                
+                // Check file size and show popup if highlighting is disabled
+                const fileSize = tab.content.length;
+                const SIZE_THRESHOLD = 2000 * 1024; // 2MB threshold (matching updateHighlighting)
+                
+                if (fileSize > SIZE_THRESHOLD) {
+                    // Show popup notification about disabled highlighting
+                    this.showHighlightingDisabledPopup(fileSize);
+                }
+                
+                // Apply highlighting (will be conditional based on file size)
                 this.updateHighlighting(textarea, highlightCode);
                 this.setupEditorEvents(textarea, highlightCode, tab.id);
             }
@@ -210,6 +242,10 @@ class HeiCritApp {
         if (textarea.dataset.eventsSetup) return;
         textarea.dataset.eventsSetup = 'true';
 
+        // Get tab reference to store listeners
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
         // Debounce highlighting updates for better performance
         let highlightTimer;
         const debouncedHighlight = () => {
@@ -219,26 +255,32 @@ class HeiCritApp {
             }, 16); // ~60fps refresh rate
         };
 
-        // Sync textarea input with syntax highlighting
-        textarea.addEventListener('input', debouncedHighlight);
-
         // Enhanced scroll synchronization
         const syncScrollNow = () => this.syncScroll(textarea, highlightCode);
-        
+
+        // Add event listeners
+        textarea.addEventListener('input', debouncedHighlight);
         textarea.addEventListener('scroll', syncScrollNow);
-        
-        // Also sync on various events that might affect scrolling
         textarea.addEventListener('input', syncScrollNow);
         textarea.addEventListener('keyup', syncScrollNow);
-        window.addEventListener('resize', syncScrollNow);
+        
+        // Store window resize listener reference for cleanup
+        const resizeListener = () => syncScrollNow();
+        window.addEventListener('resize', resizeListener);
+        tab.listeners.push({
+            target: window,
+            event: 'resize',
+            handler: resizeListener
+        });
 
-        textarea.addEventListener('keydown', (e) => {
+        const keydownHandler = (e) => {
             // Handle tab key for indentation
             if (e.key === 'Tab') {
                 e.preventDefault();
                 this.insertTab(textarea, highlightCode);
             }
-        });
+        };
+        textarea.addEventListener('keydown', keydownHandler);
     }
 
     setupProjectTabEvents(tabId) {
@@ -310,6 +352,8 @@ class HeiCritApp {
         if (!textarea || !highlightCode) return;
         
         const content = textarea.value;
+        const fileSize = content.length;
+        const SIZE_THRESHOLD = 2000 * 1024; // 2MB threshold for disabling highlighting
         
         // Skip the content change check for now to ensure proper updates
         // if (highlightCode.textContent === content) return;
@@ -330,14 +374,33 @@ class HeiCritApp {
         
         highlightCode.textContent = processedContent;
         
-        // Ensure the language class is set for XML
-        if (!highlightCode.classList.contains('language-xml')) {
-            highlightCode.classList.add('language-xml');
-        }
-        
-        // Apply Prism.js highlighting
-        if (typeof Prism !== 'undefined') {
-            Prism.highlightElement(highlightCode);
+        // Conditionally apply syntax highlighting based on file size
+        if (fileSize > SIZE_THRESHOLD) {
+            // For large files, skip Prism.js highlighting to improve performance
+            // Remove any existing Prism classes to show plain text
+            highlightCode.className = '';
+            // Ensure the highlight element is visible (not hidden by empty workspace)
+            const highlightParent = highlightCode.parentElement;
+            if (highlightParent) {
+                highlightParent.style.display = 'block';
+            }
+        } else {
+            // For smaller files, apply normal syntax highlighting
+            // Ensure the language class is set for XML
+            if (!highlightCode.classList.contains('language-xml')) {
+                highlightCode.classList.add('language-xml');
+            }
+            
+            // Apply Prism.js highlighting
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightElement(highlightCode);
+            }
+            
+            // Ensure the highlight element is visible
+            const highlightParent = highlightCode.parentElement;
+            if (highlightParent) {
+                highlightParent.style.display = 'block';
+            }
         }
     }
 
@@ -572,8 +635,15 @@ class HeiCritApp {
         input.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
+                // Show loading popup
+                this.showFileLoadingPopup();
+                this.updateStatus('Opening file...');
+                
                 const reader = new FileReader();
                 reader.onload = (e) => {
+                    // Hide loading popup
+                    this.hideFileLoadingPopup();
+                    
                     // Create a new tab for the file
                     const tabId = this.createTab('file', file.name, e.target.result, {
                         filename: file.name,
@@ -582,6 +652,13 @@ class HeiCritApp {
                     
                     this.updateStatus(`Opened: ${file.name}`);
                 };
+                
+                reader.onerror = (e) => {
+                    // Hide loading popup on error
+                    this.hideFileLoadingPopup();
+                    this.updateStatus('Failed to open file', 'error');
+                };
+                
                 reader.readAsText(file);
             }
         });
@@ -1441,6 +1518,80 @@ class HeiCritApp {
         if (overlay) {
             overlay.remove();
         }
+    }
+
+    showFileLoadingPopup() {
+        // Remove existing loading popup if present
+        const existingPopup = document.querySelector('.file-loading-overlay');
+        if (existingPopup) {
+            existingPopup.remove();
+        }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'file-loading-overlay';
+        overlay.innerHTML = `
+            <div class="file-loading-popup">
+                <h3>Opening File</h3>
+                <p>Please wait while the file is being loaded...</p>
+                <div class="loading-spinner"></div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    hideFileLoadingPopup() {
+        const overlay = document.querySelector('.file-loading-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    showHighlightingDisabledPopup(fileSize) {
+        // Create info modal for disabled highlighting
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        `;
+        
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        
+        const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(1);
+        
+        dialog.innerHTML = `
+            <h3 style="margin: 0 0 1rem 0; color: #856404;">Large File Detected</h3>
+            <p style="margin-bottom: 1rem;">This file is ${fileSizeMB} MB, which is quite large. Syntax highlighting has been disabled to improve performance and prevent the browser from becoming unresponsive.</p>
+            <p style="margin-bottom: 1rem;">The file will be displayed as plain text, but all editing functionality remains available.</p>
+            <button id="closeInfo" style="background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">OK, Continue</button>
+        `;
+        
+        modal.appendChild(dialog);
+        document.body.appendChild(modal);
+        
+        // Close modal handlers
+        const closeModal = () => document.body.removeChild(modal);
+        document.getElementById('closeInfo').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        
+        // Focus the OK button for better UX
+        document.getElementById('closeInfo').focus();
     }
 
     showErrorPopup(title, message) {
