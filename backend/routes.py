@@ -124,13 +124,18 @@ def get_synoptic_comparison():
         if not data_link:
             return jsonify({'error': 'No data_link provided'}), 400
         
-        # print(f"DEBUG: Received data_link: '{data_link}'")
-        # print(f"DEBUG: Available synoptic loci count: {synoptic_map.get_loci_count()}")
-        # print(f"DEBUG: Available witness count: {synoptic_map.get_wits_count()}")
+        print(f"DEBUG: In get_synoptic_comparison - Received data_link: '{data_link}'")
+        print(f"DEBUG: Available synoptic loci count: {synoptic_map.get_loci_count()}")
+        print(f"DEBUG: Available witness count: {synoptic_map.get_wits_count()}")
         
         # Debug witness information
         all_wit_idents = synoptic_map.get_all_wit_idents()
         print(f"DEBUG: All witness identifiers: {all_wit_idents}")
+        
+        # Check if witnesses still have elements
+        for wit_id in all_wit_idents[:3]:
+            wit_elements = synoptic_map.get_wit_elements(wit_id)
+            print(f"DEBUG: In comparison - Witness '{wit_id}' has {len(wit_elements) if wit_elements else 0} elements")
         
         # Check a few witness elements to understand structure
         for wit_id in all_wit_idents[:3]:  # Check first 3 witnesses
@@ -285,6 +290,11 @@ def open_project():
                 # Load synoptic map from project files using class method
                 try:
                     synoptic_map.load_from_project(corresp, apparatus_filepath, project_files, leiths_prefix=leiths_prefix)
+                    print(f"DEBUG: After loading synoptic map - Loci: {synoptic_map.get_loci_count()}, Witnesses: {synoptic_map.get_wits_count()}")
+                    # Check if witnesses have elements
+                    for wit_id in synoptic_map.get_all_wit_idents()[:3]:
+                        wit_elements = synoptic_map.get_wit_elements(wit_id)
+                        print(f"DEBUG: Witness '{wit_id}' has {len(wit_elements) if wit_elements else 0} elements")
                 except Exception as synoptic_error:
                     print(f"ERROR loading synoptic map: {synoptic_error}")
                     
@@ -293,8 +303,6 @@ def open_project():
             if leiths_path:
                 main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             
-            
-            synoptic_map.get_wits()
             result = {
                 'success': True,
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
@@ -417,6 +425,19 @@ def process_synoptic_map_file():
         
         # Parse content using class method
         try:
+            # Don't override an existing synoptic map that has witness elements loaded from project
+            if synoptic_map.get_wits_count() > 0:
+                # Check if any witnesses have elements (indicating project-based loading)
+                has_elements = False
+                for wit_id in synoptic_map.get_all_wit_idents():
+                    wit_elements = synoptic_map.get_wit_elements(wit_id)
+                    if wit_elements and len(wit_elements) > 0:
+                        has_elements = True
+                        break
+                
+                if has_elements:
+                    return jsonify({'error': 'Synoptic map already loaded from project with witness elements. Cannot override.'}), 400
+            
             success = synoptic_map.parse_content(content)
             if success:
                 synoptic_map.set_file_path(filename)
