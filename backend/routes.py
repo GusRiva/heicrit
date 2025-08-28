@@ -1,14 +1,13 @@
 from flask import Blueprint, request, jsonify
 import os
-from lxml import etree as et
 
-from heipy.namespaces import ns
 from heipy.heipipe.steps import PythonStep
 # from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
 
-from load_functions import load_sigla_mapping, parse_xml_heieditions, resolve_relative_path, find_file_in_project
+from load_functions import load_sigla_mapping, resolve_relative_path, find_file_in_project
 from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
 from synoptic_map import SynopticMap
+from apparatus import Apparatus
 
 
 
@@ -16,7 +15,8 @@ api = Blueprint('api', __name__)
 
 # Global variables
 sigla_mapping = {}
-synoptic_map = SynopticMap() 
+synoptic_map = SynopticMap()
+apparatus = None  # Global apparatus object for frontend modifications 
 
 
 
@@ -33,6 +33,52 @@ def get_sigla_mapping():
         })
     except Exception as e:
         return jsonify({'error': f'Failed to get sigla mapping: {str(e)}'}), 500
+
+@api.route('/apparatus', methods=['GET'])
+def get_apparatus():
+    """
+    Get the current apparatus information
+    """
+    try:
+        if apparatus is None:
+            return jsonify({'error': 'No apparatus loaded'}), 404
+        
+        return jsonify({
+            'success': True,
+            'apparatus': apparatus.to_dict()
+        })
+    except Exception as e:
+        return jsonify({'error': f'Failed to get apparatus: {str(e)}'}), 500
+
+@api.route('/apparatus/entry/<int:entry_id>', methods=['PUT'])
+def update_apparatus_entry(entry_id):
+    """
+    Update a specific apparatus entry
+    """
+    try:
+        if apparatus is None:
+            return jsonify({'error': 'No apparatus loaded'}), 404
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        updated_entry = data.get('entry')
+        if not updated_entry:
+            return jsonify({'error': 'No entry data provided'}), 400
+        
+        success = apparatus.update_entry(entry_id, updated_entry)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Entry {entry_id} updated successfully'
+            })
+        else:
+            return jsonify({'error': f'Entry {entry_id} not found'}), 404
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to update apparatus entry: {str(e)}'}), 500
 
 @api.route('/files', methods=['GET'])
 def list_files():
@@ -94,19 +140,17 @@ def open_project():
     """
     Open and process a project directory with TEI apparatus files
     Expected JSON payload: {
-        'apparatus_content': 'Apparatus XML content as string',
         'apparatus_filepath': 'relative path to apparatus file within project',
         'project_files': {path: {content: str, size: int}, ...}
     }
     """
-    global sigla_mapping, synoptic_map
+    global sigla_mapping, synoptic_map, apparatus
     try:    
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
             
-        apparatus_content = data.get('apparatus_content')
-        apparatus_filepath = data.get('apparatus_filepath', 'apparatus.xml')
+        apparatus_filepath = data.get('apparatus_filepath')
         project_files = data.get('project_files', {})
         
         # Extract project root directory from file paths to load sigla mapping
@@ -120,75 +164,42 @@ def open_project():
                 if project_root:
                     sigla_mapping = load_sigla_mapping(project_files=project_files)
         
-        if not apparatus_content:
-            return jsonify({'error': 'No apparatus content provided'}), 400
+        if not apparatus_filepath:
+            return jsonify({'error': 'No apparatus filepath provided'}), 400
         
-        # Parse XML using HeiEditionsParser
+        # Create Apparatus object and parse the file
         try:
-            apparatus_root = parse_xml_heieditions(apparatus_content)
-        except Exception as xml_error:
-            return jsonify({'error': f'Invalid XML: {str(xml_error)}'}), 400
+            apparatus = Apparatus(apparatus_filepath, project_files)
+        except Exception as apparatus_error:
+            return jsonify({'error': f'Failed to parse apparatus file: {str(apparatus_error)}'}), 400
         
         
         try:
-            leiths_path = extract_leithandschrift_path(apparatus_root)
-            leiths_info = sigla_mapping.get(leiths_path.split('/')[-1])
+            # Get information from the apparatus object
+            leiths_path = apparatus.get_leiths_path()
+            apparatus_entries = apparatus.get_entries()
+            
+            leiths_info = None
+            if leiths_path:
+                leiths_info = sigla_mapping.get(leiths_path.split('/')[-1])
 
             leiths_prefix = None
             if leiths_info is not None:
                 leiths_prefix = leiths_info.get('synoptic_pre')
             
-            # Find listApp element and extract corresp attribute
-            list_app = apparatus_root.find('.//tei:listApp', namespaces=ns)
-            if list_app is not None:
-                corresp = list_app.get('corresp')
-                if corresp:
-                    # Load synoptic map from project files using class method
-                    try:
-                        synoptic_map.load_from_project(corresp, apparatus_filepath, project_files, leiths_prefix=leiths_prefix)
-                    except Exception as synoptic_error:
-                        print(f"ERROR loading synoptic map: {synoptic_error}")
-                        import traceback
-                        traceback.print_exc()
+            # Get corresp attribute for synoptic map loading
+            corresp = apparatus.get_corresp_attribute()
+            if corresp:
+                # Load synoptic map from project files using class method
+                try:
+                    synoptic_map.load_from_project(corresp, apparatus_filepath, project_files, leiths_prefix=leiths_prefix)
+                except Exception as synoptic_error:
+                    print(f"ERROR loading synoptic map: {synoptic_error}")
                     
             # Now process main text with synoptic map available
             main_text_content = None
-            main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
-            
-            
-            # Find all app elements in the document
-            app_elements = apparatus_root.xpath('.//tei:app', namespaces=ns)
-            
-            apparatus_entries = []
-            
-            for i, app in enumerate(app_elements):
-                entry = {
-                    'id': i + 1,
-                    'loc': app.get('loc'),
-                    'corresp': app.get('corresp'),
-                    'lemma': None,
-                    'readings': []
-                }
-                
-                # Extract lemma
-                lem_element = app.find('.//tei:lem', namespaces=ns)
-                if lem_element is not None:
-                    entry['lemma'] = {
-                        'text': ''.join(lem_element.itertext()).strip(),
-                        'attributes': dict(lem_element.attrib)
-                    }
-                
-                # Extract readings
-                rdg_elements = app.xpath('.//tei:rdg', namespaces=ns)
-                for rdg in rdg_elements:
-                    reading = {
-                        'text': ''.join(rdg.itertext()).strip(),
-                        'wit': rdg.get('wit', ''),
-                        'attributes': dict(rdg.attrib)
-                    }
-                    entry['readings'].append(reading)
-                
-                apparatus_entries.append(entry)
+            if leiths_path:
+                main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             
             
             
@@ -197,7 +208,6 @@ def open_project():
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
                 'leiths-info': leiths_info,
                 'apparatus_filepath': apparatus_filepath,
-                'content_length': len(apparatus_content),
                 'apparatus_count': len(apparatus_entries),
                 'apparatus_entries': apparatus_entries,
                 'synoptic_map': synoptic_map.get_loci(),
@@ -222,28 +232,6 @@ def open_project():
         traceback.print_exc()
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
 
-
-def extract_leithandschrift_path(root: et.Element):
-    """Extract the siglum info for the leiths."""
-    try:
-        # Find witness with ana="hc:Leithandschrift"
-        leithandschrift_witness = root.find('.//tei:witness[@ana="hc:Leithandschrift"]', namespaces=ns)
-        if leithandschrift_witness is None:
-            return None        
-        
-        # Get ptr target path
-        ptr_element = leithandschrift_witness.find('.//tei:ptr', namespaces=ns)
-        if ptr_element is None:
-            return None
-        
-        target_path = ptr_element.get('target')
-        if not target_path:
-            return None
-        
-        return target_path
-        
-    except Exception as e:
-        return None
 
 
 def resolve_text_file_from_project(target_path, apparatus_filepath, project_files):
