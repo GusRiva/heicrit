@@ -496,8 +496,8 @@ class HeiCritApp {
         this.updateNavigationControls(tabId);
         
         // Show location details for current entry
-        if (currentLoc) {
-            this.showLocationDetailsForTab(tabId, currentLoc);
+        if (currentCorresp) {
+            this.showLocationDetailsForTab(tabId, currentCorresp);
         }
         
         // Highlight the corresponding synoptic unit
@@ -1703,57 +1703,50 @@ class HeiCritApp {
         }
     }
 
-    async showLocationDetailsForTab(tabId, loc) {
+    async showLocationDetailsForTab(tabId, corresp) {
         const detailsContent = document.getElementById(`apparatus-details-content-${tabId}`);
         
-        // Find entries for this location
-        const apparatusEntries = this.apparatusData ? this.apparatusData.entries : [];
+        // Find the synoptic map data for this corresp to get data-link
         const synopticMap = this.synopticMapData ? this.synopticMapData.synoptic_map : {};
+        const synopticData = synopticMap[corresp];
         
-        // Get apparatus entry for this location
-        const locationEntries = apparatusEntries.filter(entry => entry.loc === loc);
+        console.log('DEBUG: corresp =', corresp);
+        console.log('DEBUG: synopticData for corresp =', synopticData);
         
-        // Get synoptic map data for this location
-        const synopticData = synopticMap[loc];
+        let message = `<strong>Location: ${this.escapeHtml(corresp)}</strong><br><br>`;
         
-        let message = `<strong>Location: ${this.escapeHtml(loc)}</strong><br><br>`;
-        
-        // Fetch and display sigla mapping
-        try {
-            const siglaResponse = await this.apiRequest('/sigla-mapping');
-            if (siglaResponse.success && siglaResponse.sigla_mapping) {
-                message += `<strong>Sigla Mapping (${siglaResponse.count} entries):</strong><br>`;
-                const mapping = siglaResponse.sigla_mapping;
-                for (const [filename, data] of Object.entries(mapping)) {
-                    message += `${this.escapeHtml(filename)}: ${this.escapeHtml(data.siglum)} (${this.escapeHtml(data.synoptic_pre)})<br>`;
+        if (synopticData && synopticData.target) {
+            // Use the target data as data-link for synoptic comparison
+            const dataLink = synopticData.target.join(' ');
+            
+            console.log('DEBUG: Using dataLink =', dataLink);
+            
+            try {
+                const comparisonResponse = await this.apiRequest('/synoptic/compare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        data_link: dataLink
+                    })
+                });
+                
+                if (comparisonResponse.success && comparisonResponse.comparison_texts) {
+                    message += `<strong>Synoptic Comparison:</strong><br>`;
+                    comparisonResponse.comparison_texts.forEach((text, index) => {
+                        const witness = synopticData.target[index] || `Witness ${index + 1}`;
+                        message += `<strong>${this.escapeHtml(witness)}:</strong> ${this.escapeHtml(text)}<br>`;
+                    });
+                } else {
+                    message += '<strong>Synoptic Comparison:</strong> Error loading comparison data<br>';
                 }
-                message += '<br>';
-            } else {
-                message += '<strong>Sigla Mapping:</strong> Not loaded or empty<br><br>';
+            } catch (error) {
+                console.error('Error loading synoptic comparison:', error);
+                message += '<strong>Synoptic Comparison:</strong> Error loading comparison data<br>';
             }
-        } catch (error) {
-            message += '<strong>Sigla Mapping:</strong> Error loading<br><br>';
-        }
-        
-        if (locationEntries.length > 0) {
-            message += `<strong>Apparatus entries:</strong> ${locationEntries.length}<br>`;
-            locationEntries.forEach((entry, index) => {
-                if (entry.lemma) {
-                    message += `Entry ${index + 1}: "${this.escapeHtml(entry.lemma.text)}"<br>`;
-                }
-                if (entry.readings && entry.readings.length > 0) {
-                    message += `Readings: ${entry.readings.length}<br>`;
-                }
-            });
         } else {
-            message += 'No apparatus entries for this location<br>';
-        }
-        
-        if (synopticData) {
-            message += `<br><strong>Synoptic map data:</strong><br>`;
-            message += `Targets: ${synopticData.target ? synopticData.target.join(', ') : 'none'}<br>`;
-        } else {
-            message += '<br>No synoptic map data for this location<br>';
+            message += '<strong>Synoptic Comparison:</strong> No synoptic data available for this location<br>';
         }
         
         if (detailsContent) {

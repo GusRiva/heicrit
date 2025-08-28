@@ -79,7 +79,7 @@ class Apparatus:
             Path to the leithandschrift file or None if not found
         """
         try:
-            if not self._root:
+            if self._root is None:
                 return None
                 
             # Find witness with ana="hc:Leithandschrift"
@@ -107,7 +107,7 @@ class Apparatus:
         Extract apparatus entries from the parsed XML.
         """
         try:
-            if not self._root:
+            if self._root is None:
                 return
                 
             # Find all app elements in the document
@@ -229,7 +229,7 @@ class Apparatus:
             The corresp attribute value or None if not found
         """
         try:
-            if not self._root:
+            if self._root is None:
                 return None
                 
             list_app = self._root.find('.//tei:listApp', namespaces=ns)

@@ -349,7 +349,6 @@ class SynopticMap:
             
             # Find all elements with xml:id attributes
             elements_with_id = root.xpath('//*[@xml:id][not(name()="w")]', namespaces=ns)
-            
             elements_map = {}
             for element in elements_with_id:
                 xml_id = element.get('{http://www.w3.org/XML/1998/namespace}id')

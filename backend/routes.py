@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 import os
+from lxml import etree as et
 
 from heipy.heipipe.steps import PythonStep
 # from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
@@ -17,6 +18,34 @@ api = Blueprint('api', __name__)
 sigla_mapping = {}
 synoptic_map = SynopticMap()
 apparatus = None  # Global apparatus object for frontend modifications 
+
+
+def process_synoptic_unit_for_comparison(element) -> str:
+    """
+    Process an XML element and return a string representation for comparison.
+    
+    Args:
+        element: The lxml etree Element to process
+        
+    Returns:
+        String representation of the element content
+    """
+    if element is None:
+        return "[Element not found]"
+    
+    try:
+        # Get the text content of the element, stripping whitespace
+        text_content = ''.join(element.itertext()).strip()
+        
+        # If no text content, try to get element info
+        if not text_content:
+            tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+            return f"[{tag_name} element - no text content]"
+        
+        return text_content
+        
+    except Exception as e:
+        return f"[Error processing element: {str(e)}]"
 
 
 
@@ -79,6 +108,69 @@ def update_apparatus_entry(entry_id):
         
     except Exception as e:
         return jsonify({'error': f'Failed to update apparatus entry: {str(e)}'}), 500
+
+@api.route('/synoptic/compare', methods=['POST'])
+def get_synoptic_comparison():
+    """
+    Get synoptic comparison data for location details replacement
+    Expected JSON payload: { 'data_link': 'a:l_1 b:l_1' }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        data_link = data.get('data_link')
+        if not data_link:
+            return jsonify({'error': 'No data_link provided'}), 400
+        
+        # print(f"DEBUG: Received data_link: '{data_link}'")
+        # print(f"DEBUG: Available synoptic loci count: {synoptic_map.get_loci_count()}")
+        # print(f"DEBUG: Available witness count: {synoptic_map.get_wits_count()}")
+        
+        # Debug witness information
+        all_wit_idents = synoptic_map.get_all_wit_idents()
+        print(f"DEBUG: All witness identifiers: {all_wit_idents}")
+        
+        # Check a few witness elements to understand structure
+        for wit_id in all_wit_idents[:3]:  # Check first 3 witnesses
+            wit_info = synoptic_map.get_wit_info(wit_id)
+            # print(f"DEBUG: Witness '{wit_id}' info: {wit_info}")
+            wit_elements = synoptic_map.get_wit_elements(wit_id)
+            if wit_elements:
+                element_keys = list(wit_elements.keys())[:5]  # Show first 5 element keys
+        
+        comparison_texts = []
+        
+        # Parse data_link and get text representations
+        tokens = data_link.split()
+        # print(f"DEBUG: Tokens: {tokens}")
+        for token in tokens:
+            if ':' in token:
+                prefix, element_id = token.split(':', 1)
+                # print(f"DEBUG: Processing token '{token}' - prefix: '{prefix}', element_id: '{element_id}'")
+                
+                wit_elements = synoptic_map.get_wit_elements(prefix)
+                # print(f"DEBUG: wit_elements for '{prefix}': {wit_elements is not None}")
+                if wit_elements and len(wit_elements) > 0:
+                    # print(f"DEBUG: Number of elements for '{prefix}': {len(wit_elements)}")
+                    element = wit_elements.get(element_id)
+                    # print(f"DEBUG: Found element '{element_id}': {element is not None}")
+                    text_repr = process_synoptic_unit_for_comparison(element)
+                    # print(f"DEBUG: Text representation: '{text_repr}'")
+                else:
+                    text_repr = f"[Witness '{prefix}' not found]"
+                    # print(f"DEBUG: Witness not found, using: '{text_repr}'")
+                
+                comparison_texts.append(text_repr)
+        
+        return jsonify({
+            'success': True,
+            'comparison_texts': comparison_texts
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get synoptic comparison: {str(e)}'}), 500
 
 @api.route('/files', methods=['GET'])
 def list_files():
@@ -202,7 +294,7 @@ def open_project():
                 main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             
             
-            
+            synoptic_map.get_wits()
             result = {
                 'success': True,
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
@@ -216,6 +308,8 @@ def open_project():
                 'synoptic_wits_count': synoptic_map.get_wits_count(),
                 'main_text': main_text_content
             }
+            
+            
             
             
         except Exception as processing_error:
