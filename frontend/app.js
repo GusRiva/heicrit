@@ -784,8 +784,8 @@ class HeiCritApp {
         // Process synoptic map if found  
         if (synopticFiles.length > 0) {
             this.updateLoadingStep('step-synoptic', 'active');
-            const synopticFile = synopticFiles[0]; // Use first synoptic file found
-            await this.processSynopticMapFileFromProject(synopticFile.content, synopticFile.path);
+            // Synoptic map processing is already handled by /api/project/open endpoint
+            // No need for separate processing here
             this.updateLoadingStep('step-synoptic', 'completed');
         }
         
