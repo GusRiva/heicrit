@@ -8,6 +8,7 @@ class HeiCritApp {
         this.apparatusData = null;
         this.synopticMapData = null;
         this.mainTextData = null; // Store main text data
+        this.leithsInfo = null; // Store leiths-info with siglum
         this.projectFiles = new Map(); // Store all project files
         this.groupedEntries = {}; // Store grouped entries by location (legacy)
         
@@ -339,6 +340,9 @@ class HeiCritApp {
 
             // Display apparatus entries
             this.updateApparatusDisplay(tabId);
+            
+            // Mark gap symbols that have apparatus content
+            this.markGapSymbolsWithContent(tab);
 
             // Show navigation if needed
             const navigation = document.getElementById(`apparatus-navigation-${tabId}`);
@@ -346,6 +350,34 @@ class HeiCritApp {
                 navigation.style.display = 'flex';
             }
         }
+    }
+
+    markGapSymbolsWithContent(tab) {
+        if (!tab || !tab.apparatusEntries) return;
+        
+        // Get all apparatus entries that are NOT placeholders
+        const entriesWithContent = tab.apparatusEntries.filter(entry => !entry.is_placeholder);
+        
+        // Create a set of container IDs that have apparatus content
+        const containerIdsWithContent = new Set();
+        entriesWithContent.forEach(entry => {
+            if (entry.corresp) {
+                // Extract container ID from corresp (remove prefix if present)
+                const containerId = entry.corresp.includes(':') ? entry.corresp.split(':')[1] : entry.corresp;
+                containerIdsWithContent.add(containerId);
+            }
+        });
+        
+        // Find all .tei-gap-synoptic elements in the main text
+        const gapElements = document.querySelectorAll('.tei-gap-synoptic[data-container-id]');
+        gapElements.forEach(gapElement => {
+            const containerId = gapElement.getAttribute('data-container-id');
+            if (containerId && containerIdsWithContent.has(containerId)) {
+                gapElement.classList.add('has-content');
+            } else {
+                gapElement.classList.remove('has-content');
+            }
+        });
     }
 
     updateHighlighting(textarea, highlightCode) {
@@ -462,6 +494,11 @@ class HeiCritApp {
 
         // Update navigation controls
         this.updateNavigationControls(tabId);
+        
+        // Show location details for current entry
+        if (currentLoc) {
+            this.showLocationDetailsForTab(tabId, currentLoc);
+        }
         
         // Highlight the corresponding synoptic unit
         if (currentEntries.length > 0) {
@@ -947,6 +984,11 @@ class HeiCritApp {
             count: result.apparatus_count || 0
         };
         
+        // Store leiths-info if available (contains siglum for main text)
+        if (result['leiths-info']) {
+            this.leithsInfo = result['leiths-info'];
+        }
+        
         // If this result also contains synoptic map data (from project processing), store it
         if (result.synoptic_map && Object.keys(result.synoptic_map).length > 0) {
             this.synopticMapData = {
@@ -1016,6 +1058,12 @@ class HeiCritApp {
     }
 
     getCurrentDisplayFilename() {
+        // If we have leiths-info with siglum, use "App: X" format
+        if (this.leithsInfo && this.leithsInfo.siglum) {
+            return `App: ${this.leithsInfo.siglum}`;
+        }
+        
+        // Fallback to original filename display
         if (this.apparatusData && this.synopticMapData) {
             return `${this.apparatusData.filename} + ${this.synopticMapData.filename}`;
         } else if (this.apparatusData) {
@@ -1047,11 +1095,10 @@ class HeiCritApp {
             <div class="classical-apparatus">
                 <div class="classical-entry-group">`;
 
-        // Show location as clickable button
-        html += `<button class="apparatus-loc-button" 
+        // Show location as bold span
+        html += `<span class="apparatus-loc-span" 
                                 data-loc="${this.escapeHtml(loc)}" 
-                                data-corresp="${this.escapeHtml(corresp)}" 
-                                onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
+                                data-corresp="${this.escapeHtml(corresp)}">${this.escapeHtml(loc)}</span>`;
         
         // Process each entry in this location group
         entries.forEach((entry, index) => {
@@ -1210,8 +1257,8 @@ class HeiCritApp {
             
             html += '<div class="classical-entry-group">';
             
-            // Show location as clickable button
-            html += `<button class="apparatus-loc-button" data-loc="${this.escapeHtml(loc)}" data-corresp="${this.escapeHtml(corresp)}" onclick="window.heiCritApp.showLocationDetails('${this.escapeHtml(loc)}')">${this.escapeHtml(loc)}</button>`;
+            // Show location as bold span
+            html += `<span class="apparatus-loc-span" data-loc="${this.escapeHtml(loc)}" data-corresp="${this.escapeHtml(corresp)}">${this.escapeHtml(loc)}</span>`;
             
             // Process each entry in this location group
             entries.forEach((entry) => {
@@ -1656,9 +1703,8 @@ class HeiCritApp {
         }
     }
 
-    async showLocationDetails(loc) {
-        if (!this.activeTabId) return;
-        const detailsContent = document.getElementById(`apparatus-details-content-${this.activeTabId}`);
+    async showLocationDetailsForTab(tabId, loc) {
+        const detailsContent = document.getElementById(`apparatus-details-content-${tabId}`);
         
         // Find entries for this location
         const apparatusEntries = this.apparatusData ? this.apparatusData.entries : [];
@@ -1713,6 +1759,11 @@ class HeiCritApp {
         if (detailsContent) {
             detailsContent.innerHTML = message;
         }
+    }
+
+    async showLocationDetails(loc) {
+        if (!this.activeTabId) return;
+        await this.showLocationDetailsForTab(this.activeTabId, loc);
     }
 
     // Old global navigation methods removed - now handled per tab

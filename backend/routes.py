@@ -6,8 +6,9 @@ from heipy.namespaces import ns
 from heipy.heipipe.steps import PythonStep
 # from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
 
-from load_functions import load_sigla_mapping, load_synoptic_map, parse_xml_heieditions
+from load_functions import load_sigla_mapping, parse_xml_heieditions, resolve_relative_path, find_file_in_project
 from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
+from synoptic_map import SynopticMap
 
 
 
@@ -15,7 +16,8 @@ api = Blueprint('api', __name__)
 
 # Global variables
 sigla_mapping = {}
-synoptic_map_data = {}
+synoptic_map = SynopticMap() 
+
 
 
 @api.route('/sigla-mapping', methods=['GET'])
@@ -97,7 +99,7 @@ def open_project():
         'project_files': {path: {content: str, size: int}, ...}
     }
     """
-    global sigla_mapping 
+    global sigla_mapping, synoptic_map
     try:    
         data = request.get_json()
         if not data:
@@ -127,27 +129,28 @@ def open_project():
         except Exception as xml_error:
             return jsonify({'error': f'Invalid XML: {str(xml_error)}'}), 400
         
-        # Extract apparatus entries, resolve synoptic map, and extract main text from project
+        
         try:
-            # First load synoptic map, then process main text
             leiths_path = extract_leithandschrift_path(apparatus_root)
-            mapping_for_leiths = sigla_mapping.get(leiths_path.split('/')[-1])
-            synoptic_prefix = None
-            if mapping_for_leiths is not None:
-                synoptic_prefix = mapping_for_leiths.get('synoptic_pre')
+            leiths_info = sigla_mapping.get(leiths_path.split('/')[-1])
+
+            leiths_prefix = None
+            if leiths_info is not None:
+                leiths_prefix = leiths_info.get('synoptic_pre')
             
-            synoptic_map = {}
             # Find listApp element and extract corresp attribute
             list_app = apparatus_root.find('.//tei:listApp', namespaces=ns)
             if list_app is not None:
                 corresp = list_app.get('corresp')
                 if corresp:
-                    # Resolve corresp path within project files
-                    synoptic_map = load_synoptic_map(corresp, apparatus_filepath, project_files, synoptic_prefix = synoptic_prefix)
-                    # Store in global variable
-                    global synoptic_map_data
-                    synoptic_map_data = synoptic_map
-            
+                    # Load synoptic map from project files using class method
+                    try:
+                        synoptic_map.load_from_project(corresp, apparatus_filepath, project_files, leiths_prefix=leiths_prefix)
+                    except Exception as synoptic_error:
+                        print(f"ERROR loading synoptic map: {synoptic_error}")
+                        import traceback
+                        traceback.print_exc()
+                    
             # Now process main text with synoptic map available
             main_text_content = None
             main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
@@ -192,63 +195,32 @@ def open_project():
             result = {
                 'success': True,
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
+                'leiths-info': leiths_info,
                 'apparatus_filepath': apparatus_filepath,
                 'content_length': len(apparatus_content),
                 'apparatus_count': len(apparatus_entries),
                 'apparatus_entries': apparatus_entries,
-                'synoptic_map': synoptic_map_data,
-                'synoptic_map_count': len(synoptic_map_data),
+                'synoptic_map': synoptic_map.get_loci(),
+                'synoptic_map_count': synoptic_map.get_loci_count(),
+                'synoptic_wits': synoptic_map.get_wits(),
+                'synoptic_wits_count': synoptic_map.get_wits_count(),
                 'main_text': main_text_content
             }
             
+            
         except Exception as processing_error:
+            print(f"ERROR in open_project processing: {processing_error}")
+            import traceback
+            traceback.print_exc()
             return jsonify({'error': f'Failed to extract apparatus entries: {str(processing_error)}'}), 500
         
         return jsonify(result)
         
     except Exception as e:
+        print(f"ERROR in open_project outer catch: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
-
-
-def resolve_relative_path(target_path, base_filepath):
-    """
-    Resolve a relative path based on a base file path
-    """
-    # Get the directory of the base file
-    base_dir = '/'.join(base_filepath.split('/')[:-1])
-    
-    if target_path.startswith('../'):
-        # Handle relative paths like ../synopses/synoptic_map.xml
-        path_parts = base_dir.split('/') if base_dir else []
-        target_parts = target_path.split('/')
-        
-        for part in target_parts:
-            if part == '..':
-                if path_parts:
-                    path_parts.pop()
-            elif part and part != '.':
-                path_parts.append(part)
-        
-        return '/'.join(path_parts)
-    else:
-        # Handle absolute or simple relative paths
-        return target_path
-
-def find_file_in_project(resolved_path, project_files):
-    """
-    Find a file in project files using exact and fuzzy matching
-    """
-    # First try exact match
-    for project_path, file_data in project_files.items():
-        if project_path.endswith(resolved_path) or project_path == resolved_path:
-            return file_data
-    
-    # If exact match not found, try fuzzy matching
-    for project_path, file_data in project_files.items():
-        if resolved_path in project_path or project_path.endswith(resolved_path.split('/')[-1]):
-            return file_data
-    
-    return None
 
 
 def extract_leithandschrift_path(root: et.Element):
@@ -299,7 +271,7 @@ def parse_main_text_file_content(content):
         pipeline.add_step(PythonStep(append_synoptic_links_funct, name="heicrit_append_synoptic_links"), 
                           before_step= 'create_html',
                           parameters= {'sigla_mapping': sigla_mapping, 
-                                       'synoptic_map': synoptic_map_data})
+                                       'synoptic_map': synoptic_map.get_loci()})
         result = pipeline.execute(content)
         return result
         
@@ -349,6 +321,7 @@ def process_synoptic_map_file():
         'filename': 'original filename'
     }
     """
+    global synoptic_map
     try:    
         data = request.get_json()
         if not data:
@@ -360,54 +333,21 @@ def process_synoptic_map_file():
         if not content:
             return jsonify({'error': 'No content provided'}), 400
         
+        # Parse content using class method
         try:
-            root = parse_xml_heieditions(content)
-        except Exception as xml_error:
-            return jsonify({'error': f'Invalid XML: {str(xml_error)}'}), 400
-        
-        # Extract link elements directly
-        try:
-            global synoptic_map_data
-            
-            link_elements = root.xpath('.//tei:link', namespaces=ns)
-            
-            synoptic_map = {}
-            
-            for link in link_elements:
-                n = link.get('n')
-                target = link.get('target', '')
-                
-                if n:
-                    # Split target by whitespace and clean up
-                    target_list = [t.strip() for t in target.split() if t.strip()]
-                    
-                    # Find the corresp that matches the expected format (e.g., "a:l_5")
-                    # This should match the logic from load_functions.py
-                    corresp_entries = [x for x in target_list if ':l_' in x]
-                    if len(corresp_entries) > 0:
-                        # Use the first corresp format as key (e.g., "a:l_5")
-                        corresp_key = corresp_entries[0]
-                        synoptic_map[corresp_key] = {
-                            'n': n,
-                            'target': target_list
-                        }
-                    else:
-                        # Fallback to using n as key if no corresp format found
-                        synoptic_map[n] = {
-                            'n': n,
-                            'target': target_list
-                        }
-            
-            # Store in global variable
-            synoptic_map_data = synoptic_map
+            success = synoptic_map.parse_content(content)
+            if success:
+                synoptic_map.set_file_path(filename)
             
             result = {
                 'success': True,
-                'message': f'Found {len(synoptic_map)} synoptic map entries',
+                'message': f'Found {synoptic_map.get_loci_count()} synoptic map entries and {synoptic_map.get_wits_count()} witnesses',
                 'filename': filename,
                 'content_length': len(content),
-                'synoptic_map_count': len(synoptic_map),
-                'synoptic_map': synoptic_map
+                'synoptic_map_count': synoptic_map.get_loci_count(),
+                'synoptic_map': synoptic_map.get_loci(),
+                'synoptic_wits_count': synoptic_map.get_wits_count(),
+                'synoptic_wits': synoptic_map.get_wits()
             }
             
         except Exception as processing_error:

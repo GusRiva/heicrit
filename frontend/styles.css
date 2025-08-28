@@ -128,8 +128,8 @@ main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 1rem;
-    gap: 1rem;
+    padding: 0;
+    margin: 0;
 }
 
 .toolbar {
@@ -137,9 +137,11 @@ main {
     align-items: center;
     gap: 0.25rem;
     padding: 0.4rem 0.5rem;
-    background: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
+    background: #34495e;
+    border: none;
+    border-bottom: 1px solid #2c3e50;
     min-height: 36px;
+    color: #ecf0f1;
 }
 
 .toolbar-icon {
@@ -153,18 +155,18 @@ main {
     background: none;
     border-radius: 0.25rem;
     cursor: pointer;
-    color: #495057;
+    color: #bdc3c7;
     transition: all 0.2s;
 }
 
 .toolbar-icon:hover {
-    background: #e9ecef;
-    border-color: #ced4da;
-    color: #212529;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ecf0f1;
 }
 
 .toolbar-icon:active {
-    background: #dee2e6;
+    background: rgba(255, 255, 255, 0.2);
     transform: translateY(1px);
 }
 
@@ -178,6 +180,7 @@ main {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    margin: 0;
 }
 
 /* Tab system */
@@ -185,6 +188,7 @@ main {
     background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
     min-height: 32px;
+    margin: 0;
 }
 
 .tab-list {
@@ -294,8 +298,10 @@ main {
     display: flex;
     flex-direction: column;
     background: white;
-    border-radius: 0.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 0;
+    box-shadow: none;
+    border: 1px solid #dee2e6;
+    border-top: none;
 }
 
 .editor-header {
@@ -333,7 +339,7 @@ main {
 
 #apparatus-content {
     width: 100%;
-    padding: 1rem;
+    padding: 0.5rem;
     box-sizing: border-box;
 }
 
@@ -427,7 +433,7 @@ main {
 
 /* Apparatus Display Styles */
 .apparatus-display {
-    padding: 1rem;
+    padding: 0.5rem;
     line-height: 1.6;
     color: #333;
 }
@@ -490,7 +496,7 @@ main {
 }
 
 .apparatus-content {
-    padding: 1rem;
+    padding: 0.5rem;
 }
 
 .apparatus-lemma {
@@ -636,7 +642,7 @@ main {
 
 .apparatus-panel {
     flex: 1;
-    padding: 1rem;
+    padding: 0.5rem;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -644,15 +650,15 @@ main {
 
 #apparatus-content {
     flex: 0 0 auto; /* Don't grow, don't shrink, auto size to content */
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .apparatus-header-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
     border-bottom: 1px solid #dee2e6;
 }
 
@@ -758,9 +764,14 @@ main {
     flex: 0 0 20px;
     text-align: center;
     font-weight: bold;
-    color: #007bff;
+    color: #da8c39;
     font-size: 1.1em;
     cursor: pointer;
+}
+
+/* Gap symbols with apparatus content - different color */
+.synoptic-unit .tei-gap-synoptic.has-content {
+    color: #007bff; /* Blue color for entries with actual apparatus content */
 }
 
 /* Line number column in synoptic unit - fixed width */
@@ -875,12 +886,12 @@ main {
 /* Apparatus Details Panel */
 .apparatus-details {
     flex: 1; /* Take remaining space */
-    margin-top: 1rem;
-    padding-top: 1rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
     border-top: 2px solid #dee2e6;
     background: #f8f9fa;
     border-radius: 0.25rem;
-    padding: 1rem;
+    padding: 0.5rem;
     display: flex;
     flex-direction: column;
 }
@@ -903,27 +914,17 @@ main {
     overflow-y: auto;
 }
 
-/* Clickable location buttons */
-.apparatus-loc-button {
-    background: #007bff;
+/* Location spans for apparatus entries */
+.apparatus-loc-span {
+    background: #2c3e50;
     color: white;
-    border: none;
     padding: 0.2rem 0.5rem;
     border-radius: 0.25rem;
-    cursor: pointer;
     font-weight: bold;
     font-family: 'Times New Roman', Times, serif;
     font-size: inherit;
     margin-right: 0.3rem;
-    transition: background-color 0.2s;
-}
-
-.apparatus-loc-button:hover {
-    background: #0056b3;
-}
-
-.apparatus-loc-button:active {
-    background: #004085;
+    display: inline-block;
 }
 
 #status {
