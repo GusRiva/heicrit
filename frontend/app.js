@@ -308,6 +308,19 @@ class HeiCritApp {
                 }
             });
         }
+
+        // Add click handler for subentries to make them active
+        const tabPanel = document.getElementById(`panel-${tabId}`);
+        if (tabPanel) {
+            tabPanel.addEventListener('click', (e) => {
+                const subentry = e.target.closest('.classical-subentry[data-subentry-index]');
+                if (subentry) {
+                    const subentryIndex = parseInt(subentry.getAttribute('data-subentry-index'));
+                    const corresp = subentry.getAttribute('data-corresp');
+                    this.setActiveSubentry(tabId, corresp, subentryIndex);
+                }
+            });
+        }
     }
 
     loadProjectDataIntoTab(tabId, data) {
@@ -327,6 +340,7 @@ class HeiCritApp {
             tab.mainTextData = data.mainTextData;
             tab.apparatusEntries = data.apparatusEntries;
             tab.currentEntryIndex = 0;
+            tab.activeSubentryIndex = 0; // Track which subentry is active within current location
             tab.groupedEntries = this.groupEntriesByCorresp(data.apparatusEntries);
             tab.entryKeys = Object.keys(tab.groupedEntries);
 
@@ -485,7 +499,7 @@ class HeiCritApp {
         const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
         // Generate HTML for current entry
-        const htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries);
+        const htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries, tab.activeSubentryIndex || 0);
         
         // Set content
         const content = document.getElementById(`apparatus-content-${tabId}`);
@@ -535,6 +549,7 @@ class HeiCritApp {
 
         if (tab.currentEntryIndex > 0) {
             tab.currentEntryIndex--;
+            tab.activeSubentryIndex = 0; // Reset to first subentry when navigating
             this.updateApparatusDisplay(tabId);
         }
     }
@@ -545,6 +560,7 @@ class HeiCritApp {
 
         if (tab.currentEntryIndex < tab.entryKeys.length - 1) {
             tab.currentEntryIndex++;
+            tab.activeSubentryIndex = 0; // Reset to first subentry when navigating
             this.updateApparatusDisplay(tabId);
         }
     }
@@ -570,6 +586,7 @@ class HeiCritApp {
 
         if (targetIndex !== -1) {
             tab.currentEntryIndex = targetIndex;
+            tab.activeSubentryIndex = 0; // Reset to first subentry when navigating
             this.updateApparatusDisplay(tabId);
             input.value = '';
         } else {
@@ -578,6 +595,30 @@ class HeiCritApp {
             setTimeout(() => {
                 input.style.border = '';
             }, 1000);
+        }
+    }
+
+    setActiveSubentry(tabId, corresp, subentryIndex) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
+        // Update active subentry index for current corresp
+        tab.activeSubentryIndex = subentryIndex;
+
+        // Remove active class from all subentries in this tab
+        const tabPanel = document.getElementById(`panel-${tabId}`);
+        if (tabPanel) {
+            tabPanel.querySelectorAll('.classical-subentry.active').forEach(entry => {
+                entry.classList.remove('active');
+            });
+
+            // Add active class to the selected subentry
+            const activeSubentry = tabPanel.querySelector(
+                `.classical-subentry[data-corresp="${corresp}"][data-subentry-index="${subentryIndex}"]`
+            );
+            if (activeSubentry) {
+                activeSubentry.classList.add('active');
+            }
         }
     }
 
@@ -1002,7 +1043,7 @@ class HeiCritApp {
 
 
 
-    generateSingleEntryHTML(loc, entries) {
+    generateSingleEntryHTML(loc, entries, activeSubentryIndex = 0) {
         const corresp = entries.length > 0 && entries[0].corresp ? entries[0].corresp : '';
         let html = `
         <div class="apparatus-display">
@@ -1015,12 +1056,12 @@ class HeiCritApp {
                                 data-corresp="${this.escapeHtml(corresp)}">${this.escapeHtml(loc)}</span>`;
         
         // Process each entry in this location group
-        entries.forEach((entry) => {
-            html += '<div class="classical-subentry';
-            if (entry.is_placeholder) {
-                html += ' placeholder-entry';
-            }
-            html += '">';
+        entries.forEach((entry, index) => {
+            const isActive = index === activeSubentryIndex;
+            
+            html += `<div class="classical-subentry${entry.is_placeholder ? ' placeholder-entry' : ''}${isActive ? ' active' : ''}" 
+                         data-subentry-index="${index}" 
+                         data-corresp="${this.escapeHtml(corresp)}">`;
             
             // Handle placeholder entries (no apparatus data)
             if (entry.is_placeholder) {
