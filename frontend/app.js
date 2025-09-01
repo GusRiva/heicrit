@@ -12,7 +12,6 @@ class HeiCritApp {
         this.witnessOrder = []; // Store witness order from apparatus listWit
         this.witnessMapping = {}; // Store witness-to-prefix mapping from apparatus
         this.projectFiles = new Map(); // Store all project files
-        this.groupedEntries = {}; // Store grouped entries by location (legacy)
         
         // Tab management
         this.tabs = new Map(); // Store tab data: id -> {type, title, content, data}
@@ -684,7 +683,7 @@ class HeiCritApp {
                     this.hideFileLoadingPopup();
                     
                     // Create a new tab for the file
-                    const tabId = this.createTab('file', file.name, e.target.result, {
+                    this.createTab('file', file.name, e.target.result, {
                         filename: file.name,
                         filepath: file.name
                     });
@@ -692,7 +691,7 @@ class HeiCritApp {
                     this.updateStatus(`Opened: ${file.name}`);
                 };
                 
-                reader.onerror = (e) => {
+                reader.onerror = () => {
                     // Hide loading popup on error
                     this.hideFileLoadingPopup();
                     this.updateStatus('Failed to open file', 'error');
@@ -767,12 +766,12 @@ class HeiCritApp {
     async autoProcessProjectFiles() {
         // Look for apparatus files in apparatus/ directory
         const apparatusFiles = Array.from(this.projectFiles.entries())
-            .filter(([path, fileData]) => path.includes('/apparatus/') && path.endsWith('.xml'))
+            .filter(([path]) => path.includes('/apparatus/') && path.endsWith('.xml'))
             .map(([path, fileData]) => ({ path, ...fileData }));
         
         // Look for synoptic map files in synopses/ directory
         const synopticFiles = Array.from(this.projectFiles.entries())
-            .filter(([path, fileData]) => path.includes('/synopses/') && path.endsWith('.xml'))
+            .filter(([path]) => path.includes('/synopses/') && path.endsWith('.xml'))
             .map(([path, fileData]) => ({ path, ...fileData }));
         
         // Process apparatus file if found
@@ -808,23 +807,6 @@ class HeiCritApp {
         }, 500);
     }
 
-    async processApparatusFile(content, filename) {
-        try {
-            this.updateStatus('Processing apparatus file...');
-            
-            // Basic client-side XML validation first
-            if (!this.validateXML(content)) {
-                return; // Error popup will be shown by validateXML
-            }
-            
-            // Send file to backend for validation and processing
-            await this.sendApparatusToBackend(content, filename);
-            
-        } catch (error) {
-            this.showErrorPopup('Apparatus File Error', `Failed to process apparatus file: ${error.message}`);
-        }
-    }
-
 
     async processApparatusFileFromProject(content, filepath) {
         try {
@@ -840,23 +822,6 @@ class HeiCritApp {
             
         } catch (error) {
             this.showErrorPopup('Apparatus File Error', `Failed to process apparatus file: ${error.message}`);
-        }
-    }
-
-    async processSynopticMapFileFromProject(content, filepath) {
-        try {
-            this.updateStatus('Processing synoptic map from project...');
-            
-            // Basic client-side XML validation first
-            if (!this.validateXML(content)) {
-                return; // Error popup will be shown by validateXML
-            }
-            
-            // Send file to backend for processing
-            await this.sendSynopticMapToBackend(content, filepath);
-            
-        } catch (error) {
-            this.showErrorPopup('Synoptic Map File Error', `Failed to process synoptic map file: ${error.message}`);
         }
     }
 
@@ -912,70 +877,6 @@ class HeiCritApp {
             };
         }
         return fileList;
-    }
-
-    async sendApparatusToBackend(content, filename) {
-        try {
-            // First validate the file with backend
-            this.updateStatus('Validating apparatus file structure...');
-            
-            const validationResponse = await this.apiRequest('/apparatus/validate', {
-                method: 'POST',
-                body: JSON.stringify({
-                    content: content,
-                    filename: filename
-                })
-            });
-
-            if (!validationResponse.valid) {
-                const messages = validationResponse.messages.join('\n');
-                this.showErrorPopup('Invalid Apparatus File', messages);
-                return;
-            }
-
-            // If validation passes, process the file
-            this.updateStatus('Processing apparatus file with heipy...');
-            
-            const processResponse = await this.apiRequest('/apparatus/process', {
-                method: 'POST',
-                body: JSON.stringify({
-                    content: content,
-                    filename: filename
-                })
-            });
-
-            if (processResponse.success) {
-                this.handleApparatusProcessingResult(processResponse, filename);
-            } else {
-                this.showErrorPopup('Processing Error', processResponse.message || 'Unknown error occurred');
-            }
-
-        } catch (error) {
-            this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
-        }
-    }
-
-    async sendSynopticMapToBackend(content, filename) {
-        try {
-            this.updateStatus('Processing synoptic map with heipy...');
-            
-            const processResponse = await this.apiRequest('/synoptic/process', {
-                method: 'POST',
-                body: JSON.stringify({
-                    content: content,
-                    filename: filename
-                })
-            });
-
-            if (processResponse.success) {
-                this.handleSynopticMapProcessingResult(processResponse, filename);
-            } else {
-                this.showErrorPopup('Processing Error', processResponse.message || 'Unknown error occurred');
-            }
-
-        } catch (error) {
-            this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
-        }
     }
 
     handleApparatusProcessingResult(result, filename) {
@@ -1102,7 +1003,6 @@ class HeiCritApp {
 
 
     generateSingleEntryHTML(loc, entries) {
-        
         const corresp = entries.length > 0 && entries[0].corresp ? entries[0].corresp : '';
         let html = `
         <div class="apparatus-display">
@@ -1115,7 +1015,7 @@ class HeiCritApp {
                                 data-corresp="${this.escapeHtml(corresp)}">${this.escapeHtml(loc)}</span>`;
         
         // Process each entry in this location group
-        entries.forEach((entry, index) => {
+        entries.forEach((entry) => {
             html += '<div class="classical-subentry';
             if (entry.is_placeholder) {
                 html += ' placeholder-entry';
@@ -1192,63 +1092,6 @@ class HeiCritApp {
         }
     }
 
-    generateApparatusHTML(apparatusEntries, filename) {
-        let html = `
-        <div class="apparatus-display">
-            <div class="apparatus-header">
-                <h2>Apparatus Entries from ${filename}</h2>
-                <p>Found ${apparatusEntries.length} apparatus entries</p>
-            </div>
-            <div class="apparatus-list">`;
-
-        apparatusEntries.forEach((entry, index) => {
-            html += `
-            <div class="apparatus-entry" data-entry-id="${entry.id}">
-                <div class="apparatus-entry-header">
-                    <h3>Entry ${entry.id}</h3>
-                </div>
-                <div class="apparatus-content">`;
-
-            // Display lemma if present
-            if (entry.lemma) {
-                html += `
-                <div class="apparatus-lemma">
-                    <strong>Lemma:</strong> ${this.escapeHtml(entry.lemma.text)}
-                    ${Object.keys(entry.lemma.attributes).length > 0 ? 
-                        `<span class="attributes">(${this.formatAttributes(entry.lemma.attributes)})</span>` : ''}
-                </div>`;
-            }
-
-            // Display readings
-            if (entry.readings && entry.readings.length > 0) {
-                html += `<div class="apparatus-readings"><strong>Readings:</strong><ul>`;
-                entry.readings.forEach(reading => {
-                    html += `
-                    <li class="reading">
-                        ${this.escapeHtml(reading.text)}
-                        ${Object.keys(reading.attributes).length > 0 ? 
-                            `<span class="attributes">(${this.formatAttributes(reading.attributes)})</span>` : ''}
-                    </li>`;
-                });
-                html += `</ul></div>`;
-            }
-
-            // Show XML content in a collapsible section
-            html += `
-                <details class="apparatus-xml">
-                    <summary>Show XML</summary>
-                    <pre class="xml-content">${this.escapeHtml(entry.xml_content)}</pre>
-                </details>
-            </div>
-        </div>`;
-        });
-
-        html += `
-            </div>
-        </div>`;
-
-        return html;
-    }
 
     mergeApparatusWithSynopticMap(apparatusEntries, synopticMap) {
         
