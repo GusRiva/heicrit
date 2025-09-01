@@ -1192,8 +1192,6 @@ class HeiCritApp {
         }
     }
 
-    // Old displayMainText method removed - now handled per tab in loadProjectDataIntoTab
-
     generateApparatusHTML(apparatusEntries, filename) {
         let html = `
         <div class="apparatus-display">
@@ -1243,85 +1241,6 @@ class HeiCritApp {
                 </details>
             </div>
         </div>`;
-        });
-
-        html += `
-            </div>
-        </div>`;
-
-        return html;
-    }
-
-    generateClassicalApparatusHTML(apparatusEntries, filename) {
-        let html = `
-        <div class="apparatus-display">
-            <div class="apparatus-header">
-                <h2>Critical Apparatus: ${filename}</h2>
-                <p>Found ${apparatusEntries.length} apparatus entries</p>
-            </div>
-            <div class="classical-apparatus">`;
-
-        // Group entries by corresp
-        const groupedEntries = this.groupEntriesByCorresp(apparatusEntries);
-        
-        // Process each corresp group
-        Object.keys(groupedEntries).forEach(corresp => {
-            const entries = groupedEntries[corresp];
-            const loc = entries.length > 0 && entries[0].loc ? entries[0].loc : '';
-            
-            html += '<div class="classical-entry-group">';
-            
-            // Show location as bold span
-            html += `<span class="apparatus-loc-span" data-loc="${this.escapeHtml(loc)}" data-corresp="${this.escapeHtml(corresp)}">${this.escapeHtml(loc)}</span>`;
-            
-            // Process each entry in this location group
-            entries.forEach((entry) => {
-                html += '<div class="classical-subentry';
-                if (entry.is_placeholder) {
-                    html += ' placeholder-entry';
-                }
-                html += '">';
-                
-                // Handle placeholder entries (no apparatus data)
-                if (entry.is_placeholder) {
-                    html += ' <span class="no-apparatus">(no apparatus)</span>';
-                } else {
-                    // Lemma content
-                    if (entry.lemma && entry.lemma.text) {
-                        html += ` ${this.escapeHtml(entry.lemma.text)}`;
-                    }
-                    
-                    // Closing bracket
-                    html += ' ]';
-                    
-                    // Readings with witnesses
-                    if (entry.readings && entry.readings.length > 0) {
-                        const readingParts = [];
-                        
-                        entry.readings.forEach(reading => {
-                            let readingPart = ` ${this.escapeHtml(reading.text)}`;
-                            
-                            // Add witnesses in italics
-                            if (reading.wit) {
-                                // Clean up witness list (remove # symbols and extra spaces)
-                                const witnesses = reading.wit.replace(/#/g, '').trim().split(/\s+/).join(' ');
-                                if (witnesses) {
-                                    readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(witnesses)}</em>`;
-                                }
-                            }
-                            
-                            readingParts.push(readingPart);
-                        });
-                        
-                        // Join readings with semicolons
-                        html += readingParts.join(' ;');
-                    }
-                }
-                
-                html += '</div>';
-            });
-            
-            html += '</div>';
         });
 
         html += `
@@ -1431,8 +1350,6 @@ class HeiCritApp {
     }
 
     createSynLine(siglum, data) {
-        console.log(data);
-        
         return `<div class="syn-line">
                     <div class="syn-line-wit" data-line-id="${this.escapeHtml(data.lineId)}">
                         ${this.escapeHtml(siglum)}:
