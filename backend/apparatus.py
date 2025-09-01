@@ -221,6 +221,135 @@ class Apparatus:
         """
         return self._root
     
+    def get_witness_order(self) -> List[str]:
+        """
+        Extract the ordered list of witness IDs from the listWit section.
+        
+        Returns:
+            List of witness xml:id values in the order they appear in listWit
+        """
+        if self._root is None:
+            return []
+        
+        try:
+            # Find all witness elements in listWit
+            witness_elements = self._root.xpath('.//tei:listWit/tei:witness', namespaces=ns)
+            witness_ids = []
+            
+            for witness in witness_elements:
+                xml_id = witness.get('{http://www.w3.org/XML/1998/namespace}id')
+                if xml_id:
+                    witness_ids.append(xml_id)
+            
+            return witness_ids
+            
+        except Exception as e:
+            print(f"ERROR: Could not extract witness order: {str(e)}")
+            return []
+    
+    def get_witness_to_prefix_mapping(self) -> Dict[str, Dict[str, str]]:
+        """
+        Parse the witness-to-prefix mapping by comparing ptr targets with prefixDef replacementPatterns.
+        Extract siglums from witness files if project_files are available.
+        
+        Returns:
+            Dictionary mapping witness IDs to their prefix info and siglum
+        """
+        if self._root is None:
+            return {}
+        
+        try:
+            # Get all witness elements with their ptr targets and siglums
+            witness_elements = self._root.xpath('.//tei:listWit/tei:witness', namespaces=ns)
+            witness_info = {}
+            
+            for witness in witness_elements:
+                xml_id = witness.get('{http://www.w3.org/XML/1998/namespace}id')
+                ptr_element = witness.find('.//tei:ptr', namespaces=ns)
+                siglum_element = witness.find('.//tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns)
+                
+                if xml_id and ptr_element is not None:
+                    target = ptr_element.get('target')
+                    siglum = siglum_element.text if siglum_element is not None and siglum_element.text else xml_id
+                    
+                    if target:
+                        witness_info[xml_id] = {
+                            'target': target,
+                            'siglum': siglum
+                        }
+            
+            # Get all prefixDef elements with ana="hc:SynopticTextPrefixDefinition"
+            prefix_def_elements = self._root.xpath('.//tei:prefixDef[@ana="hc:SynopticTextPrefixDefinition"]', namespaces=ns)
+            prefix_patterns = {}
+            
+            for prefix_def in prefix_def_elements:
+                ident = prefix_def.get('ident')
+                replacement_pattern = prefix_def.get('replacementPattern')
+                if ident and replacement_pattern:
+                    # Extract the base path from replacementPattern (remove /$1 suffix)
+                    base_path = replacement_pattern.replace('/$1', '')
+                    prefix_patterns[ident] = base_path
+            
+            # Match witnesses to prefixes by comparing targets to replacement patterns
+            mapping = {}
+            for witness_id, info in witness_info.items():
+                target = info['target']
+                siglum = info['siglum']
+                
+                for prefix, base_path in prefix_patterns.items():
+                    if target == base_path:
+                        mapping[witness_id] = {
+                            'synoptic_prefix': prefix,
+                            'target_file': target,
+                            'siglum': siglum
+                        }
+                        break
+            
+            return mapping
+            
+        except Exception as e:
+            print(f"ERROR: Could not extract witness-to-prefix mapping: {str(e)}")
+            return {}
+    
+    def _extract_siglum_from_witness_file(self, target_file: str) -> str:
+        """
+        Extract siglum from a witness file.
+        
+        Args:
+            target_file: Path to the witness file
+            
+        Returns:
+            The siglum if found, otherwise the filename without extension
+        """
+        if not self._project_files or not target_file:
+            return target_file.split('/')[-1].replace('.xml', '') if target_file else ''
+        
+        try:
+            # Resolve relative path and find file in project
+            resolved_path = resolve_relative_path(target_file, self._apparatus_filepath)
+            file_data = find_file_in_project(resolved_path, self._project_files)
+            
+            if not file_data:
+                return target_file.split('/')[-1].replace('.xml', '')
+            
+            # Parse the witness file
+            parser = HeiEditionsParser()
+            content_bytes = file_data['content'].encode('utf-8')
+            doc = et.parse(BytesIO(content_bytes), parser)
+            root = doc.getroot()
+            
+            # Extract siglum from witness file
+            siglum_element = root.find('.//tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns)
+            if siglum_element is not None and siglum_element.text:
+                return siglum_element.text
+            
+            # Fallback to filename without extension
+            return target_file.split('/')[-1].replace('.xml', '')
+            
+        except Exception as e:
+            print(f"WARNING: Could not extract siglum from {target_file}: {str(e)}")
+            return target_file.split('/')[-1].replace('.xml', '') if target_file else ''
+    
     def get_corresp_attribute(self) -> Optional[str]:
         """
         Get the corresp attribute from the listApp element.

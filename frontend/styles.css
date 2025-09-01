@@ -805,6 +805,18 @@ main {
     margin-left: 0.5rem; /* Add some space between line number and content */
 }
 
+
+/* Classes for the comparison */
+.syn-line {
+    display: block;
+    margin: 1em;
+}
+
+.syn-line .syn-token {
+    padding-right: .25em;
+}
+
+
 /* If no text-line class is used, fallback to inline styling */
 #main-text-content .tei-container-n {
     cursor: pointer;

@@ -53,7 +53,8 @@ class SynopticMap:
         for ident, wit_info in self._wits.items():
             wits_copy[ident] = {
                 'file_name': wit_info.get('file_name'),
-                'elements_count': len(wit_info.get('elements', {}))
+                'elements_count': len(wit_info.get('elements', {})),
+                'siglum': wit_info.get('siglum')
             }
         return wits_copy
     
@@ -156,6 +157,7 @@ class SynopticMap:
         """
         locus_info = self.get_locus_info(locus_id)
         if locus_info and 'target' in locus_info:
+            print(locus_info['target'])
             return locus_info['target'].copy()
         return []
     
@@ -266,8 +268,13 @@ class SynopticMap:
                     # Parse witness file and extract elements if project files are available
                     if file_name and apparatus_filepath and project_files:
                         try:
-                            elements_map = self._parse_witness_file(file_name, apparatus_filepath, project_files)
-                            wit_info['elements'] = elements_map
+                            parse_result = self._parse_witness_file(file_name, apparatus_filepath, project_files)
+                            if isinstance(parse_result, dict) and 'elements' in parse_result:
+                                wit_info['elements'] = parse_result['elements']
+                                wit_info['siglum'] = parse_result.get('siglum')
+                            else:
+                                # Backward compatibility for old return format
+                                wit_info['elements'] = parse_result
                         except Exception as e:
                             print(f"WARNING: Could not parse witness file {file_name}: {str(e)}")
                             wit_info['elements'] = {}
@@ -342,10 +349,14 @@ class SynopticMap:
                 return {}
             
             # Parse the witness file
-            parser = HeiEditionsParser()
+            parser = HeiEditionsParser(resolve_entities=True)
             content_bytes = file_data['content'].encode('utf-8')
             doc = et.parse(BytesIO(content_bytes), parser)
             root = doc.getroot()
+            
+            # Extract siglum from the witness file
+            siglum = root.find('.//tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns)
+            siglum_text = siglum.text if siglum is not None else None
             
             # Find all elements with xml:id attributes
             elements_with_id = root.xpath('//*[@xml:id][not(name()="w")]', namespaces=ns)
@@ -355,11 +366,11 @@ class SynopticMap:
                 if xml_id:
                     elements_map[xml_id] = element
             
-            return elements_map
+            return {'elements': elements_map, 'siglum': siglum_text}
             
         except Exception as e:
             print(f"ERROR: Could not parse witness file {file_name}: {str(e)}")
-            return {}
+            return {'elements': {}, 'siglum': None}
 
     def load_from_project(self, corresp_path: str, apparatus_filepath: str, 
                          project_files: Dict[str, Dict[str, Any]], 

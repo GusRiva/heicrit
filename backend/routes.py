@@ -20,9 +20,43 @@ synoptic_map = SynopticMap()
 apparatus = None  # Global apparatus object for frontend modifications 
 
 
-def process_synoptic_unit_for_comparison(element) -> str:
+def process_synoptic_token(el:et.Element) -> str:
+    tag_name = el.tag.split('}')[-1] if '}' in el.tag else el.tag
+    result = ''
+    if tag_name in ['w', 'pc']:
+        result += f"<span class='syn-token syn-tei-{tag_name}'>"
+        if el.text is not None:
+            result += el.text.strip()
+        for child in el:
+            result += process_synoptic_token(child)
+        result += "</span>"
+    elif tag_name in ['c']:
+        result += "<span class='syn-token syn-tei-space'> </span>"
+    elif tag_name in ['choice']:
+        for child in el:
+            result += process_synoptic_token(child)
+        if el.tail is not None and el.tail.strip() != '':
+            result += el.tail
+    elif tag_name in ['orig', 'sic', 'hi', 'initial']:
+        if el.text is not None:
+            result += el.text.strip()
+        for child in el:
+            result += process_synoptic_token(child)
+        if el.tail is not None and el.tail.strip() != '':
+            result += el.tail
+    elif tag_name in ['titlePart']:
+        if el.text is not None:
+            result += el.text.strip()
+        for child in el:
+            result += process_synoptic_token(child)
+            
+        
+    return result
+
+
+def process_synoptic_unit_for_comparison(element:et.Element) -> str:
     """
-    Process an XML element and return a string representation for comparison.
+    Process an XML synoptic unit and return a string representation for comparison.
     
     Args:
         element: The lxml etree Element to process
@@ -35,14 +69,19 @@ def process_synoptic_unit_for_comparison(element) -> str:
     
     try:
         # Get the text content of the element, stripping whitespace
-        text_content = ''.join(element.itertext()).strip()
+        # line_content = ''.join(element.itertext()).strip()
+        line_content = ''
+        for el in element:
+            line_content += process_synoptic_token(el)
         
         # If no text content, try to get element info
-        if not text_content:
+        if not line_content:
             tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+            if tag_name == 'gap':
+                return "<span class='synoptic-unit-no-data'>Fehlt</span>"
             return f"[{tag_name} element - no text content]"
         
-        return text_content
+        return line_content
         
     except Exception as e:
         return f"[Error processing element: {str(e)}]"
@@ -123,52 +162,23 @@ def get_synoptic_comparison():
         data_link = data.get('data_link')
         if not data_link:
             return jsonify({'error': 'No data_link provided'}), 400
-        
-        print(f"DEBUG: In get_synoptic_comparison - Received data_link: '{data_link}'")
-        print(f"DEBUG: Available synoptic loci count: {synoptic_map.get_loci_count()}")
-        print(f"DEBUG: Available witness count: {synoptic_map.get_wits_count()}")
-        
-        # Debug witness information
-        all_wit_idents = synoptic_map.get_all_wit_idents()
-        print(f"DEBUG: All witness identifiers: {all_wit_idents}")
-        
-        # Check if witnesses still have elements
-        for wit_id in all_wit_idents[:3]:
-            wit_elements = synoptic_map.get_wit_elements(wit_id)
-            print(f"DEBUG: In comparison - Witness '{wit_id}' has {len(wit_elements) if wit_elements else 0} elements")
-        
-        # Check a few witness elements to understand structure
-        for wit_id in all_wit_idents[:3]:  # Check first 3 witnesses
-            wit_info = synoptic_map.get_wit_info(wit_id)
-            # print(f"DEBUG: Witness '{wit_id}' info: {wit_info}")
-            wit_elements = synoptic_map.get_wit_elements(wit_id)
-            if wit_elements:
-                element_keys = list(wit_elements.keys())[:5]  # Show first 5 element keys
+                
         
         comparison_texts = []
         
         # Parse data_link and get text representations
         tokens = data_link.split()
-        # print(f"DEBUG: Tokens: {tokens}")
         for token in tokens:
             if ':' in token:
                 prefix, element_id = token.split(':', 1)
-                # print(f"DEBUG: Processing token '{token}' - prefix: '{prefix}', element_id: '{element_id}'")
-                
                 wit_elements = synoptic_map.get_wit_elements(prefix)
-                # print(f"DEBUG: wit_elements for '{prefix}': {wit_elements is not None}")
-                if wit_elements and len(wit_elements) > 0:
-                    # print(f"DEBUG: Number of elements for '{prefix}': {len(wit_elements)}")
-                    element = wit_elements.get(element_id)
-                    # print(f"DEBUG: Found element '{element_id}': {element is not None}")
-                    text_repr = process_synoptic_unit_for_comparison(element)
-                    # print(f"DEBUG: Text representation: '{text_repr}'")
-                else:
-                    text_repr = f"[Witness '{prefix}' not found]"
-                    # print(f"DEBUG: Witness not found, using: '{text_repr}'")
+                if not wit_elements or len(wit_elements) == 0:
+                    continue
+                element = wit_elements.get(element_id)
+                text_repr = process_synoptic_unit_for_comparison(element)
                 
                 comparison_texts.append(text_repr)
-        
+        # print(comparison_texts)
         return jsonify({
             'success': True,
             'comparison_texts': comparison_texts
@@ -275,14 +285,22 @@ def open_project():
             # Get information from the apparatus object
             leiths_path = apparatus.get_leiths_path()
             apparatus_entries = apparatus.get_entries()
-            
+            witness_order = apparatus.get_witness_order()
+            witness_mapping = apparatus.get_witness_to_prefix_mapping()
+            print(witness_mapping)
+            # Find leiths info from witness mapping
             leiths_info = None
-            if leiths_path:
-                leiths_info = sigla_mapping.get(leiths_path.split('/')[-1])
-
             leiths_prefix = None
-            if leiths_info is not None:
-                leiths_prefix = leiths_info.get('synoptic_pre')
+            if leiths_path:
+                leiths_filename = leiths_path.split('/')[-1]
+                for witness_id, mapping_info in witness_mapping.items():
+                    if mapping_info['target_file'].endswith(leiths_filename):
+                        leiths_info = {
+                            'siglum': mapping_info['siglum'],
+                            'synoptic_pre': mapping_info['synoptic_prefix']
+                        }
+                        leiths_prefix = mapping_info['synoptic_prefix']
+                        break
             
             # Get corresp attribute for synoptic map loading
             corresp = apparatus.get_corresp_attribute()
@@ -290,11 +308,6 @@ def open_project():
                 # Load synoptic map from project files using class method
                 try:
                     synoptic_map.load_from_project(corresp, apparatus_filepath, project_files, leiths_prefix=leiths_prefix)
-                    print(f"DEBUG: After loading synoptic map - Loci: {synoptic_map.get_loci_count()}, Witnesses: {synoptic_map.get_wits_count()}")
-                    # Check if witnesses have elements
-                    for wit_id in synoptic_map.get_all_wit_idents()[:3]:
-                        wit_elements = synoptic_map.get_wit_elements(wit_id)
-                        print(f"DEBUG: Witness '{wit_id}' has {len(wit_elements) if wit_elements else 0} elements")
                 except Exception as synoptic_error:
                     print(f"ERROR loading synoptic map: {synoptic_error}")
                     
@@ -310,6 +323,8 @@ def open_project():
                 'apparatus_filepath': apparatus_filepath,
                 'apparatus_count': len(apparatus_entries),
                 'apparatus_entries': apparatus_entries,
+                'witness_order': witness_order,
+                'witness_mapping': witness_mapping,
                 'synoptic_map': synoptic_map.get_loci(),
                 'synoptic_map_count': synoptic_map.get_loci_count(),
                 'synoptic_wits': synoptic_map.get_wits(),

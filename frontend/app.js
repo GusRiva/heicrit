@@ -9,6 +9,8 @@ class HeiCritApp {
         this.synopticMapData = null;
         this.mainTextData = null; // Store main text data
         this.leithsInfo = null; // Store leiths-info with siglum
+        this.witnessOrder = []; // Store witness order from apparatus listWit
+        this.witnessMapping = {}; // Store witness-to-prefix mapping from apparatus
         this.projectFiles = new Map(); // Store all project files
         this.groupedEntries = {}; // Store grouped entries by location (legacy)
         
@@ -989,10 +991,21 @@ class HeiCritApp {
             this.leithsInfo = result['leiths-info'];
         }
         
+        // Store witness order if available
+        if (result.witness_order) {
+            this.witnessOrder = result.witness_order;
+        }
+        
+        // Store witness mapping if available
+        if (result.witness_mapping) {
+            this.witnessMapping = result.witness_mapping;
+        }
+        
         // If this result also contains synoptic map data (from project processing), store it
         if (result.synoptic_map && Object.keys(result.synoptic_map).length > 0) {
             this.synopticMapData = {
                 synoptic_map: result.synoptic_map,
+                synoptic_wits: result.synoptic_wits || {},
                 filename: `${filename} (embedded)`,
                 count: result.synoptic_map_count || 0
             };
@@ -1014,6 +1027,7 @@ class HeiCritApp {
         // Store synoptic map data        
         this.synopticMapData = {
             synoptic_map: result.synoptic_map || {},
+            synoptic_wits: result.synoptic_wits || {},
             filename: filename,
             count: result.synoptic_map_count || 0
         };
@@ -1404,6 +1418,18 @@ class HeiCritApp {
         return div.innerHTML;
     }
 
+    getSiglumForWitness(witnessId) {
+        // Get siglum from synoptic_wits mapping if available
+        if (this.synopticMapData && this.synopticMapData.synoptic_wits) {
+            const witInfo = this.synopticMapData.synoptic_wits[witnessId];
+            if (witInfo && witInfo.siglum) {
+                return witInfo.siglum;
+            }
+        }
+        // Fallback to witness ID if no siglum found
+        return witnessId;
+    }
+
     formatAttributes(attributes) {
         return Object.entries(attributes)
             .map(([key, value]) => `${key}="${value}"`)
@@ -1710,16 +1736,11 @@ class HeiCritApp {
         const synopticMap = this.synopticMapData ? this.synopticMapData.synoptic_map : {};
         const synopticData = synopticMap[corresp];
         
-        console.log('DEBUG: corresp =', corresp);
-        console.log('DEBUG: synopticData for corresp =', synopticData);
-        
-        let message = `<strong>Location: ${this.escapeHtml(corresp)}</strong><br><br>`;
+        let message = ``;
         
         if (synopticData && synopticData.target) {
             // Use the target data as data-link for synoptic comparison
             const dataLink = synopticData.target.join(' ');
-            
-            console.log('DEBUG: Using dataLink =', dataLink);
             
             try {
                 const comparisonResponse = await this.apiRequest('/synoptic/compare', {
@@ -1733,11 +1754,40 @@ class HeiCritApp {
                 });
                 
                 if (comparisonResponse.success && comparisonResponse.comparison_texts) {
-                    message += `<strong>Synoptic Comparison:</strong><br>`;
+                    // Create a mapping from synoptic prefix to comparison data
+                    const prefixToData = {};
                     comparisonResponse.comparison_texts.forEach((text, index) => {
-                        const witness = synopticData.target[index] || `Witness ${index + 1}`;
-                        message += `<strong>${this.escapeHtml(witness)}:</strong> ${this.escapeHtml(text)}<br>`;
+                        const lineId = synopticData.target[index] || `Witness ${index + 1}`;
+                        const synopticPrefix = lineId.includes(':') ? lineId.split(':')[0] : lineId;
+                        
+                        prefixToData[synopticPrefix] = {
+                            lineId: lineId,
+                            text: text
+                        };
                     });
+                    
+                    // Display in apparatus witness order, filtering to only included witnesses
+                    if (this.witnessOrder && this.witnessOrder.length > 0 && this.witnessMapping) {
+                        this.witnessOrder.forEach(witnessId => {
+                            // Get synoptic prefix from witness mapping
+                            const mappingInfo = this.witnessMapping[witnessId];
+                            if (mappingInfo && mappingInfo.synoptic_prefix) {
+                                const synopticPrefix = mappingInfo.synoptic_prefix;
+                                
+                                if (prefixToData[synopticPrefix]) {
+                                    const data = prefixToData[synopticPrefix];
+                                    const siglum = mappingInfo.siglum || synopticPrefix;
+                                    message += `<div class="syn-line"><span class="syn-line-wit" data-line-id="${this.escapeHtml(data.lineId)}">${this.escapeHtml(siglum)}:</span> ${data.text}</div>`;
+                                }
+                            }
+                        });
+                    } else {
+                        // Fallback to original order if no witness order available
+                        Object.entries(prefixToData).forEach(([synopticPrefix, data]) => {
+                            const siglum = this.getSiglumForWitness(synopticPrefix);
+                            message += `<div class="syn-line"><span class="syn-line-wit" data-line-id="${this.escapeHtml(data.lineId)}">${this.escapeHtml(siglum)}:</span> ${data.text}</div>`;
+                        });
+                    }
                 } else {
                     message += '<strong>Synoptic Comparison:</strong> Error loading comparison data<br>';
                 }
