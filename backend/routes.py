@@ -3,6 +3,7 @@ import os
 from lxml import etree as et
 
 from heipy.heipipe.steps import PythonStep
+from heipy.namespaces import prefix_format
 # from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
 
 from load_functions import resolve_relative_path, find_file_in_project
@@ -23,7 +24,7 @@ def process_synoptic_token(el:et.Element) -> str:
     tag_name = el.tag.split('}')[-1] if '}' in el.tag else el.tag
     result = ''
     if tag_name in ['w', 'pc']:
-        result += f"<span class='syn-token syn-tei-{tag_name}'>"
+        result += f"<span class='syn-token syn-tei-{tag_name}' data-token-id='{el.get(prefix_format('xml','id'))}'>"
         if el.text is not None:
             result += el.text.strip()
         for child in el:
@@ -31,7 +32,7 @@ def process_synoptic_token(el:et.Element) -> str:
         result += "</span>"
     elif tag_name in ['c']:
         result += "<span class='syn-token syn-tei-space'> </span>"
-    elif tag_name in ['choice']:
+    elif tag_name in ['choice', 'lg', 'l']:
         for child in el:
             result += process_synoptic_token(child)
         if el.tail is not None and el.tail.strip() != '':
@@ -64,7 +65,7 @@ def process_synoptic_unit_for_comparison(element:et.Element) -> str:
         String representation of the element content
     """
     if element is None:
-        return "[Element not found]"
+        return '<div class="synoptic-content-no-data">Stelle nicht gefunden</div>'
     
     try:
         # Get the text content of the element, stripping whitespace
@@ -75,9 +76,11 @@ def process_synoptic_unit_for_comparison(element:et.Element) -> str:
         
         # If no text content, try to get element info
         if not line_content:
+            for el in element:
+                print(el)
             tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
             if tag_name == 'gap':
-                return "<span class='synoptic-unit-no-data'>Fehlt</span>"
+                return "<div class='synoptic-content-om'>om.</div>"
             return f"[{tag_name} element - no text content]"
         
         return line_content
@@ -170,28 +173,18 @@ def get_synoptic_comparison():
         if not data_link:
             return jsonify({'error': 'No data_link provided'}), 400
         
-        print(f"DEBUG: Available synoptic map witnesses: {synoptic_map.get_all_wit_idents()}")
-        print(f"DEBUG: Synoptic map wits count: {synoptic_map.get_wits_count()}")
-                
-        
         comparison_data = []
         
         # Parse data_link and get text representations
         tokens = data_link.split()
-        print(f"DEBUG: Processing data_link tokens: {tokens}")
         for token in tokens:
             if ':' in token:
                 prefix, element_id = token.split(':', 1)
-                print(f"DEBUG: Looking for prefix='{prefix}', element_id='{element_id}'")
                 wit_elements = synoptic_map.get_wit_elements(prefix)
-                print(f"DEBUG: wit_elements for '{prefix}': {wit_elements is not None and len(wit_elements) if wit_elements else 'None/Empty'}")
                 if not wit_elements or len(wit_elements) == 0:
-                    print(f"DEBUG: No wit_elements found for prefix '{prefix}', skipping")
                     continue
                 element = wit_elements.get(element_id)
-                print(f"DEBUG: Element for '{element_id}': {element is not None}")
                 text_repr = process_synoptic_unit_for_comparison(element)
-                print(f"DEBUG: Text representation for '{prefix}:{element_id}': {text_repr}")
                 
                 comparison_data.append({
                     'token': token,

@@ -263,16 +263,13 @@ class SynopticMap:
                     file_name = replacement_pattern[3:-3]
                 
                 if ident:
-                    print(f"DEBUG: Processing prefixDef with ident='{ident}', file_name='{file_name}'")
                     # Filter: only process witnesses that are mentioned in apparatus
                     if apparatus_witness_mapping is not None:
-                        print(f"DEBUG: Apparatus mapping available: {apparatus_witness_mapping}")
                         # Check if this prefix corresponds to any witness in the apparatus
                         is_in_apparatus = any(
                             mapping_info.get('synoptic_prefix') == ident
                             for mapping_info in apparatus_witness_mapping.values()
                         )
-                        print(f"DEBUG: Prefix '{ident}' in apparatus: {is_in_apparatus}")
                         if not is_in_apparatus:
                             print(f"INFO: Skipping witness file {file_name} (prefix: {ident}) - not in apparatus")
                             continue
@@ -358,7 +355,6 @@ class SynopticMap:
         """
         try:
             resolved_path = resolve_relative_path(file_name, apparatus_filepath)
-            print(resolved_path)
             file_data = find_file_in_project(resolved_path, project_files)
             
             
