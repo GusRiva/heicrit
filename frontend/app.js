@@ -618,6 +618,155 @@ class HeiCritApp {
             );
             if (activeSubentry) {
                 activeSubentry.classList.add('active');
+                
+                // Highlight corresponding tokens
+                this.highlightTokensForEntry(tabId, corresp, subentryIndex);
+            }
+        }
+    }
+
+    highlightTokensForEntry(tabId, corresp, subentryIndex) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
+        // Clear any existing token highlights
+        this.clearTokenHighlights(tabId);
+
+        // Get the entry data
+        const entries = tab.groupedEntries[corresp];
+        if (!entries || subentryIndex >= entries.length) return;
+
+        const entry = entries[subentryIndex];
+        if (entry.is_placeholder) return;
+
+        // Highlight lemma tokens in green
+        if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
+            this.highlightTokensFromCorresp(entry.lemma.attributes.corresp, 'lemma');
+        }
+
+        // Highlight reading tokens in yellow
+        if (entry.readings && entry.readings.length > 0) {
+            entry.readings.forEach(reading => {
+                if (reading.attributes && reading.attributes.corresp) {
+                    this.highlightTokensFromCorresp(reading.attributes.corresp, 'reading');
+                }
+            });
+        }
+    }
+
+    clearTokenHighlights(tabId) {
+        // Remove all token highlighting classes
+        const tabPanel = document.getElementById(`panel-${tabId}`);
+        if (tabPanel) {
+            tabPanel.querySelectorAll('.syn-token.highlight-lemma, .syn-token.highlight-reading').forEach(token => {
+                token.classList.remove('highlight-lemma', 'highlight-reading');
+            });
+        }
+    }
+
+    highlightTokensFromCorresp(correspValue, type) {
+        // Parse corresp attribute like "a:range(w_12_1, w_12_2)" or "ba:w_12_1 bb:w_12_1"
+        console.log(`Highlighting ${type} tokens from corresp: ${correspValue}`);
+        
+        // More sophisticated parsing to handle ranges with spaces
+        const correspParts = [];
+        let currentPart = '';
+        let inRange = false;
+        
+        const tokens = correspValue.split(/\s+/);
+        for (const token of tokens) {
+            if (token.includes('range(')) {
+                inRange = true;
+                currentPart = token;
+            } else if (inRange && token.endsWith(')')) {
+                currentPart += ' ' + token;
+                correspParts.push(currentPart);
+                currentPart = '';
+                inRange = false;
+            } else if (inRange) {
+                currentPart += ' ' + token;
+            } else {
+                correspParts.push(token);
+            }
+        }
+        
+        // Handle case where we're still in a range at the end
+        if (currentPart) {
+            correspParts.push(currentPart);
+        }
+        
+        correspParts.forEach(part => {
+            console.log(`Processed part: "${part}"`);
+            if (part.includes(':')) {
+                const colonIndex = part.indexOf(':');
+                const prefix = part.substring(0, colonIndex);
+                const tokenSpec = part.substring(colonIndex + 1);
+                console.log(`Processing prefix: "${prefix}", tokenSpec: "${tokenSpec}"`);
+                this.highlightTokensForPrefix(prefix, tokenSpec, type);
+            }
+        });
+    }
+
+    highlightTokensForPrefix(prefix, tokenSpec, type) {
+        // Find the syn-line-wit element with matching prefix
+        const witElement = document.querySelector(`.syn-line-wit[data-line-id*="${prefix}:"]`);
+        console.log(`Looking for wit element with prefix ${prefix}, found:`, witElement);
+        if (!witElement) return;
+
+        const synLine = witElement.closest('.syn-line');
+        console.log(`Found syn-line:`, synLine);
+        if (!synLine) return;
+
+        const synLineContent = synLine.querySelector('.syn-line-content');
+        console.log(`Found syn-line-content:`, synLineContent);
+        if (!synLineContent) return;
+
+        if (tokenSpec.startsWith('range(') && tokenSpec.endsWith(')')) {
+            // Handle range specification like "range(w_12_1, w_12_2)"
+            const rangeContent = tokenSpec.slice(6, -1); // Remove "range(" and ")"
+            const [startToken, endToken] = rangeContent.split(',').map(s => s.trim());
+            console.log(`Range: ${startToken} to ${endToken}`);
+            this.highlightTokenRange(synLineContent, startToken, endToken, type);
+        } else {
+            // Handle single token like "w_12_1"
+            console.log(`Single token: ${tokenSpec}`);
+            this.highlightSingleToken(synLineContent, tokenSpec, type);
+        }
+    }
+
+    highlightSingleToken(container, tokenId, type) {
+        const token = container.querySelector(`.syn-token[data-token-id="${tokenId}"]`);
+        console.log(`Looking for token with ID: ${tokenId}, found:`, token);
+        if (token) {
+            token.classList.add(`highlight-${type}`);
+            console.log(`Added highlight-${type} class to token`);
+        }
+    }
+
+    highlightTokenRange(container, startTokenId, endTokenId, type) {
+        const allTokens = container.querySelectorAll('.syn-token[data-token-id]');
+        console.log(`Range highlighting: ${startTokenId} to ${endTokenId}, found ${allTokens.length} tokens`);
+        let inRange = false;
+        let foundStart = false;
+
+        for (const token of allTokens) {
+            const tokenId = token.getAttribute('data-token-id');
+            console.log(`Checking token: ${tokenId}`);
+            
+            if (tokenId === startTokenId) {
+                inRange = true;
+                foundStart = true;
+                console.log(`Found start token: ${tokenId}`);
+            }
+            
+            if (inRange) {
+                token.classList.add(`highlight-${type}`);
+                console.log(`Highlighted token: ${tokenId}`);
+            }
+            
+            if (tokenId === endTokenId && foundStart) {
+                console.log(`Found end token: ${tokenId}, stopping`);
+                break;
             }
         }
     }
@@ -1624,6 +1773,12 @@ class HeiCritApp {
         
         if (detailsContent) {
             detailsContent.innerHTML = message;
+            
+            // Trigger token highlighting after synoptic content is loaded
+            const tab = this.tabs.get(tabId);
+            if (tab) {
+                this.highlightTokensForEntry(tabId, corresp, tab.activeSubentryIndex || 0);
+            }
         }
     }
 
