@@ -305,6 +305,7 @@ class Apparatus:
                         }
                         break
             
+            print(f"DEBUG: Created witness mapping: {mapping}")
             return mapping
             
         except Exception as e:

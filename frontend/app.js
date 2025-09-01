@@ -1753,39 +1753,70 @@ class HeiCritApp {
                     })
                 });
                 
-                if (comparisonResponse.success && comparisonResponse.comparison_texts) {
+                if (comparisonResponse.success) {
+                    console.log('DEBUG: synopticData.target:', synopticData.target);
+                    console.log('DEBUG: comparisonResponse:', comparisonResponse);
+                    console.log('DEBUG: dataLink sent to backend:', dataLink);
+                    
                     // Create a mapping from synoptic prefix to comparison data
                     const prefixToData = {};
-                    comparisonResponse.comparison_texts.forEach((text, index) => {
-                        const lineId = synopticData.target[index] || `Witness ${index + 1}`;
-                        const synopticPrefix = lineId.includes(':') ? lineId.split(':')[0] : lineId;
-                        
-                        prefixToData[synopticPrefix] = {
-                            lineId: lineId,
-                            text: text
-                        };
-                    });
+                    
+                    if (comparisonResponse.comparison_data) {
+                        // Use new format with explicit prefix mapping
+                        comparisonResponse.comparison_data.forEach(item => {
+                            console.log(`DEBUG: Processing item: prefix=${item.prefix}, token=${item.token}, text=${item.text}`);
+                            prefixToData[item.prefix] = {
+                                lineId: item.token,
+                                text: item.text
+                            };
+                        });
+                    } else if (comparisonResponse.comparison_texts) {
+                        // Fallback to old format (for backward compatibility)
+                        comparisonResponse.comparison_texts.forEach((text, index) => {
+                            const lineId = synopticData.target[index] || `Witness ${index + 1}`;
+                            const synopticPrefix = lineId.includes(':') ? lineId.split(':')[0] : lineId;
+                            
+                            console.log(`DEBUG: Index ${index}: lineId=${lineId}, synopticPrefix=${synopticPrefix}, text=${text}`);
+                            
+                            prefixToData[synopticPrefix] = {
+                                lineId: lineId,
+                                text: text
+                            };
+                        });
+                    }
                     
                     // Display in apparatus witness order, filtering to only included witnesses
+                    console.log('DEBUG: witnessOrder:', this.witnessOrder);
+                    console.log('DEBUG: witnessMapping:', this.witnessMapping);
+                    console.log('DEBUG: prefixToData:', prefixToData);
+                    
                     if (this.witnessOrder && this.witnessOrder.length > 0 && this.witnessMapping) {
                         this.witnessOrder.forEach(witnessId => {
+                            console.log(`DEBUG: Processing witnessId: ${witnessId}`);
                             // Get synoptic prefix from witness mapping
                             const mappingInfo = this.witnessMapping[witnessId];
+                            console.log(`DEBUG: mappingInfo for ${witnessId}:`, mappingInfo);
                             if (mappingInfo && mappingInfo.synoptic_prefix) {
                                 const synopticPrefix = mappingInfo.synoptic_prefix;
+                                console.log(`DEBUG: synopticPrefix for ${witnessId}: ${synopticPrefix}`);
                                 
                                 if (prefixToData[synopticPrefix]) {
                                     const data = prefixToData[synopticPrefix];
                                     const siglum = mappingInfo.siglum || synopticPrefix;
-                                    message += `<div class="syn-line"><span class="syn-line-wit" data-line-id="${this.escapeHtml(data.lineId)}">${this.escapeHtml(siglum)}:</span> ${data.text}</div>`;
+                                    console.log(`DEBUG: Adding syn-line for ${witnessId} (${siglum})`);
+                                    message += `<div class="syn-line"><div class="syn-line-wit" data-line-id="${this.escapeHtml(data.lineId)}">${this.escapeHtml(siglum)}:</div> <div class="syn-line-content">${data.text}</div></div>`;
+                                } else {
+                                    console.log(`DEBUG: No data found in prefixToData for prefix ${synopticPrefix}`);
                                 }
+                            } else {
+                                console.log(`DEBUG: No mapping info or synoptic_prefix for ${witnessId}`);
                             }
                         });
                     } else {
                         // Fallback to original order if no witness order available
                         Object.entries(prefixToData).forEach(([synopticPrefix, data]) => {
                             const siglum = this.getSiglumForWitness(synopticPrefix);
-                            message += `<div class="syn-line"><span class="syn-line-wit" data-line-id="${this.escapeHtml(data.lineId)}">${this.escapeHtml(siglum)}:</span> ${data.text}</div>`;
+                            message += `<div class="syn-line"><div class="syn-line-wit" data-line-id="${this.escapeHtml(data.lineId)}">${this.escapeHtml(siglum)}:</div> <div class="syn-line-content">${data.text}</div></div>`;
                         });
                     }
                 } else {

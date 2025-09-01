@@ -5,7 +5,7 @@ from lxml import etree as et
 from heipy.heipipe.steps import PythonStep
 # from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
 
-from load_functions import load_sigla_mapping, resolve_relative_path, find_file_in_project
+from load_functions import resolve_relative_path, find_file_in_project
 from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
 from synoptic_map import SynopticMap
 from apparatus import Apparatus
@@ -15,7 +15,6 @@ from apparatus import Apparatus
 api = Blueprint('api', __name__)
 
 # Global variables
-sigla_mapping = {}
 synoptic_map = SynopticMap()
 apparatus = None  # Global apparatus object for frontend modifications 
 
@@ -91,16 +90,24 @@ def process_synoptic_unit_for_comparison(element:et.Element) -> str:
 @api.route('/sigla-mapping', methods=['GET'])
 def get_sigla_mapping():
     """
-    Get the current sigla mapping dictionary
+    Get the apparatus-based witness mapping
     """
+    global apparatus
     try:
+        if apparatus is None:
+            return jsonify({
+                'success': False,
+                'error': 'No apparatus loaded'
+            }), 400
+        
+        witness_mapping = apparatus.get_witness_to_prefix_mapping()
         return jsonify({
             'success': True,
-            'sigla_mapping': sigla_mapping,
-            'count': len(sigla_mapping)
+            'witness_mapping': witness_mapping,
+            'count': len(witness_mapping)
         })
     except Exception as e:
-        return jsonify({'error': f'Failed to get sigla mapping: {str(e)}'}), 500
+        return jsonify({'error': f'Failed to get witness mapping: {str(e)}'}), 500
 
 @api.route('/apparatus', methods=['GET'])
 def get_apparatus():
@@ -162,26 +169,43 @@ def get_synoptic_comparison():
         data_link = data.get('data_link')
         if not data_link:
             return jsonify({'error': 'No data_link provided'}), 400
+        
+        print(f"DEBUG: Available synoptic map witnesses: {synoptic_map.get_all_wit_idents()}")
+        print(f"DEBUG: Synoptic map wits count: {synoptic_map.get_wits_count()}")
                 
         
-        comparison_texts = []
+        comparison_data = []
         
         # Parse data_link and get text representations
         tokens = data_link.split()
+        print(f"DEBUG: Processing data_link tokens: {tokens}")
         for token in tokens:
             if ':' in token:
                 prefix, element_id = token.split(':', 1)
+                print(f"DEBUG: Looking for prefix='{prefix}', element_id='{element_id}'")
                 wit_elements = synoptic_map.get_wit_elements(prefix)
+                print(f"DEBUG: wit_elements for '{prefix}': {wit_elements is not None and len(wit_elements) if wit_elements else 'None/Empty'}")
                 if not wit_elements or len(wit_elements) == 0:
+                    print(f"DEBUG: No wit_elements found for prefix '{prefix}', skipping")
                     continue
                 element = wit_elements.get(element_id)
+                print(f"DEBUG: Element for '{element_id}': {element is not None}")
                 text_repr = process_synoptic_unit_for_comparison(element)
+                print(f"DEBUG: Text representation for '{prefix}:{element_id}': {text_repr}")
                 
-                comparison_texts.append(text_repr)
-        # print(comparison_texts)
+                comparison_data.append({
+                    'token': token,
+                    'prefix': prefix,
+                    'text': text_repr
+                })
+        
+        # Keep old format for backward compatibility
+        comparison_texts = [item['text'] for item in comparison_data]
+        
         return jsonify({
             'success': True,
-            'comparison_texts': comparison_texts
+            'comparison_texts': comparison_texts,
+            'comparison_data': comparison_data
         })
         
     except Exception as e:
@@ -251,7 +275,7 @@ def open_project():
         'project_files': {path: {content: str, size: int}, ...}
     }
     """
-    global sigla_mapping, synoptic_map, apparatus
+    global synoptic_map, apparatus
     try:    
         data = request.get_json()
         if not data:
@@ -260,16 +284,6 @@ def open_project():
         apparatus_filepath = data.get('apparatus_filepath')
         project_files = data.get('project_files', {})
         
-        # Extract project root directory from file paths to load sigla mapping
-        if project_files:
-            # Get the common root directory from the project files
-            file_paths = list(project_files.keys())
-            if file_paths:
-                # Find the common root directory (typically the first part before '/')
-                first_path = file_paths[0]
-                project_root = first_path.split('/')[0] if '/' in first_path else ''
-                if project_root:
-                    sigla_mapping = load_sigla_mapping(project_files=project_files)
         
         if not apparatus_filepath:
             return jsonify({'error': 'No apparatus filepath provided'}), 400
@@ -287,7 +301,6 @@ def open_project():
             apparatus_entries = apparatus.get_entries()
             witness_order = apparatus.get_witness_order()
             witness_mapping = apparatus.get_witness_to_prefix_mapping()
-            print(witness_mapping)
             # Find leiths info from witness mapping
             leiths_info = None
             leiths_prefix = None
@@ -307,7 +320,9 @@ def open_project():
             if corresp:
                 # Load synoptic map from project files using class method
                 try:
-                    synoptic_map.load_from_project(corresp, apparatus_filepath, project_files, leiths_prefix=leiths_prefix)
+                    synoptic_map.load_from_project(corresp, apparatus_filepath, project_files, 
+                                                 leiths_prefix=leiths_prefix, 
+                                                 apparatus_witness_mapping=witness_mapping)
                 except Exception as synoptic_error:
                     print(f"ERROR loading synoptic map: {synoptic_error}")
                     
@@ -373,9 +388,12 @@ def parse_main_text_file_content(content):
     """
     try:
         pipeline = HeiCritPipe()
+        # Get witness mapping from apparatus if available
+        witness_mapping = apparatus.get_witness_to_prefix_mapping() if apparatus else {}
+        
         pipeline.add_step(PythonStep(append_synoptic_links_funct, name="heicrit_append_synoptic_links"), 
                           before_step= 'create_html',
-                          parameters= {'sigla_mapping': sigla_mapping, 
+                          parameters= {'witness_mapping': witness_mapping, 
                                        'synoptic_map': synoptic_map.get_loci()})
         result = pipeline.execute(content)
         return result

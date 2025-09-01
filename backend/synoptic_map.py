@@ -230,7 +230,8 @@ class SynopticMap:
     
     def parse_content(self, content: str, leiths_prefix: Optional[str] = None,
                      apparatus_filepath: Optional[str] = None,
-                     project_files: Optional[Dict[str, Dict[str, Any]]] = None) -> bool:
+                     project_files: Optional[Dict[str, Dict[str, Any]]] = None,
+                     apparatus_witness_mapping: Optional[Dict[str, Dict[str, str]]] = None) -> bool:
         """
         Parse synoptic map content from XML string and populate the loci.
         
@@ -239,6 +240,7 @@ class SynopticMap:
             leiths_prefix: Prefix for filtering leithandschrift entries
             apparatus_filepath: Path to apparatus file for resolving witness file paths
             project_files: Dictionary of project files for parsing witness files
+            apparatus_witness_mapping: Mapping of witness IDs to their info from apparatus (for filtering)
             
         Returns:
             True if parsing was successful, False otherwise
@@ -261,6 +263,19 @@ class SynopticMap:
                     file_name = replacement_pattern[3:-3]
                 
                 if ident:
+                    print(f"DEBUG: Processing prefixDef with ident='{ident}', file_name='{file_name}'")
+                    # Filter: only process witnesses that are mentioned in apparatus
+                    if apparatus_witness_mapping is not None:
+                        print(f"DEBUG: Apparatus mapping available: {apparatus_witness_mapping}")
+                        # Check if this prefix corresponds to any witness in the apparatus
+                        is_in_apparatus = any(
+                            mapping_info.get('synoptic_prefix') == ident
+                            for mapping_info in apparatus_witness_mapping.values()
+                        )
+                        print(f"DEBUG: Prefix '{ident}' in apparatus: {is_in_apparatus}")
+                        if not is_in_apparatus:
+                            print(f"INFO: Skipping witness file {file_name} (prefix: {ident}) - not in apparatus")
+                            continue
                     wit_info = {
                         'file_name': file_name
                     }
@@ -343,7 +358,9 @@ class SynopticMap:
         """
         try:
             resolved_path = resolve_relative_path(file_name, apparatus_filepath)
+            print(resolved_path)
             file_data = find_file_in_project(resolved_path, project_files)
+            
             
             if not file_data:
                 return {}
@@ -374,7 +391,8 @@ class SynopticMap:
 
     def load_from_project(self, corresp_path: str, apparatus_filepath: str, 
                          project_files: Dict[str, Dict[str, Any]], 
-                         leiths_prefix: Optional[str] = None) -> bool:
+                         leiths_prefix: Optional[str] = None,
+                         apparatus_witness_mapping: Optional[Dict[str, Dict[str, str]]] = None) -> bool:
         """
         Load synoptic map from project files using relative path resolution.
         
@@ -383,6 +401,7 @@ class SynopticMap:
             apparatus_filepath: Path to the apparatus file (for relative resolution)
             project_files: Dictionary of project files {path: {content: str, ...}}
             leiths_prefix: Prefix for filtering leithandschrift entries
+            apparatus_witness_mapping: Mapping of witness IDs to their info from apparatus (for filtering)
             
         Returns:
             True if loading was successful, False otherwise
@@ -393,7 +412,7 @@ class SynopticMap:
             
             if file_data:
                 self._file_path = resolved_path
-                return self.parse_content(file_data['content'], leiths_prefix, apparatus_filepath, project_files)
+                return self.parse_content(file_data['content'], leiths_prefix, apparatus_filepath, project_files, apparatus_witness_mapping)
             
             return False
             
