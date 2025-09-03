@@ -31,6 +31,10 @@ class HeiCritApp {
         this.currentProjectDirectory = null;
         this.currentApparatusFile = null;
         
+        // Store bound event handlers for proper removal
+        this.tokenClickHandler = null;
+        this.delegationHandler = null;
+        
         this.init();
     }
 
@@ -1266,9 +1270,17 @@ class HeiCritApp {
                                 data-loc="${this.escapeHtml(loc)}" 
                                 data-corresp="${this.escapeHtml(corresp)}">${this.escapeHtml(loc)}</span>`;
         
+        // Check if there are any real (non-placeholder) entries in this group
+        const hasRealEntries = entries.some(entry => !entry.is_placeholder);
+        
         // Process each entry in this location group
         entries.forEach((entry, index) => {
             const isActive = index === activeSubentryIndex;
+            
+            // Skip placeholder entries if there are real entries
+            if (entry.is_placeholder && hasRealEntries) {
+                return;
+            }
             
             html += `<div class="classical-subentry${entry.is_placeholder ? ' placeholder-entry' : ''}${isActive ? ' active' : ''}" 
                          data-subentry-index="${index}" 
@@ -1917,7 +1929,7 @@ class HeiCritApp {
         
         if (this.creationMode) {
             // Enter creation mode
-            newReadingBtn.textContent = 'Cancel';
+            newReadingBtn.textContent = 'Finish';
             newReadingBtn.classList.add('active');
             readingGroupSelect.style.display = 'inline-block';
             
@@ -1929,8 +1941,9 @@ class HeiCritApp {
             this.currentReadingGroup = 'lemma';
             this.nextReadingGroupIndex = 2;
             
-            // Set up token click handlers
+            // Set up token click handlers and event delegation
             this.setupTokenClickHandlers(tabId);
+            this.setupTokenEventDelegation();
             
         } else {
             // Exit creation mode
@@ -1950,19 +1963,59 @@ class HeiCritApp {
         // Clear all selected tokens
         this.clearSelectedTokens(tabId);
         
-        // Remove token click handlers
+        // Remove token click handlers and event delegation
         this.removeTokenClickHandlers(tabId);
+        if (this.delegationHandler) {
+            document.removeEventListener('click', this.delegationHandler);
+            this.delegationHandler = null;
+        }
+        
+        // Update the apparatus display now that we're exiting creation mode
+        this.updateApparatusDisplay(tabId);
     }
     
     setupTokenClickHandlers(tabId) {
+        console.log('setupTokenClickHandlers called for tab:', tabId);
         const tabPanel = document.getElementById(`panel-${tabId}`);
-        if (!tabPanel) return;
+        if (!tabPanel) {
+            console.log('No tab panel found for:', tabId);
+            return;
+        }
         
+        // Simply set cursor pointer - we'll use event delegation instead
         const tokens = tabPanel.querySelectorAll('.syn-token');
+        console.log(`Found ${tokens.length} tokens to set cursor for`);
+        
         tokens.forEach(token => {
-            token.addEventListener('click', this.handleTokenClick.bind(this, tabId));
             token.style.cursor = 'pointer';
+            // Add a data attribute to mark tokens as clickable in creation mode
+            token.setAttribute('data-creation-clickable', 'true');
         });
+        
+        console.log('Set cursor pointer for all tokens');
+    }
+    
+    setupTokenEventDelegation() {
+        // Remove existing delegation if any
+        if (this.delegationHandler) {
+            document.removeEventListener('click', this.delegationHandler);
+        }
+        
+        // Create new delegation handler
+        this.delegationHandler = (event) => {
+            // Check if the clicked element is a token in creation mode
+            if (this.creationMode && 
+                event.target.classList.contains('syn-token') && 
+                event.target.hasAttribute('data-creation-clickable')) {
+                
+                console.log('Event delegation caught token click:', event.target);
+                this.handleTokenClick(this.activeTabId, event);
+            }
+        };
+        
+        // Add the delegation handler
+        document.addEventListener('click', this.delegationHandler);
+        console.log('Set up event delegation for token clicks');
     }
     
     removeTokenClickHandlers(tabId) {
@@ -1971,19 +2024,29 @@ class HeiCritApp {
         
         const tokens = tabPanel.querySelectorAll('.syn-token');
         tokens.forEach(token => {
-            token.removeEventListener('click', this.handleTokenClick.bind(this, tabId));
             token.style.cursor = '';
+            token.removeAttribute('data-creation-clickable');
         });
     }
     
     handleTokenClick(tabId, event) {
-        if (!this.creationMode) return;
+        console.log('handleTokenClick called, creationMode:', this.creationMode);
+        
+        if (!this.creationMode) {
+            console.log('Not in creation mode, returning');
+            return;
+        }
         
         event.stopPropagation();
         const token = event.target;
         const tokenId = token.getAttribute('data-token-id');
         
-        if (!tokenId) return;
+        console.log('Token clicked:', token, 'tokenId:', tokenId);
+        
+        if (!tokenId) {
+            console.log('No tokenId found, returning');
+            return;
+        }
         
         // Determine which line this token belongs to
         const synLine = token.closest('.syn-line');
@@ -1992,11 +2055,21 @@ class HeiCritApp {
         // If clicking on main text (first line), force lemma selection
         const readingGroup = isMainText ? 'lemma' : this.currentReadingGroup;
         
+        console.log('Token click:', {
+            tokenId,
+            isMainText,
+            currentReadingGroup: this.currentReadingGroup,
+            finalReadingGroup: readingGroup,
+            synLine: synLine ? synLine.className : 'null',
+            selectedTokensKeys: Object.keys(this.selectedTokens)
+        });
+        
         // Toggle token selection
         if (token.classList.contains(`selected-${readingGroup}`)) {
             // Remove from selection
             token.classList.remove(`selected-${readingGroup}`);
             this.selectedTokens[readingGroup] = this.selectedTokens[readingGroup].filter(t => t.tokenId !== tokenId);
+            console.log('Token deselected from', readingGroup);
         } else {
             // Add to selection
             token.classList.add(`selected-${readingGroup}`);
@@ -2013,10 +2086,25 @@ class HeiCritApp {
                 text: token.textContent.trim(),
                 witnessInfo: witnessInfo
             });
+            
+            console.log('Token selected for', readingGroup, 'witness:', witnessInfo);
         }
         
         // Save entry immediately after any token change
+        console.log('About to call saveNewEntry, creationMode before:', this.creationMode);
         this.saveNewEntry(tabId);
+        console.log('After saveNewEntry, creationMode:', this.creationMode);
+        
+        // Check if event handlers are still attached
+        const tokens = document.querySelectorAll('.syn-token');
+        console.log('Total tokens found:', tokens.length);
+        let tokensWithHandlers = 0;
+        tokens.forEach(token => {
+            if (token.style.cursor === 'pointer') {
+                tokensWithHandlers++;
+            }
+        });
+        console.log('Tokens with cursor pointer (should have handlers):', tokensWithHandlers);
     }
     
     getWitnessInfoFromLine(synLine) {
@@ -2046,6 +2134,8 @@ class HeiCritApp {
     }
     
     handleReadingGroupChange(tabId, value) {
+        console.log('Reading group changed to:', value);
+        
         if (value === 'new-group') {
             // Create new reading group
             const newGroupName = `reading-${this.nextReadingGroupIndex}`;
@@ -2062,8 +2152,10 @@ class HeiCritApp {
             // Select the new group
             select.value = newGroupName;
             this.currentReadingGroup = newGroupName;
+            console.log('Created new reading group:', newGroupName);
         } else {
             this.currentReadingGroup = value;
+            console.log('Current reading group set to:', this.currentReadingGroup);
         }
     }
     
@@ -2110,12 +2202,26 @@ class HeiCritApp {
                 tab.newEntries.push(newEntry);
                 console.log('New entry created:', newEntry);
             }
+            
+            // Add/update entry in the grouped entries for immediate display
+            this.updateGroupedEntriesWithNewEntry(tab, newEntry);
+            
         } else {
             // No selections - remove entry if it exists
             if (entryIndex >= 0) {
-                tab.newEntries.splice(entryIndex, 1);
+                const removedEntry = tab.newEntries.splice(entryIndex, 1)[0];
                 console.log('Entry removed for location:', currentLoc);
+                
+                // Remove from grouped entries as well
+                this.removeNewEntryFromGroupedEntries(tab, removedEntry);
             }
+        }
+        
+        // Don't update the apparatus display during creation mode to avoid DOM rebuilds
+        // that interfere with token selection. The display will be updated when
+        // creation mode is exited.
+        if (!this.creationMode) {
+            this.updateApparatusDisplay(tabId);
         }
     }
     
@@ -2194,6 +2300,84 @@ class HeiCritApp {
         });
         
         return entry;
+    }
+    
+    updateGroupedEntriesWithNewEntry(tab, newEntry) {
+        const corresp = newEntry.corresp;
+        
+        // Initialize grouped entries if not exists
+        if (!tab.groupedEntries) {
+            tab.groupedEntries = {};
+        }
+        
+        // Mark the entry as user-created for styling
+        newEntry.isUserCreated = true;
+        
+        // Add to grouped entries
+        if (!tab.groupedEntries[corresp]) {
+            tab.groupedEntries[corresp] = [];
+            
+            // Add to entryKeys and sort
+            if (!tab.entryKeys) {
+                tab.entryKeys = [];
+            }
+            tab.entryKeys.push(corresp);
+            
+            // Re-sort entry keys by location
+            tab.entryKeys.sort((a, b) => {
+                const locA = tab.groupedEntries[a][0]?.loc || '';
+                const locB = tab.groupedEntries[b][0]?.loc || '';
+                const numA = parseInt(locA) || 0;
+                const numB = parseInt(locB) || 0;
+                return numA - numB;
+            });
+        }
+        
+        // Find if there's already a user-created entry for this corresp
+        const userEntryIndex = tab.groupedEntries[corresp].findIndex(entry => entry.isUserCreated);
+        
+        let subentryIndex;
+        if (userEntryIndex >= 0) {
+            // Replace existing user-created entry
+            tab.groupedEntries[corresp][userEntryIndex] = newEntry;
+            subentryIndex = userEntryIndex;
+        } else {
+            // Add new user-created entry
+            tab.groupedEntries[corresp].push(newEntry);
+            subentryIndex = tab.groupedEntries[corresp].length - 1;
+        }
+        
+        // Make this entry active and navigate to its location
+        const correspIndex = tab.entryKeys.indexOf(corresp);
+        if (correspIndex >= 0) {
+            tab.currentEntryIndex = correspIndex;
+            tab.activeSubentryIndex = subentryIndex;
+        }
+    }
+    
+    removeNewEntryFromGroupedEntries(tab, removedEntry) {
+        const corresp = removedEntry.corresp;
+        
+        if (tab.groupedEntries && tab.groupedEntries[corresp]) {
+            // Remove user-created entries for this corresp
+            tab.groupedEntries[corresp] = tab.groupedEntries[corresp].filter(entry => !entry.isUserCreated);
+            
+            // If no entries left for this corresp, remove the corresp key entirely
+            if (tab.groupedEntries[corresp].length === 0) {
+                delete tab.groupedEntries[corresp];
+                
+                // Remove from entryKeys
+                const keyIndex = tab.entryKeys.indexOf(corresp);
+                if (keyIndex >= 0) {
+                    tab.entryKeys.splice(keyIndex, 1);
+                }
+                
+                // Adjust current entry index if needed
+                if (tab.currentEntryIndex >= tab.entryKeys.length && tab.entryKeys.length > 0) {
+                    tab.currentEntryIndex = tab.entryKeys.length - 1;
+                }
+            }
+        }
     }
     
     async saveProject() {
