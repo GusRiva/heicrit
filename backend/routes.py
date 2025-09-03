@@ -489,3 +489,177 @@ def process_synoptic_map_file():
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
 
 
+@api.route('/apparatus/save', methods=['POST'])
+def save_apparatus_entries():
+    """
+    Save new apparatus entries to the apparatus file
+    """
+    try:
+        print("=== apparatus/save endpoint called ===")
+        
+        data = request.get_json()
+        if not data:
+            print("ERROR: No data provided")
+            return jsonify({'error': 'No data provided'}), 400
+        
+        print(f"Received data: {data}")
+        
+        apparatus_file = data.get('apparatus_file')
+        new_entries = data.get('new_entries', [])
+        project_directory = data.get('project_directory', '')
+        
+        print(f"apparatus_file: {apparatus_file}")
+        print(f"project_directory: {project_directory}")
+        print(f"new_entries count: {len(new_entries)}")
+        
+        if not apparatus_file:
+            print("ERROR: No apparatus file specified")
+            return jsonify({'error': 'No apparatus file specified'}), 400
+        
+        if not new_entries:
+            print("ERROR: No new entries to save")
+            return jsonify({'error': 'No new entries to save'}), 400
+        
+        # Resolve apparatus file path
+        # Check if apparatus_file already starts with project_directory
+        if not os.path.isabs(apparatus_file):
+            if apparatus_file.startswith(project_directory + '/'):
+                # apparatus_file already contains project_directory, use as-is
+                pass
+            else:
+                # apparatus_file is relative, join with project_directory
+                apparatus_file = os.path.join(project_directory, apparatus_file)
+        
+        print(f"Resolved apparatus file path: {apparatus_file}")
+        print(f"Current working directory: {os.getcwd()}")
+        print(f"File exists: {os.path.exists(apparatus_file)}")
+        
+        # Try resolving from project root instead of backend directory
+        if not os.path.exists(apparatus_file):
+            project_root_path = os.path.join('..', apparatus_file)
+            print(f"Trying from project root: {project_root_path}")
+            print(f"Project root path exists: {os.path.exists(project_root_path)}")
+            if os.path.exists(project_root_path):
+                apparatus_file = project_root_path
+        
+        if not os.path.exists(apparatus_file):
+            print(f"ERROR: File not found at {apparatus_file}")
+            return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
+        
+        # Load and parse the apparatus file
+        print("Loading apparatus file...")
+        with open(apparatus_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        print(f"File loaded, content length: {len(content)}")
+        
+        print("Parsing XML...")
+        root = et.fromstring(content.encode('utf-8'))
+        print("XML parsed successfully")
+        
+        # Find the text body where apparatus entries are stored
+        body = root.find('.//{http://www.tei-c.org/ns/1.0}body')
+        if body is None:
+            print("ERROR: No body element found")
+            return jsonify({'error': 'Could not find body element in apparatus file'}), 400
+        
+        print("Body element found")
+        
+        # Create new apparatus entries and insert them in location order
+        entries_added = 0
+        for entry_data in new_entries:
+            print(f"Processing entry: {entry_data}")
+            new_app = create_apparatus_element(entry_data)
+            insert_apparatus_entry_in_order(body, new_app, entry_data['loc'])
+            entries_added += 1
+        
+        print(f"Processed {entries_added} entries")
+        
+        # Write back to file
+        print("Generating output XML...")
+        output_content = et.tostring(root, encoding='unicode', pretty_print=True)
+        
+        print("Writing to file...")
+        with open(apparatus_file, 'w', encoding='utf-8') as f:
+            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            f.write(output_content)
+        
+        print("File written successfully")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully added {entries_added} new apparatus entries',
+            'entries_added': entries_added
+        })
+        
+    except Exception as e:
+        print(f"ERROR: Exception occurred: {str(e)}")
+        print(f"Exception type: {type(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to save apparatus entries: {str(e)}'}), 500
+
+
+def create_apparatus_element(entry_data):
+    """
+    Create an XML apparatus element from entry data
+    """
+    app = et.Element('{http://www.tei-c.org/ns/1.0}app')
+    app.set('loc', str(entry_data['loc']))
+    app.set('corresp', entry_data['corresp'])
+    
+    # Add lemma if present
+    if entry_data.get('lemma'):
+        lemma_data = entry_data['lemma']
+        lemma = et.SubElement(app, '{http://www.tei-c.org/ns/1.0}lem')
+        lemma.text = lemma_data['text']
+        
+        for attr_name, attr_value in lemma_data['attributes'].items():
+            lemma.set(attr_name, attr_value)
+    
+    # Add readings
+    for reading_data in entry_data.get('readings', []):
+        rdg = et.SubElement(app, '{http://www.tei-c.org/ns/1.0}rdg')
+        rdg.text = reading_data['text']
+        
+        for attr_name, attr_value in reading_data['attributes'].items():
+            rdg.set(attr_name, attr_value)
+    
+    return app
+
+
+def insert_apparatus_entry_in_order(body, new_app, loc):
+    """
+    Insert the new apparatus entry in the correct location order
+    """
+    loc_num = int(loc) if loc.isdigit() else 0
+    
+    # Find all existing app elements
+    apps = body.findall('.//{http://www.tei-c.org/ns/1.0}app')
+    
+    # Find the correct insertion point
+    insert_index = len(apps)  # Default to end
+    
+    for i, app in enumerate(apps):
+        app_loc = app.get('loc', '0')
+        app_loc_num = int(app_loc) if app_loc.isdigit() else 0
+        
+        if loc_num < app_loc_num:
+            insert_index = i
+            break
+    
+    # Insert the new element
+    if insert_index < len(apps):
+        # Insert before the found element
+        parent = apps[insert_index].getparent()
+        parent.insert(list(parent).index(apps[insert_index]), new_app)
+    else:
+        # Insert at the end
+        if apps:
+            parent = apps[-1].getparent()
+            parent.append(new_app)
+        else:
+            # No existing apps, add to body
+            body.append(new_app)
+
+

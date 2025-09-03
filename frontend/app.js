@@ -18,6 +18,19 @@ class HeiCritApp {
         this.activeTabId = null;
         this.nextTabId = 1;
         
+        // Entry creation mode
+        this.creationMode = false;
+        this.currentReadingGroup = 'lemma';
+        this.selectedTokens = {
+            lemma: [],
+            'reading-1': []
+        };
+        this.nextReadingGroupIndex = 2;
+        
+        // Project tracking for save functionality
+        this.currentProjectDirectory = null;
+        this.currentApparatusFile = null;
+        
         this.init();
     }
 
@@ -147,7 +160,17 @@ class HeiCritApp {
                             </div>
                             
                             <div class="apparatus-details">
-                                <h4>Location Details</h4>
+                                <div class="apparatus-details-header">
+                                    <h4>Location Details</h4>
+                                    <div class="apparatus-toolbar">
+                                        <button id="new-reading-btn-${tabId}" class="new-reading-btn">New Reading</button>
+                                        <select id="reading-group-select-${tabId}" class="reading-group-select" style="display: none;">
+                                            <option value="lemma">Lemma</option>
+                                            <option value="reading-1">Reading 1</option>
+                                            <option value="new-group">+ New reading group</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div id="apparatus-details-content-${tabId}">
                                     Click on a location number to see details
                                 </div>
@@ -320,6 +343,18 @@ class HeiCritApp {
                     this.setActiveSubentry(tabId, corresp, subentryIndex);
                 }
             });
+        }
+        
+        // Setup entry creation events
+        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+        const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+        
+        if (newReadingBtn) {
+            newReadingBtn.addEventListener('click', () => this.toggleCreationMode(tabId));
+        }
+        
+        if (readingGroupSelect) {
+            readingGroupSelect.addEventListener('change', (e) => this.handleReadingGroupChange(tabId, e.target.value));
         }
     }
 
@@ -788,6 +823,7 @@ class HeiCritApp {
         document.getElementById('openProjectDirectory').addEventListener('click', () => this.openProjectDirectory());
         document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
         document.getElementById('saveAsFile').addEventListener('click', () => this.saveAsFile());
+        document.getElementById('saveProject').addEventListener('click', () => this.saveProject());
         
         // Toolbar icon events
         document.getElementById('openProjectDirectoryIcon').addEventListener('click', () => this.openProjectDirectory());
@@ -932,6 +968,14 @@ class HeiCritApp {
             // Store all files in the project
             this.projectFiles.clear();
             
+            // Extract and store project directory path
+            if (files.length > 0 && files[0].webkitRelativePath) {
+                const firstFilePath = files[0].webkitRelativePath;
+                // Extract the root directory name (first part of the path)
+                this.currentProjectDirectory = firstFilePath.split('/')[0];
+                console.log('Project directory set to:', this.currentProjectDirectory);
+            }
+            
             // Read all files and store them
             const fileReadPromises = files.map(file => {
                 return new Promise((resolve) => {
@@ -1012,6 +1056,10 @@ class HeiCritApp {
     async processApparatusFileFromProject(content, filepath) {
         try {
             this.updateStatus('Processing apparatus file from project...');
+            
+            // Store the apparatus file path for save functionality
+            this.currentApparatusFile = filepath;
+            console.log('Apparatus file set to:', this.currentApparatusFile);
             
             // Basic client-side XML validation first
             if (!this.validateXML(content)) {
@@ -1161,7 +1209,10 @@ class HeiCritApp {
                 apparatusData: this.apparatusData,
                 synopticMapData: this.synopticMapData,
                 mainTextData: this.mainTextData,
-                filename: projectName
+                filename: projectName,
+                // Add project paths for save functionality
+                projectDirectory: this.currentProjectDirectory,
+                apparatusFile: this.currentApparatusFile
             });
             
             const apparatusCount = this.apparatusData ? this.apparatusData.count : 0;
@@ -1855,6 +1906,341 @@ class HeiCritApp {
                 // Scroll to make sure it's visible
                 synopticUnit.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
+        }
+    }
+
+    // Entry creation mode methods
+    toggleCreationMode(tabId) {
+        this.creationMode = !this.creationMode;
+        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+        const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+        
+        if (this.creationMode) {
+            // Enter creation mode
+            newReadingBtn.textContent = 'Cancel';
+            newReadingBtn.classList.add('active');
+            readingGroupSelect.style.display = 'inline-block';
+            
+            // Reset selected tokens
+            this.selectedTokens = {
+                lemma: [],
+                'reading-1': []
+            };
+            this.currentReadingGroup = 'lemma';
+            this.nextReadingGroupIndex = 2;
+            
+            // Set up token click handlers
+            this.setupTokenClickHandlers(tabId);
+            
+        } else {
+            // Exit creation mode
+            this.exitCreationMode(tabId);
+        }
+    }
+    
+    exitCreationMode(tabId) {
+        this.creationMode = false;
+        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+        const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+        
+        newReadingBtn.textContent = 'New Reading';
+        newReadingBtn.classList.remove('active');
+        readingGroupSelect.style.display = 'none';
+        
+        // Clear all selected tokens
+        this.clearSelectedTokens(tabId);
+        
+        // Remove token click handlers
+        this.removeTokenClickHandlers(tabId);
+    }
+    
+    setupTokenClickHandlers(tabId) {
+        const tabPanel = document.getElementById(`panel-${tabId}`);
+        if (!tabPanel) return;
+        
+        const tokens = tabPanel.querySelectorAll('.syn-token');
+        tokens.forEach(token => {
+            token.addEventListener('click', this.handleTokenClick.bind(this, tabId));
+            token.style.cursor = 'pointer';
+        });
+    }
+    
+    removeTokenClickHandlers(tabId) {
+        const tabPanel = document.getElementById(`panel-${tabId}`);
+        if (!tabPanel) return;
+        
+        const tokens = tabPanel.querySelectorAll('.syn-token');
+        tokens.forEach(token => {
+            token.removeEventListener('click', this.handleTokenClick.bind(this, tabId));
+            token.style.cursor = '';
+        });
+    }
+    
+    handleTokenClick(tabId, event) {
+        if (!this.creationMode) return;
+        
+        event.stopPropagation();
+        const token = event.target;
+        const tokenId = token.getAttribute('data-token-id');
+        
+        if (!tokenId) return;
+        
+        // Determine which line this token belongs to
+        const synLine = token.closest('.syn-line');
+        const isMainText = synLine && synLine.classList.contains('main-text');
+        
+        // If clicking on main text (first line), force lemma selection
+        const readingGroup = isMainText ? 'lemma' : this.currentReadingGroup;
+        
+        // Toggle token selection
+        if (token.classList.contains(`selected-${readingGroup}`)) {
+            // Remove from selection
+            token.classList.remove(`selected-${readingGroup}`);
+            this.selectedTokens[readingGroup] = this.selectedTokens[readingGroup].filter(t => t.tokenId !== tokenId);
+        } else {
+            // Add to selection
+            token.classList.add(`selected-${readingGroup}`);
+            
+            // Get witness information from the line
+            const witnessInfo = this.getWitnessInfoFromLine(synLine);
+            
+            if (!this.selectedTokens[readingGroup]) {
+                this.selectedTokens[readingGroup] = [];
+            }
+            
+            this.selectedTokens[readingGroup].push({
+                tokenId: tokenId,
+                text: token.textContent.trim(),
+                witnessInfo: witnessInfo
+            });
+        }
+        
+        // Save entry immediately after any token change
+        this.saveNewEntry(tabId);
+    }
+    
+    getWitnessInfoFromLine(synLine) {
+        if (!synLine) return null;
+        
+        const witElement = synLine.querySelector('.syn-line-wit');
+        if (!witElement) return null;
+        
+        const lineId = witElement.getAttribute('data-line-id');
+        if (!lineId) return null;
+        
+        // Extract witness prefix from line-id (e.g., "a:123" -> "a")
+        const prefix = lineId.includes(':') ? lineId.split(':')[0] : lineId;
+        
+        // Find corresponding witness from mapping
+        for (const [witnessId, mappingInfo] of Object.entries(this.witnessMapping || {})) {
+            if (mappingInfo.synoptic_prefix === prefix) {
+                return {
+                    witnessId: witnessId,
+                    siglum: mappingInfo.siglum || witnessId,
+                    prefix: prefix
+                };
+            }
+        }
+        
+        return { witnessId: prefix, siglum: prefix, prefix: prefix };
+    }
+    
+    handleReadingGroupChange(tabId, value) {
+        if (value === 'new-group') {
+            // Create new reading group
+            const newGroupName = `reading-${this.nextReadingGroupIndex}`;
+            this.selectedTokens[newGroupName] = [];
+            this.nextReadingGroupIndex++;
+            
+            // Update dropdown
+            const select = document.getElementById(`reading-group-select-${tabId}`);
+            const newOption = document.createElement('option');
+            newOption.value = newGroupName;
+            newOption.textContent = `Reading ${this.nextReadingGroupIndex - 1}`;
+            select.insertBefore(newOption, select.lastElementChild);
+            
+            // Select the new group
+            select.value = newGroupName;
+            this.currentReadingGroup = newGroupName;
+        } else {
+            this.currentReadingGroup = value;
+        }
+    }
+    
+    clearSelectedTokens(tabId) {
+        const tabPanel = document.getElementById(`panel-${tabId}`);
+        if (!tabPanel) return;
+        
+        // Remove all selection classes
+        Object.keys(this.selectedTokens).forEach(group => {
+            tabPanel.querySelectorAll(`.selected-${group}`).forEach(token => {
+                token.classList.remove(`selected-${group}`);
+            });
+        });
+    }
+    
+    saveNewEntry(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+        
+        // Get current location from the active entry
+        const currentLoc = this.getCurrentLocation(tab);
+        
+        // Initialize newEntries array if not exists
+        if (!tab.newEntries) {
+            tab.newEntries = [];
+        }
+        
+        // Check if we have any selected tokens
+        const hasSelections = Object.values(this.selectedTokens).some(group => group.length > 0);
+        
+        // Find existing entry for this location
+        const entryIndex = tab.newEntries.findIndex(entry => entry.loc === currentLoc);
+        
+        if (hasSelections) {
+            // Create new apparatus entry
+            const newEntry = this.createApparatusEntry(currentLoc);
+            
+            if (entryIndex >= 0) {
+                // Update existing entry
+                tab.newEntries[entryIndex] = newEntry;
+                console.log('Entry updated:', newEntry);
+            } else {
+                // Add new entry
+                tab.newEntries.push(newEntry);
+                console.log('New entry created:', newEntry);
+            }
+        } else {
+            // No selections - remove entry if it exists
+            if (entryIndex >= 0) {
+                tab.newEntries.splice(entryIndex, 1);
+                console.log('Entry removed for location:', currentLoc);
+            }
+        }
+    }
+    
+    getCurrentLocation(tab) {
+        if (tab.entryKeys && tab.entryKeys.length > 0 && typeof tab.currentEntryIndex === 'number') {
+            const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
+            const entries = tab.groupedEntries[currentCorresp];
+            if (entries && entries.length > 0) {
+                return entries[0].loc;
+            }
+        }
+        return '1'; // Default location
+    }
+    
+    createApparatusEntry(loc) {
+        const entry = {
+            loc: loc,
+            corresp: `a:l_${loc}`,
+            lemma: null,
+            readings: []
+        };
+        
+        // Process lemma
+        if (this.selectedTokens.lemma && this.selectedTokens.lemma.length > 0) {
+            const lemmaTokens = this.selectedTokens.lemma;
+            const lemmaText = lemmaTokens.map(t => t.text).join(' ');
+            const lemmaCorresp = lemmaTokens.map(t => `${lemmaTokens[0].witnessInfo.prefix}:${t.tokenId}`).join(' ');
+            const lemmaWit = `#${lemmaTokens[0].witnessInfo.witnessId}`;
+            
+            entry.lemma = {
+                text: lemmaText,
+                attributes: {
+                    wit: lemmaWit,
+                    corresp: lemmaCorresp
+                }
+            };
+        }
+        
+        // Process readings
+        Object.keys(this.selectedTokens).forEach(group => {
+            if (group !== 'lemma' && this.selectedTokens[group].length > 0) {
+                const readingTokens = this.selectedTokens[group];
+                
+                // Group tokens by witness
+                const witGroups = {};
+                readingTokens.forEach(token => {
+                    const witId = token.witnessInfo.witnessId;
+                    if (!witGroups[witId]) {
+                        witGroups[witId] = [];
+                    }
+                    witGroups[witId].push(token);
+                });
+                
+                // Get reading text from the first witness only
+                const firstWitnessId = Object.keys(witGroups)[0];
+                const firstWitnessTokens = witGroups[firstWitnessId];
+                const readingText = firstWitnessTokens.map(t => t.text).join(' ');
+                
+                // Create corresp and wit attributes
+                const witIds = Object.keys(witGroups).map(id => `#${id}`).join(' ');
+                const correspParts = [];
+                Object.entries(witGroups).forEach(([witId, tokens]) => {
+                    const witnessInfo = tokens[0].witnessInfo;
+                    const tokenIds = tokens.map(t => `${witnessInfo.prefix}:${t.tokenId}`).join(' ');
+                    correspParts.push(tokenIds);
+                });
+                
+                entry.readings.push({
+                    text: readingText,
+                    attributes: {
+                        wit: witIds,
+                        corresp: correspParts.join(' ')
+                    }
+                });
+            }
+        });
+        
+        return entry;
+    }
+    
+    async saveProject() {
+        if (!this.activeTabId) {
+            alert('No active project tab to save');
+            return;
+        }
+        
+        const tab = this.tabs.get(this.activeTabId);
+        if (!tab || tab.type !== 'project') {
+            alert('Active tab is not a project');
+            return;
+        }
+        
+        if (!tab.newEntries || tab.newEntries.length === 0) {
+            alert('No new entries to save');
+            return;
+        }
+        
+        try {
+            const requestData = {
+                apparatus_file: tab.data.apparatusFile,
+                new_entries: tab.newEntries,
+                project_directory: tab.data.projectDirectory
+            };
+            
+            console.log('Sending save request:', requestData);
+            
+            const response = await this.apiRequest('/apparatus/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            if (response.success) {
+                alert(`Project saved! ${tab.newEntries.length} new entries added.`);
+                // Clear the new entries as they're now saved
+                tab.newEntries = [];
+            } else {
+                console.error('Save failed:', response);
+                alert(`Failed to save project: ${response.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error saving project:', error);
+            alert('Error saving project. Check the console for details.');
         }
     }
 
