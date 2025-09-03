@@ -496,6 +496,7 @@ class HeiCritApp {
         // Get current entry data
         const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
         const currentEntries = tab.groupedEntries[currentCorresp];
+        console.log("Current entries", currentEntries);
         const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
         // Generate HTML for current entry
@@ -644,11 +645,13 @@ class HeiCritApp {
             this.highlightTokensFromCorresp(entry.lemma.attributes.corresp, 'lemma');
         }
 
-        // Highlight reading tokens in yellow
+        // Highlight reading tokens with different colors for each reading group
         if (entry.readings && entry.readings.length > 0) {
-            entry.readings.forEach(reading => {
+            entry.readings.forEach((reading, index) => {
                 if (reading.attributes && reading.attributes.corresp) {
-                    this.highlightTokensFromCorresp(reading.attributes.corresp, 'reading');
+                    // Use different reading classes for each reading group
+                    const readingType = `reading-${index + 1}`;
+                    this.highlightTokensFromCorresp(reading.attributes.corresp, readingType);
                 }
             });
         }
@@ -658,8 +661,16 @@ class HeiCritApp {
         // Remove all token highlighting classes
         const tabPanel = document.getElementById(`panel-${tabId}`);
         if (tabPanel) {
-            tabPanel.querySelectorAll('.syn-token.highlight-lemma, .syn-token.highlight-reading').forEach(token => {
-                token.classList.remove('highlight-lemma', 'highlight-reading');
+            // Remove lemma highlighting
+            tabPanel.querySelectorAll('.syn-token.highlight-lemma').forEach(token => {
+                token.classList.remove('highlight-lemma');
+            });
+            
+            // Remove all reading highlighting classes (reading-1, reading-2, etc.)
+            tabPanel.querySelectorAll('.syn-token[class*="highlight-reading"]').forEach(token => {
+                // Remove all classes that start with 'highlight-reading'
+                const classesToRemove = Array.from(token.classList).filter(cls => cls.startsWith('highlight-reading'));
+                token.classList.remove(...classesToRemove);
             });
         }
     }
@@ -696,12 +707,12 @@ class HeiCritApp {
         }
         
         correspParts.forEach(part => {
-            console.log(`Processed part: "${part}"`);
+            
             if (part.includes(':')) {
                 const colonIndex = part.indexOf(':');
                 const prefix = part.substring(0, colonIndex);
                 const tokenSpec = part.substring(colonIndex + 1);
-                console.log(`Processing prefix: "${prefix}", tokenSpec: "${tokenSpec}"`);
+                
                 this.highlightTokensForPrefix(prefix, tokenSpec, type);
             }
         });
@@ -710,62 +721,62 @@ class HeiCritApp {
     highlightTokensForPrefix(prefix, tokenSpec, type) {
         // Find the syn-line-wit element with matching prefix
         const witElement = document.querySelector(`.syn-line-wit[data-line-id*="${prefix}:"]`);
-        console.log(`Looking for wit element with prefix ${prefix}, found:`, witElement);
+        
         if (!witElement) return;
 
         const synLine = witElement.closest('.syn-line');
-        console.log(`Found syn-line:`, synLine);
+        
         if (!synLine) return;
 
         const synLineContent = synLine.querySelector('.syn-line-content');
-        console.log(`Found syn-line-content:`, synLineContent);
+        
         if (!synLineContent) return;
 
         if (tokenSpec.startsWith('range(') && tokenSpec.endsWith(')')) {
             // Handle range specification like "range(w_12_1, w_12_2)"
             const rangeContent = tokenSpec.slice(6, -1); // Remove "range(" and ")"
             const [startToken, endToken] = rangeContent.split(',').map(s => s.trim());
-            console.log(`Range: ${startToken} to ${endToken}`);
+            
             this.highlightTokenRange(synLineContent, startToken, endToken, type);
         } else {
             // Handle single token like "w_12_1"
-            console.log(`Single token: ${tokenSpec}`);
+            
             this.highlightSingleToken(synLineContent, tokenSpec, type);
         }
     }
 
     highlightSingleToken(container, tokenId, type) {
         const token = container.querySelector(`.syn-token[data-token-id="${tokenId}"]`);
-        console.log(`Looking for token with ID: ${tokenId}, found:`, token);
+        
         if (token) {
             token.classList.add(`highlight-${type}`);
-            console.log(`Added highlight-${type} class to token`);
+            
         }
     }
 
     highlightTokenRange(container, startTokenId, endTokenId, type) {
         const allTokens = container.querySelectorAll('.syn-token[data-token-id]');
-        console.log(`Range highlighting: ${startTokenId} to ${endTokenId}, found ${allTokens.length} tokens`);
+        
         let inRange = false;
         let foundStart = false;
 
         for (const token of allTokens) {
             const tokenId = token.getAttribute('data-token-id');
-            console.log(`Checking token: ${tokenId}`);
+            
             
             if (tokenId === startTokenId) {
                 inRange = true;
                 foundStart = true;
-                console.log(`Found start token: ${tokenId}`);
+                
             }
             
             if (inRange) {
                 token.classList.add(`highlight-${type}`);
-                console.log(`Highlighted token: ${tokenId}`);
+                
             }
             
             if (tokenId === endTokenId && foundStart) {
-                console.log(`Found end token: ${tokenId}, stopping`);
+                
                 break;
             }
         }
@@ -1312,7 +1323,6 @@ class HeiCritApp {
                     apparatusMap[correspKey].forEach(entry => {
                         completeEntries.push({
                             ...entry,
-                            synoptic_data: synopticMap[corresp]
                         });
                     });
                 } else {
@@ -1323,7 +1333,6 @@ class HeiCritApp {
                         loc: synopticData.n || synopticData['n'] || corresp,
                         lemma: null,
                         readings: [],
-                        synoptic_data: synopticData,
                         is_placeholder: true
                     });
                 }
@@ -1787,7 +1796,6 @@ class HeiCritApp {
         await this.showLocationDetailsForTab(this.activeTabId, loc);
     }
 
-    // Old global navigation methods removed - now handled per tab
 
     goToCorrespEntry(containerId) {
         if (!containerId) {
@@ -1825,7 +1833,6 @@ class HeiCritApp {
     }
 
     highlightSynopticUnit(containerId) {
-        // Remove existing highlights in all tabs
         document.querySelectorAll('.synoptic-unit.active').forEach(unit => {
             unit.classList.remove('active');
         });

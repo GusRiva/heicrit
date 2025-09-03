@@ -324,6 +324,7 @@ def open_project():
             if leiths_path:
                 main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             
+            
             result = {
                 'success': True,
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
