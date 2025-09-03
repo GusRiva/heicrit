@@ -165,14 +165,16 @@ class HeiCritApp {
                             
                             <div class="apparatus-details">
                                 <div class="apparatus-details-header">
-                                    <h4>Location Details</h4>
-                                    <div class="apparatus-toolbar">
-                                        <button id="new-reading-btn-${tabId}" class="new-reading-btn">New Reading</button>
-                                        <select id="reading-group-select-${tabId}" class="reading-group-select" style="display: none;">
-                                            <option value="lemma">Lemma</option>
-                                            <option value="reading-1">Reading 1</option>
-                                            <option value="new-group">+ New reading group</option>
-                                        </select>
+                                    <div class="apparatus-details-title">
+                                        <h4>Location Details</h4>
+                                        <div class="apparatus-toolbar">
+                                            <button id="new-reading-btn-${tabId}" class="new-reading-btn">New Reading</button>
+                                            <select id="reading-group-select-${tabId}" class="reading-group-select" style="display: none;">
+                                                <option value="lemma">Lemma</option>
+                                                <option value="reading-1">Reading 1</option>
+                                                <option value="new-group">+ New reading group</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="apparatus-details-content-${tabId}">
@@ -379,7 +381,6 @@ class HeiCritApp {
             tab.mainTextData = data.mainTextData;
             tab.apparatusEntries = data.apparatusEntries;
             tab.currentEntryIndex = 0;
-            tab.activeSubentryIndex = 0; // Track which subentry is active within current location
             tab.groupedEntries = this.groupEntriesByCorresp(data.apparatusEntries);
             tab.entryKeys = Object.keys(tab.groupedEntries);
 
@@ -391,6 +392,15 @@ class HeiCritApp {
                 const numB = parseInt(locB) || 0;
                 return numA - numB;
             });
+            
+            // Set initial activeSubentryIndex to first non-placeholder entry
+            if (tab.entryKeys.length > 0) {
+                const firstCorresp = tab.entryKeys[0];
+                const firstEntries = tab.groupedEntries[firstCorresp];
+                tab.activeSubentryIndex = this.findFirstNonPlaceholderEntry(firstEntries);
+            } else {
+                tab.activeSubentryIndex = -1;
+            }
 
             // Display apparatus entries
             this.updateApparatusDisplay(tabId);
@@ -539,7 +549,9 @@ class HeiCritApp {
         const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
         // Generate HTML for current entry
-        const htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries, tab.activeSubentryIndex || 0);
+        // Use max(0, activeSubentryIndex) to handle -1 case (no non-placeholder entries)
+        const displayIndex = Math.max(0, tab.activeSubentryIndex || 0);
+        const htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries, displayIndex);
         
         // Set content
         const content = document.getElementById(`apparatus-content-${tabId}`);
@@ -589,7 +601,12 @@ class HeiCritApp {
 
         if (tab.currentEntryIndex > 0) {
             tab.currentEntryIndex--;
-            tab.activeSubentryIndex = 0; // Reset to first subentry when navigating
+            
+            // Set to first non-placeholder entry, or -1 if all are placeholders
+            const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
+            const currentEntries = tab.groupedEntries[currentCorresp];
+            tab.activeSubentryIndex = this.findFirstNonPlaceholderEntry(currentEntries);
+            
             this.updateApparatusDisplay(tabId);
         }
     }
@@ -600,7 +617,12 @@ class HeiCritApp {
 
         if (tab.currentEntryIndex < tab.entryKeys.length - 1) {
             tab.currentEntryIndex++;
-            tab.activeSubentryIndex = 0; // Reset to first subentry when navigating
+            
+            // Set to first non-placeholder entry, or -1 if all are placeholders
+            const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
+            const currentEntries = tab.groupedEntries[currentCorresp];
+            tab.activeSubentryIndex = this.findFirstNonPlaceholderEntry(currentEntries);
+            
             this.updateApparatusDisplay(tabId);
         }
     }
@@ -626,7 +648,12 @@ class HeiCritApp {
 
         if (targetIndex !== -1) {
             tab.currentEntryIndex = targetIndex;
-            tab.activeSubentryIndex = 0; // Reset to first subentry when navigating
+            
+            // Set to first non-placeholder entry, or -1 if all are placeholders
+            const currentCorresp = tab.entryKeys[targetIndex];
+            const currentEntries = tab.groupedEntries[currentCorresp];
+            tab.activeSubentryIndex = this.findFirstNonPlaceholderEntry(currentEntries);
+            
             this.updateApparatusDisplay(tabId);
             input.value = '';
         } else {
@@ -636,6 +663,17 @@ class HeiCritApp {
                 input.style.border = '';
             }, 1000);
         }
+    }
+
+    findFirstNonPlaceholderEntry(entries) {
+        if (!entries || entries.length === 0) return -1;
+        
+        for (let i = 0; i < entries.length; i++) {
+            if (!entries[i].is_placeholder) {
+                return i;
+            }
+        }
+        return -1; // All entries are placeholders
     }
 
     setActiveSubentry(tabId, corresp, subentryIndex) {
@@ -672,6 +710,9 @@ class HeiCritApp {
         // Clear any existing token highlights
         this.clearTokenHighlights(tabId);
 
+        // First, add gray background to all tokens that have apparatus entries
+        this.addApparatusBackgroundToTokens(tabId, corresp);
+
         // Get the entry data
         const entries = tab.groupedEntries[corresp];
         if (!entries || subentryIndex >= entries.length) return;
@@ -696,10 +737,143 @@ class HeiCritApp {
         }
     }
 
+    addApparatusBackgroundToTokens(tabId, corresp) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
+        // Get all entries for this location
+        const entries = tab.groupedEntries[corresp];
+        if (!entries) return;
+
+        // Collect all corresp values from all entries at this location
+        const allCorrespValues = [];
+        entries.forEach(entry => {
+            if (entry.is_placeholder) return;
+            
+            // Add lemma corresp
+            if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
+                allCorrespValues.push(entry.lemma.attributes.corresp);
+            }
+            
+            // Add reading corresp values
+            if (entry.readings && entry.readings.length > 0) {
+                entry.readings.forEach(reading => {
+                    if (reading.attributes && reading.attributes.corresp) {
+                        allCorrespValues.push(reading.attributes.corresp);
+                    }
+                });
+            }
+        });
+
+        // Apply has-apparatus class to all these tokens
+        allCorrespValues.forEach(correspValue => {
+            this.addHasApparatusClassFromCorresp(correspValue);
+        });
+    }
+
+    addHasApparatusClassFromCorresp(correspValue) {
+        // Parse corresp attribute like "a:range(w_12_1, w_12_2)" or "ba:w_12_1 bb:w_12_1"
+        const correspParts = [];
+        let currentPart = '';
+        let inRange = false;
+        
+        const tokens = correspValue.split(/\s+/);
+        for (const token of tokens) {
+            if (token.includes('range(')) {
+                inRange = true;
+                currentPart = token;
+            } else if (inRange && token.endsWith(')')) {
+                currentPart += ' ' + token;
+                correspParts.push(currentPart);
+                currentPart = '';
+                inRange = false;
+            } else if (inRange) {
+                currentPart += ' ' + token;
+            } else {
+                correspParts.push(token);
+            }
+        }
+        
+        // Handle case where we're still in a range at the end
+        if (currentPart) {
+            correspParts.push(currentPart);
+        }
+        
+        correspParts.forEach(part => {
+            if (part.includes(':')) {
+                const colonIndex = part.indexOf(':');
+                const prefix = part.substring(0, colonIndex);
+                const tokenSpec = part.substring(colonIndex + 1);
+                
+                this.addHasApparatusClassForPrefix(prefix, tokenSpec);
+            }
+        });
+    }
+
+    addHasApparatusClassForPrefix(prefix, tokenSpec) {
+        // Find the syn-line-wit element with matching prefix
+        const witElement = document.querySelector(`.syn-line-wit[data-line-id*="${prefix}:"]`);
+        
+        if (!witElement) return;
+
+        const synLine = witElement.closest('.syn-line');
+        if (!synLine) return;
+
+        const synLineContent = synLine.querySelector('.syn-line-content');
+        if (!synLineContent) return;
+
+        if (tokenSpec.startsWith('range(') && tokenSpec.endsWith(')')) {
+            // Handle range specification like "range(w_12_1, w_12_2)"
+            const rangeContent = tokenSpec.slice(6, -1); // Remove "range(" and ")"
+            const [startToken, endToken] = rangeContent.split(',').map(s => s.trim());
+            
+            this.addHasApparatusClassToTokenRange(synLineContent, startToken, endToken);
+        } else {
+            // Handle single token like "w_12_1"
+            this.addHasApparatusClassToSingleToken(synLineContent, tokenSpec);
+        }
+    }
+
+    addHasApparatusClassToSingleToken(container, tokenId) {
+        const token = container.querySelector(`.syn-token[data-token-id="${tokenId}"]`);
+        if (token) {
+            token.classList.add('has-apparatus');
+        }
+    }
+
+    addHasApparatusClassToTokenRange(container, startTokenId, endTokenId) {
+        const allTokens = container.querySelectorAll('.syn-token[data-token-id]');
+        
+        let inRange = false;
+        let foundStart = false;
+
+        for (const token of allTokens) {
+            const tokenId = token.getAttribute('data-token-id');
+            
+            if (tokenId === startTokenId) {
+                inRange = true;
+                foundStart = true;
+            }
+            
+            if (inRange) {
+                token.classList.add('has-apparatus');
+            }
+            
+            if (tokenId === endTokenId && foundStart) {
+                break;
+            }
+        }
+    }
+
     clearTokenHighlights(tabId) {
         // Remove all token highlighting classes
         const tabPanel = document.getElementById(`panel-${tabId}`);
         if (tabPanel) {
+            // Remove apparatus background highlighting
+            tabPanel.querySelectorAll('.syn-token.has-apparatus').forEach(token => {
+                token.classList.remove('has-apparatus');
+            });
+            
             // Remove lemma highlighting
             tabPanel.querySelectorAll('.syn-token.highlight-lemma').forEach(token => {
                 token.classList.remove('highlight-lemma');
@@ -1848,8 +2022,8 @@ class HeiCritApp {
             
             // Trigger token highlighting after synoptic content is loaded
             const tab = this.tabs.get(tabId);
-            if (tab) {
-                this.highlightTokensForEntry(tabId, corresp, tab.activeSubentryIndex || 0);
+            if (tab && tab.activeSubentryIndex >= 0) {
+                this.highlightTokensForEntry(tabId, corresp, tab.activeSubentryIndex);
             }
         }
     }
@@ -1883,6 +2057,12 @@ class HeiCritApp {
         
         if (targetIndex !== -1) {
             activeTab.currentEntryIndex = targetIndex;
+            
+            // Set to first non-placeholder entry, or -1 if all are placeholders
+            const currentCorresp = activeTab.entryKeys[targetIndex];
+            const currentEntries = activeTab.groupedEntries[currentCorresp];
+            activeTab.activeSubentryIndex = this.findFirstNonPlaceholderEntry(currentEntries);
+            
             this.updateApparatusDisplay(activeTab.id);
             
             // Scroll to the apparatus panel if it's not visible
@@ -1933,6 +2113,9 @@ class HeiCritApp {
             newReadingBtn.classList.add('active');
             readingGroupSelect.style.display = 'inline-block';
             
+            // Reset dropdown to initial state
+            this.resetReadingGroupDropdown(tabId);
+            
             // Reset selected tokens
             this.selectedTokens = {
                 lemma: [],
@@ -1962,6 +2145,12 @@ class HeiCritApp {
         
         // Clear all selected tokens
         this.clearSelectedTokens(tabId);
+        
+        // Clear currently editing entry reference
+        const tab = this.tabs.get(tabId);
+        if (tab) {
+            tab.currentlyEditingEntry = null;
+        }
         
         // Remove token click handlers and event delegation
         this.removeTokenClickHandlers(tabId);
@@ -2133,6 +2322,32 @@ class HeiCritApp {
         return { witnessId: prefix, siglum: prefix, prefix: prefix };
     }
     
+    resetReadingGroupDropdown(tabId) {
+        const select = document.getElementById(`reading-group-select-${tabId}`);
+        if (!select) return;
+        
+        // Clear all options
+        select.innerHTML = '';
+        
+        // Add default options
+        const options = [
+            { value: 'lemma', text: 'Lemma' },
+            { value: 'reading-1', text: 'Reading 1' },
+            { value: 'new-group', text: '+ New reading group' }
+        ];
+        
+        options.forEach(optionData => {
+            const option = document.createElement('option');
+            option.value = optionData.value;
+            option.textContent = optionData.text;
+            select.appendChild(option);
+        });
+        
+        // Select lemma as default
+        select.value = 'lemma';
+        console.log('Reset reading group dropdown to initial state');
+    }
+    
     handleReadingGroupChange(tabId, value) {
         console.log('Reading group changed to:', value);
         
@@ -2177,43 +2392,60 @@ class HeiCritApp {
         
         // Get current location from the active entry
         const currentLoc = this.getCurrentLocation(tab);
+        const currentCorresp = `a:l_${currentLoc}`;
         
         // Initialize newEntries array if not exists
         if (!tab.newEntries) {
             tab.newEntries = [];
         }
         
+        // Initialize currentlyEditing entry for this session if not exists
+        if (!tab.currentlyEditingEntry) {
+            tab.currentlyEditingEntry = null;
+        }
+        
         // Check if we have any selected tokens
         const hasSelections = Object.values(this.selectedTokens).some(group => group.length > 0);
         
-        // Find existing entry for this location
-        const entryIndex = tab.newEntries.findIndex(entry => entry.loc === currentLoc);
-        
         if (hasSelections) {
-            // Create new apparatus entry
-            const newEntry = this.createApparatusEntry(currentLoc);
+            // Create apparatus entry from current selections
+            const entryData = this.createApparatusEntry(currentLoc);
             
-            if (entryIndex >= 0) {
-                // Update existing entry
-                tab.newEntries[entryIndex] = newEntry;
-                console.log('Entry updated:', newEntry);
+            if (!tab.currentlyEditingEntry || tab.currentlyEditingEntry.corresp !== currentCorresp) {
+                // Starting to edit a new entry - create it
+                tab.currentlyEditingEntry = entryData;
+                tab.currentlyEditingEntry.isUserCreated = true;
+                
+                // Add to newEntries array
+                tab.newEntries.push(tab.currentlyEditingEntry);
+                console.log('Started editing new entry:', tab.currentlyEditingEntry);
+                
+                // Add to grouped entries for display
+                this.updateGroupedEntriesWithNewEntry(tab, tab.currentlyEditingEntry);
             } else {
-                // Add new entry
-                tab.newEntries.push(newEntry);
-                console.log('New entry created:', newEntry);
+                // Update the currently editing entry
+                Object.assign(tab.currentlyEditingEntry, entryData);
+                console.log('Updated currently editing entry:', tab.currentlyEditingEntry);
+                
+                // Update in grouped entries
+                this.updateExistingEntryInGroupedEntries(tab, tab.currentlyEditingEntry);
             }
             
-            // Add/update entry in the grouped entries for immediate display
-            this.updateGroupedEntriesWithNewEntry(tab, newEntry);
-            
         } else {
-            // No selections - remove entry if it exists
-            if (entryIndex >= 0) {
-                const removedEntry = tab.newEntries.splice(entryIndex, 1)[0];
-                console.log('Entry removed for location:', currentLoc);
+            // No selections - clear currently editing entry if it exists
+            if (tab.currentlyEditingEntry && tab.currentlyEditingEntry.corresp === currentCorresp) {
+                // Remove from newEntries
+                const entryIndex = tab.newEntries.indexOf(tab.currentlyEditingEntry);
+                if (entryIndex >= 0) {
+                    tab.newEntries.splice(entryIndex, 1);
+                    console.log('Removed empty entry for location:', currentLoc);
+                }
                 
-                // Remove from grouped entries as well
-                this.removeNewEntryFromGroupedEntries(tab, removedEntry);
+                // Remove from grouped entries
+                this.removeNewEntryFromGroupedEntries(tab, tab.currentlyEditingEntry);
+                
+                // Clear currently editing reference
+                tab.currentlyEditingEntry = null;
             }
         }
         
@@ -2333,25 +2565,28 @@ class HeiCritApp {
             });
         }
         
-        // Find if there's already a user-created entry for this corresp
-        const userEntryIndex = tab.groupedEntries[corresp].findIndex(entry => entry.isUserCreated);
-        
-        let subentryIndex;
-        if (userEntryIndex >= 0) {
-            // Replace existing user-created entry
-            tab.groupedEntries[corresp][userEntryIndex] = newEntry;
-            subentryIndex = userEntryIndex;
-        } else {
-            // Add new user-created entry
-            tab.groupedEntries[corresp].push(newEntry);
-            subentryIndex = tab.groupedEntries[corresp].length - 1;
-        }
+        // Always add new user-created entry (don't replace existing ones)
+        tab.groupedEntries[corresp].push(newEntry);
+        const subentryIndex = tab.groupedEntries[corresp].length - 1;
         
         // Make this entry active and navigate to its location
         const correspIndex = tab.entryKeys.indexOf(corresp);
         if (correspIndex >= 0) {
             tab.currentEntryIndex = correspIndex;
             tab.activeSubentryIndex = subentryIndex;
+        }
+    }
+    
+    updateExistingEntryInGroupedEntries(tab, updatedEntry) {
+        const corresp = updatedEntry.corresp;
+        
+        if (tab.groupedEntries && tab.groupedEntries[corresp]) {
+            // Find the entry in grouped entries and update it
+            const entryIndex = tab.groupedEntries[corresp].findIndex(entry => entry === updatedEntry);
+            if (entryIndex >= 0) {
+                // Entry is already in the array and will be updated by reference
+                console.log('Updated existing entry in grouped entries');
+            }
         }
     }
     

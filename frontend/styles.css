@@ -1204,10 +1204,13 @@ main {
 
 /* Apparatus creation toolbar */
 .apparatus-details-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 10px;
+}
+
+.apparatus-details-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .apparatus-details-header h4 {
@@ -1250,6 +1253,11 @@ main {
     border-radius: 4px;
     font-size: 0.9rem;
     background: white;
+}
+
+/* Token with apparatus entry background */
+.syn-token.has-apparatus {
+    background-color: #e9ecef;
 }
 
 /* Token selection highlighting during creation mode */

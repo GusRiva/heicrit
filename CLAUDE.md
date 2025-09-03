@@ -12,6 +12,8 @@ App for creating critical apparatus for scholarly editions. Works as both web ap
 ✅ Main text (Leithandschrift) display alongside apparatus
 ✅ Interactive location buttons with details panel
 ✅ Paginated apparatus entry navigation
+✅ Apparatus entry creation with token selection
+✅ Smart entry selection and visual token highlighting
 ⏳ Apparatus processing functions and display (ongoing)
 ⏳ Electron wrapper (tested)
 
@@ -39,6 +41,9 @@ App for creating critical apparatus for scholarly editions. Works as both web ap
 - **Main Text Display**: Extract and show Leithandschrift text alongside apparatus
 - **Interactive Navigation**: Click location numbers for details, paginate through entries
 - **Relative Path Resolution**: Handle TEI file references within project context
+- **Apparatus Entry Creation**: Create new critical apparatus entries through token selection
+- **Smart Visual Feedback**: Gray background for tokens with apparatus entries, colored highlighting for active selections
+- **Intelligent Entry Selection**: Always selects first non-placeholder entry when navigating to new locations
 
 ## API Endpoints
 - `GET /api/health` - Health check
@@ -49,6 +54,8 @@ App for creating critical apparatus for scholarly editions. Works as both web ap
 - `POST /api/apparatus/process-with-project` - Process apparatus with project context
 - `POST /api/apparatus/validate` - Validate apparatus file
 - `POST /api/synoptic/process` - Process synoptic map file
+- `POST /api/apparatus/save` - Save new apparatus entries to XML file
+- `POST /api/synoptic/compare` - Get synoptic comparison data for location details
 
 ## File Structure
 - `backend/routes.py` - Main API routes with apparatus processing
@@ -58,10 +65,35 @@ App for creating critical apparatus for scholarly editions. Works as both web ap
 - `test_data/` - Sample TEI files for testing
 
 ## Current Implementation
-- **Backend**: Extracts apparatus entries, synoptic map, and main text from TEI files
+- **Backend**: Extracts apparatus entries, synoptic map, and main text from TEI files; saves new entries to XML
 - **Frontend**: Displays apparatus in classical format with pagination and interactive elements
 - **UI Layout**: Three-panel design (main text | apparatus | details)
 - **Navigation**: Previous/Next buttons for apparatus entries, clickable location numbers
+- **Entry Creation**: Token-based selection system for creating new apparatus entries with visual feedback
+- **Smart Navigation**: Automatically selects meaningful (non-placeholder) entries when navigating
+
+## Recent Developments (2025-01-03)
+### Apparatus Entry Creation System
+- **Token Selection Interface**: Click tokens to build lemma and readings for new apparatus entries
+- **Creation Mode**: "New Reading" button toggles entry creation mode with visual toolbar
+- **Reading Groups**: Support for multiple reading groups (Reading 1, Reading 2, etc.) with different colors
+- **Session Management**: Fresh dropdown state for each creation session (lemma + Reading 1 + new group option)
+- **Real-time Building**: Entries are built incrementally as tokens are selected/deselected
+
+### Visual Feedback System  
+- **Token Highlighting**: Color-coded highlights for different reading groups (green lemma, orange/blue readings)
+- **Apparatus Background**: Gray background on tokens that have corresponding apparatus entries
+- **Event Delegation**: Robust token click handling that survives DOM updates during creation
+
+### Smart Entry Selection
+- **Intelligent Navigation**: Always selects first non-placeholder entry when opening new locations
+- **Placeholder Handling**: Gracefully handles locations with only placeholder entries (no highlighting)
+- **Consistent Behavior**: Same smart selection across all navigation methods (prev/next, goto, gap clicks)
+
+### UI Improvements
+- **Button Positioning**: "New Reading" button positioned next to "Location Details" heading
+- **Dropdown Reset**: Reading group dropdown resets to clean state for each new creation session
+- **Session Isolation**: Each entry creation session starts fresh without previous reading groups
 
 ## Next Tasks
 Continue working on apparatus processing functions and display improvements:
