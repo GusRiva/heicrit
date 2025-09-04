@@ -545,7 +545,6 @@ class HeiCritApp {
         // Get current entry data
         const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
         const currentEntries = tab.groupedEntries[currentCorresp];
-        console.log("Current entries", currentEntries);
         const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
         // Generate HTML for current entry
@@ -890,7 +889,6 @@ class HeiCritApp {
 
     highlightTokensFromCorresp(correspValue, type) {
         // Parse corresp attribute like "a:range(w_12_1, w_12_2)" or "ba:w_12_1 bb:w_12_1"
-        console.log(`Highlighting ${type} tokens from corresp: ${correspValue}`);
         
         // More sophisticated parsing to handle ranges with spaces
         const correspParts = [];
@@ -1151,7 +1149,6 @@ class HeiCritApp {
                 const firstFilePath = files[0].webkitRelativePath;
                 // Extract the root directory name (first part of the path)
                 this.currentProjectDirectory = firstFilePath.split('/')[0];
-                console.log('Project directory set to:', this.currentProjectDirectory);
             }
             
             // Read all files and store them
@@ -1237,7 +1234,6 @@ class HeiCritApp {
             
             // Store the apparatus file path for save functionality
             this.currentApparatusFile = filepath;
-            console.log('Apparatus file set to:', this.currentApparatusFile);
             
             // Basic client-side XML validation first
             if (!this.validateXML(content)) {
@@ -1449,7 +1445,7 @@ class HeiCritApp {
         
         // Process each entry in this location group
         entries.forEach((entry, index) => {
-            const isActive = index === activeSubentryIndex;
+            const isActive = index === activeSubentryIndex && !entry.is_placeholder;
             
             // Skip placeholder entries if there are real entries
             if (entry.is_placeholder && hasRealEntries) {
@@ -2161,19 +2157,34 @@ class HeiCritApp {
         
         // Update the apparatus display now that we're exiting creation mode
         this.updateApparatusDisplay(tabId);
+
+        // Only highlight if there's a non-placeholder active subentry
+        const activeSubentryIndex = tab.activeSubentryIndex;
+        if (activeSubentryIndex >= 0 && tab.apparatusEntries[activeSubentryIndex] && !tab.apparatusEntries[activeSubentryIndex].isPlaceholder) {
+            // Highlight the gap element for the current location being viewed
+            const currentLoc = this.getCurrentLocation(tab);
+            const currentLocId = `l_${currentLoc}`;
+            
+            // Look for the element within the specific tab context
+            const tabPanel = document.getElementById(`panel-${tabId}`);
+            if (tabPanel) {
+                const targetElement = tabPanel.querySelector(`.tei-gap-synoptic[data-container-id="${currentLocId}"]`);
+                if (targetElement) {
+                    targetElement.classList.add('has-content');
+                }
+            }
+        }
+        
     }
     
     setupTokenClickHandlers(tabId) {
-        console.log('setupTokenClickHandlers called for tab:', tabId);
         const tabPanel = document.getElementById(`panel-${tabId}`);
         if (!tabPanel) {
-            console.log('No tab panel found for:', tabId);
             return;
         }
         
         // Simply set cursor pointer - we'll use event delegation instead
         const tokens = tabPanel.querySelectorAll('.syn-token');
-        console.log(`Found ${tokens.length} tokens to set cursor for`);
         
         tokens.forEach(token => {
             token.style.cursor = 'pointer';
@@ -2181,7 +2192,6 @@ class HeiCritApp {
             token.setAttribute('data-creation-clickable', 'true');
         });
         
-        console.log('Set cursor pointer for all tokens');
     }
     
     setupTokenEventDelegation() {
@@ -2197,14 +2207,12 @@ class HeiCritApp {
                 event.target.classList.contains('syn-token') && 
                 event.target.hasAttribute('data-creation-clickable')) {
                 
-                console.log('Event delegation caught token click:', event.target);
                 this.handleTokenClick(this.activeTabId, event);
             }
         };
         
         // Add the delegation handler
         document.addEventListener('click', this.delegationHandler);
-        console.log('Set up event delegation for token clicks');
     }
     
     removeTokenClickHandlers(tabId) {
@@ -2219,10 +2227,8 @@ class HeiCritApp {
     }
     
     handleTokenClick(tabId, event) {
-        console.log('handleTokenClick called, creationMode:', this.creationMode);
         
         if (!this.creationMode) {
-            console.log('Not in creation mode, returning');
             return;
         }
         
@@ -2230,10 +2236,8 @@ class HeiCritApp {
         const token = event.target;
         const tokenId = token.getAttribute('data-token-id');
         
-        console.log('Token clicked:', token, 'tokenId:', tokenId);
         
         if (!tokenId) {
-            console.log('No tokenId found, returning');
             return;
         }
         
@@ -2244,21 +2248,12 @@ class HeiCritApp {
         // If clicking on main text (first line), force lemma selection
         const readingGroup = isMainText ? 'lemma' : this.currentReadingGroup;
         
-        console.log('Token click:', {
-            tokenId,
-            isMainText,
-            currentReadingGroup: this.currentReadingGroup,
-            finalReadingGroup: readingGroup,
-            synLine: synLine ? synLine.className : 'null',
-            selectedTokensKeys: Object.keys(this.selectedTokens)
-        });
         
         // Toggle token selection
         if (token.classList.contains(`selected-${readingGroup}`)) {
             // Remove from selection
             token.classList.remove(`selected-${readingGroup}`);
             this.selectedTokens[readingGroup] = this.selectedTokens[readingGroup].filter(t => t.tokenId !== tokenId);
-            console.log('Token deselected from', readingGroup);
         } else {
             // Add to selection
             token.classList.add(`selected-${readingGroup}`);
@@ -2276,24 +2271,19 @@ class HeiCritApp {
                 witnessInfo: witnessInfo
             });
             
-            console.log('Token selected for', readingGroup, 'witness:', witnessInfo);
         }
         
         // Save entry immediately after any token change
-        console.log('About to call saveNewEntry, creationMode before:', this.creationMode);
         this.saveNewEntry(tabId);
-        console.log('After saveNewEntry, creationMode:', this.creationMode);
         
         // Check if event handlers are still attached
         const tokens = document.querySelectorAll('.syn-token');
-        console.log('Total tokens found:', tokens.length);
         let tokensWithHandlers = 0;
         tokens.forEach(token => {
             if (token.style.cursor === 'pointer') {
                 tokensWithHandlers++;
             }
         });
-        console.log('Tokens with cursor pointer (should have handlers):', tokensWithHandlers);
     }
     
     getWitnessInfoFromLine(synLine) {
@@ -2345,11 +2335,9 @@ class HeiCritApp {
         
         // Select lemma as default
         select.value = 'lemma';
-        console.log('Reset reading group dropdown to initial state');
     }
     
     handleReadingGroupChange(tabId, value) {
-        console.log('Reading group changed to:', value);
         
         if (value === 'new-group') {
             // Create new reading group
@@ -2367,10 +2355,8 @@ class HeiCritApp {
             // Select the new group
             select.value = newGroupName;
             this.currentReadingGroup = newGroupName;
-            console.log('Created new reading group:', newGroupName);
         } else {
             this.currentReadingGroup = value;
-            console.log('Current reading group set to:', this.currentReadingGroup);
         }
     }
     
@@ -2418,14 +2404,12 @@ class HeiCritApp {
                 
                 // Add to newEntries array
                 tab.newEntries.push(tab.currentlyEditingEntry);
-                console.log('Started editing new entry:', tab.currentlyEditingEntry);
                 
                 // Add to grouped entries for display
                 this.updateGroupedEntriesWithNewEntry(tab, tab.currentlyEditingEntry);
             } else {
                 // Update the currently editing entry
                 Object.assign(tab.currentlyEditingEntry, entryData);
-                console.log('Updated currently editing entry:', tab.currentlyEditingEntry);
                 
                 // Update in grouped entries
                 this.updateExistingEntryInGroupedEntries(tab, tab.currentlyEditingEntry);
@@ -2438,7 +2422,6 @@ class HeiCritApp {
                 const entryIndex = tab.newEntries.indexOf(tab.currentlyEditingEntry);
                 if (entryIndex >= 0) {
                     tab.newEntries.splice(entryIndex, 1);
-                    console.log('Removed empty entry for location:', currentLoc);
                 }
                 
                 // Remove from grouped entries
@@ -2585,7 +2568,6 @@ class HeiCritApp {
             const entryIndex = tab.groupedEntries[corresp].findIndex(entry => entry === updatedEntry);
             if (entryIndex >= 0) {
                 // Entry is already in the array and will be updated by reference
-                console.log('Updated existing entry in grouped entries');
             }
         }
     }
@@ -2639,7 +2621,6 @@ class HeiCritApp {
                 project_directory: tab.data.projectDirectory
             };
             
-            console.log('Sending save request:', requestData);
             
             const response = await this.apiRequest('/apparatus/save', {
                 method: 'POST',
