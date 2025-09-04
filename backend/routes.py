@@ -435,6 +435,201 @@ def validate_apparatus_file():
     except Exception as e:
         return jsonify({'error': f'Validation failed: {str(e)}'}), 500
 
+# Sequential processing endpoints for real progress reporting
+
+@api.route('/apparatus/parse', methods=['POST'])
+def parse_apparatus_file():
+    """
+    Step 1: Parse apparatus file and store in global apparatus object
+    """
+    global apparatus
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        apparatus_content = data.get('apparatus_content')
+        apparatus_filepath = data.get('apparatus_filepath')
+        project_files = data.get('project_files', {})
+        
+        if not apparatus_content:
+            return jsonify({'error': 'No apparatus content provided'}), 400
+        if not apparatus_filepath:
+            return jsonify({'error': 'No apparatus filepath provided'}), 400
+        
+        # Create Apparatus object and parse the file
+        apparatus = Apparatus(apparatus_filepath, project_files)
+        
+        # Get basic info for response
+        apparatus_entries = apparatus.get_entries()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Parsed apparatus file with {len(apparatus_entries)} entries',
+            'apparatus_count': len(apparatus_entries),
+            'apparatus_filepath': apparatus_filepath
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to parse apparatus: {str(e)}'}), 500
+
+@api.route('/witnesses/load', methods=['POST'])
+def load_witness_mappings():
+    """
+    Step 2: Extract witness mappings from parsed apparatus
+    """
+    global apparatus
+    try:
+        if apparatus is None:
+            return jsonify({'error': 'No apparatus loaded. Call /apparatus/parse first.'}), 400
+        
+        witness_order = apparatus.get_witness_order()
+        witness_mapping = apparatus.get_witness_to_prefix_mapping()
+        
+        # Find leiths info from witness mapping
+        leiths_path = apparatus.get_leiths_path()
+        leiths_info = None
+        leiths_prefix = None
+        if leiths_path:
+            leiths_filename = leiths_path.split('/')[-1]
+            for witness_id, mapping_info in witness_mapping.items():
+                if mapping_info['target_file'].endswith(leiths_filename):
+                    leiths_info = {
+                        'siglum': mapping_info['siglum'],
+                        'synoptic_pre': mapping_info['synoptic_prefix']
+                    }
+                    leiths_prefix = mapping_info['synoptic_prefix']
+                    break
+        
+        return jsonify({
+            'success': True,
+            'message': f'Loaded {len(witness_mapping)} witness mappings',
+            'witness_count': len(witness_mapping),
+            'witness_order': witness_order,
+            'witness_mapping': witness_mapping,
+            'leiths_info': leiths_info,
+            'leiths_prefix': leiths_prefix,
+            'leiths_path': leiths_path
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to load witnesses: {str(e)}'}), 500
+
+@api.route('/synoptic/load', methods=['POST'])
+def load_synoptic_map():
+    """
+    Step 3: Process synoptic map with witness data
+    """
+    global synoptic_map, apparatus
+    try:
+        if apparatus is None:
+            return jsonify({'error': 'No apparatus loaded. Call /apparatus/parse first.'}), 400
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        project_files = data.get('project_files', {})
+        apparatus_filepath = data.get('apparatus_filepath')
+        leiths_prefix = data.get('leiths_prefix')
+        
+        # Get corresp attribute for synoptic map loading
+        corresp = apparatus.get_corresp_attribute()
+        if corresp:
+            witness_mapping = apparatus.get_witness_to_prefix_mapping()
+            synoptic_map.load_from_project(corresp, apparatus_filepath, project_files,
+                                         leiths_prefix=leiths_prefix,
+                                         apparatus_witness_mapping=witness_mapping)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Loaded synoptic map with {synoptic_map.get_loci_count()} locations',
+            'synoptic_map_count': synoptic_map.get_loci_count(),
+            'synoptic_wits_count': synoptic_map.get_wits_count(),
+            'synoptic_map': synoptic_map.get_loci(),
+            'synoptic_wits': synoptic_map.get_wits()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to load synoptic map: {str(e)}'}), 500
+
+@api.route('/maintext/generate', methods=['POST'])
+def generate_main_text():
+    """
+    Step 4: Generate main text HTML using loaded data
+    """
+    global apparatus, synoptic_map
+    try:
+        if apparatus is None:
+            return jsonify({'error': 'No apparatus loaded. Call /apparatus/parse first.'}), 400
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        leiths_path = data.get('leiths_path')
+        apparatus_filepath = data.get('apparatus_filepath')
+        project_files = data.get('project_files', {})
+        
+        main_text_content = None
+        if leiths_path:
+            main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Generated main text HTML',
+            'main_text': main_text_content,
+            'has_main_text': main_text_content is not None
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to generate main text: {str(e)}'}), 500
+
+@api.route('/project/finalize', methods=['POST'])
+def finalize_project():
+    """
+    Step 5: Return final combined project data
+    """
+    global apparatus, synoptic_map
+    try:
+        if apparatus is None:
+            return jsonify({'error': 'No apparatus loaded. Call /apparatus/parse first.'}), 400
+        
+        # Get all the processed data
+        apparatus_entries = apparatus.get_entries()
+        witness_order = apparatus.get_witness_order()
+        witness_mapping = apparatus.get_witness_to_prefix_mapping()
+        
+        # Find leiths info
+        leiths_path = apparatus.get_leiths_path()
+        leiths_info = None
+        if leiths_path:
+            leiths_filename = leiths_path.split('/')[-1]
+            for witness_id, mapping_info in witness_mapping.items():
+                if mapping_info['target_file'].endswith(leiths_filename):
+                    leiths_info = {
+                        'siglum': mapping_info['siglum'],
+                        'synoptic_pre': mapping_info['synoptic_prefix']
+                    }
+                    break
+        
+        return jsonify({
+            'success': True,
+            'message': f'Project finalized with {len(apparatus_entries)} apparatus entries',
+            'apparatus_count': len(apparatus_entries),
+            'apparatus_entries': apparatus_entries,
+            'witness_order': witness_order,
+            'witness_mapping': witness_mapping,
+            'leiths_info': leiths_info,
+            'synoptic_map': synoptic_map.get_loci(),
+            'synoptic_map_count': synoptic_map.get_loci_count(),
+            'synoptic_wits': synoptic_map.get_wits(),
+            'synoptic_wits_count': synoptic_map.get_wits_count()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to finalize project: {str(e)}'}), 500
+
 @api.route('/synoptic/process', methods=['POST'])
 def process_synoptic_map_file():
     """

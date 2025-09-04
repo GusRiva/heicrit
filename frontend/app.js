@@ -1210,18 +1210,8 @@ class HeiCritApp {
         
         // Process apparatus file if found
         if (apparatusFiles.length > 0) {
-            this.updateLoadingStep('step-processing', 'active');
             const apparatusFile = apparatusFiles[0]; // Use first apparatus file found
             await this.processApparatusFileFromProject(apparatusFile.content, apparatusFile.path);
-            this.updateLoadingStep('step-processing', 'completed');
-        }
-        
-        // Process synoptic map if found  
-        if (synopticFiles.length > 0) {
-            this.updateLoadingStep('step-synoptic', 'active');
-            // Synoptic map processing is already handled by /api/project/open endpoint
-            // No need for separate processing here
-            this.updateLoadingStep('step-synoptic', 'completed');
         }
         
         if (apparatusFiles.length === 0 && synopticFiles.length === 0) {
@@ -1229,10 +1219,6 @@ class HeiCritApp {
             this.showErrorPopup('No Files Found', 'No apparatus files found in apparatus/ directory or synoptic map files found in synopses/ directory.');
             return;
         }
-        
-        // Complete remaining steps
-        this.updateLoadingStep('step-maintext', 'completed');
-        this.updateLoadingStep('step-display', 'active');
         
         // Small delay to show the final step
         setTimeout(() => {
@@ -1281,26 +1267,124 @@ class HeiCritApp {
                 return;
             }
 
-            // If validation passes, process the file with project context
-            this.updateStatus('Processing apparatus file with project context...');
+            // Process in steps with real backend calls
+            await this.processApparatusInSteps(content, filepath);
+
+        } catch (error) {
+            this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
+        }
+    }
+
+    async processApparatusInSteps(content, filepath) {
+        try {
+            const projectFiles = this.getProjectFileList();
+            let combinedResponse = {};
             
-            const processResponse = await this.apiRequest('/project/open', {
+            // Step 1: Parse apparatus file
+            this.updateLoadingStep('step-apparatus', 'active');
+            this.updateStatus('Parsing apparatus file...');
+            
+            const apparatusResponse = await this.apiRequest('/apparatus/parse', {
                 method: 'POST',
                 body: JSON.stringify({
                     apparatus_content: content,
                     apparatus_filepath: filepath,
-                    project_files: this.getProjectFileList()
+                    project_files: projectFiles
                 })
             });
-
-            if (processResponse.success) {
-                this.handleApparatusProcessingResult(processResponse, filepath);
-            } else {
-                this.showErrorPopup('Processing Error', processResponse.message || 'Unknown error occurred');
+            
+            if (!apparatusResponse.success) {
+                this.showErrorPopup('Processing Error', apparatusResponse.error || 'Failed to parse apparatus');
+                return;
             }
-
+            
+            combinedResponse = { ...combinedResponse, ...apparatusResponse };
+            
+            // Step 2: Load witness mappings
+            this.updateLoadingStep('step-apparatus', 'completed');
+            this.updateLoadingStep('step-witnesses', 'active');
+            this.updateStatus('Loading witness mappings...');
+            
+            const witnessResponse = await this.apiRequest('/witnesses/load', {
+                method: 'POST',
+                body: JSON.stringify({})
+            });
+            
+            if (!witnessResponse.success) {
+                this.showErrorPopup('Processing Error', witnessResponse.error || 'Failed to load witnesses');
+                return;
+            }
+            
+            combinedResponse = { ...combinedResponse, ...witnessResponse };
+            
+            // Step 3: Process synoptic map
+            this.updateLoadingStep('step-witnesses', 'completed');
+            this.updateLoadingStep('step-synoptic', 'active');
+            this.updateStatus('Processing synoptic map...');
+            
+            const synopticResponse = await this.apiRequest('/synoptic/load', {
+                method: 'POST',
+                body: JSON.stringify({
+                    project_files: projectFiles,
+                    apparatus_filepath: filepath,
+                    leiths_prefix: witnessResponse.leiths_prefix
+                })
+            });
+            
+            if (!synopticResponse.success) {
+                this.showErrorPopup('Processing Error', synopticResponse.error || 'Failed to process synoptic map');
+                return;
+            }
+            
+            combinedResponse = { ...combinedResponse, ...synopticResponse };
+            
+            // Step 4: Generate main text
+            this.updateLoadingStep('step-synoptic', 'completed');
+            this.updateLoadingStep('step-maintext', 'active');
+            this.updateStatus('Generating main text...');
+            
+            const maintextResponse = await this.apiRequest('/maintext/generate', {
+                method: 'POST',
+                body: JSON.stringify({
+                    leiths_path: witnessResponse.leiths_path,
+                    apparatus_filepath: filepath,
+                    project_files: projectFiles
+                })
+            });
+            
+            if (!maintextResponse.success) {
+                this.showErrorPopup('Processing Error', maintextResponse.error || 'Failed to generate main text');
+                return;
+            }
+            
+            combinedResponse = { ...combinedResponse, ...maintextResponse };
+            
+            // Step 5: Finalize project
+            this.updateLoadingStep('step-maintext', 'completed');
+            this.updateLoadingStep('step-display', 'active');
+            this.updateStatus('Building interface...');
+            
+            const finalResponse = await this.apiRequest('/project/finalize', {
+                method: 'POST',
+                body: JSON.stringify({})
+            });
+            
+            if (!finalResponse.success) {
+                this.showErrorPopup('Processing Error', finalResponse.error || 'Failed to finalize project');
+                return;
+            }
+            
+            // Combine all responses for the final result
+            const fullResponse = { 
+                success: true,
+                ...combinedResponse, 
+                ...finalResponse
+            };
+            
+            this.handleApparatusProcessingResult(fullResponse, filepath);
+            
         } catch (error) {
-            this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
+            this.showErrorPopup('Processing Error', `Failed to process apparatus: ${error.message}`);
         }
     }
 
@@ -1779,10 +1863,11 @@ class HeiCritApp {
                 <div class="loading-spinner"></div>
                 <div class="loading-steps">
                     <div class="loading-step" id="step-reading">Reading project files</div>
-                    <div class="loading-step" id="step-processing">Processing apparatus</div>
-                    <div class="loading-step" id="step-synoptic">Loading synoptic map</div>
+                    <div class="loading-step" id="step-apparatus">Parsing apparatus file</div>
+                    <div class="loading-step" id="step-witnesses">Loading witness mappings</div>
+                    <div class="loading-step" id="step-synoptic">Processing synoptic map</div>
                     <div class="loading-step" id="step-maintext">Generating main text</div>
-                    <div class="loading-step" id="step-display">Preparing display</div>
+                    <div class="loading-step" id="step-display">Building interface</div>
                 </div>
             </div>
         `;
