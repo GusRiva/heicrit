@@ -298,39 +298,26 @@ class SynopticMap:
             link_elements = root.xpath('.//tei:link', namespaces=ns)
             
             loci_map = {}
-            
+            found_keys = set()
             for link in link_elements:
                 n = link.get('n')
                 target = link.get('target', '')
                 target_list = [t.strip() for t in target.split() if t.strip()]
                 
-                if leiths_prefix:
-                    corresp_in_leiths = [x for x in target_list if x.startswith(f"{leiths_prefix}:")]
-                    if len(corresp_in_leiths) < 1:
-                        continue
-                    
-                    # Use the first corresp format as key
-                    loci_map[corresp_in_leiths[0]] = {
+                if not leiths_prefix:
+                    print("ERROR: Can't find main text prefix.")
+                    return False
+                corresp_in_leiths = [x for x in target_list if x.startswith(f"{leiths_prefix}:")]
+                # Use the first corresp format as key
+                loci_map_key = corresp_in_leiths[0]
+                if loci_map_key in found_keys:
+                    loci_map[loci_map_key]['target'] += target_list
+                else:
+                    loci_map[loci_map_key] = {
                         'n': n,
                         'target': target_list
                     }
-                else:
-                    # Find the corresp that matches the expected format (e.g., "a:l_5")
-                    corresp_entries = [x for x in target_list if ':l_' in x]
-                    if len(corresp_entries) > 0:
-                        # Use the first corresp format as key (e.g., "a:l_5")
-                        corresp_key = corresp_entries[0]
-                        loci_map[corresp_key] = {
-                            'n': n,
-                            'target': target_list
-                        }
-                    else:
-                        # Fallback to using n as key if no corresp format found
-                        if n:
-                            loci_map[n] = {
-                                'n': n,
-                                'target': target_list
-                            }
+                    found_keys.add(loci_map_key)
             
             self._loci = loci_map
             self._wits = wits_map
@@ -371,14 +358,12 @@ class SynopticMap:
             siglum = root.find('.//tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns)
             siglum_text = siglum.text if siglum is not None else None
             
-            # Find all elements with xml:id attributes
-            elements_with_id = root.xpath('//*[@xml:id][not(name()="w")]', namespaces=ns)
             elements_map = {}
-            for element in elements_with_id:
-                xml_id = element.get('{http://www.w3.org/XML/1998/namespace}id')
-                if xml_id:
-                    elements_map[xml_id] = element
-            
+            for el in root.iter():
+                if "{http://www.w3.org/XML/1998/namespace}id" not in el.attrib or el.tag == "{http://www.tei-c.org/ns/1.0}w":
+                    continue
+                xml_id = el.get("{http://www.w3.org/XML/1998/namespace}id")
+                elements_map[xml_id] = el
             return {'elements': elements_map, 'siglum': siglum_text}
             
         except Exception as e:

@@ -57,7 +57,6 @@ def find_file_in_project(resolved_path, project_files):
 
 def load_sigla_mapping(project_directory=None, project_files=None):
     """
-    Load sigla mapping from pipelines/config.py
     Can load from either a project directory or project files dictionary
     Returns the mapping dictionary or empty dict if not found
     """

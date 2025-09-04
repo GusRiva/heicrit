@@ -3,7 +3,9 @@ from lxml import etree as et
 from heipy.namespaces import prefix_format
 from heipy.heipipe.steps import Pipeline, DeleteStep, XsltStep
 from heipy.heipipe.step_library import container2milestone, whitespaces, move_layout_milestones, number_line_segment_beginnings, suppress_first_cb
+from heipy.heipipe.step_library.append_synoptic_links import parse_target
 from heipy.heipipe.pipeline_library.synoptic import milestone_element_map
+
 
 reduce_markup = XsltStep(files=['xslt/reduce_markup.xsl'],
                             name="reduce_markup",)
@@ -33,7 +35,7 @@ class HeiCritPipe(Pipeline):
             # For first gap we add xml:id gap_leaf_1 if missing
             # AddAttribute()
 
-            suppress_first_cb.get_step(),
+            # suppress_first_cb.get_step(),
             create_html
             ]
         
@@ -54,18 +56,20 @@ def append_synoptic_links_funct(root, parameters):
             elements_by_id[xml_id] = element
     
     # Iterate through synoptic_map and find corresponding elements
+    # count = 0
     for key, synoptic_entry in synoptic_map.items():
-        # Extract xml:id (remove prefix if present)
-        if ':' in key:
-            xml_id = key.split(':', 1)[1]  # Get part after first colon
-        else:
-            xml_id = key
+        # count += 1
+        # if count < 70 or count > 90:
+        #     continue
+        prefix, pos, xml_id = parse_target(key)
+        gap = et.Element(prefix_format('tei', 'gap'))
         
-        # Find element in our dictionary
+        # print(key, synoptic_entry)
+                
         element = elements_by_id.get(xml_id)
         if element is None:
+            print(f"WARNING: Could not find element {xml_id} in the main text.")    
             continue
-        gap = et.Element(prefix_format('tei', 'gap'))
         
         # Add corresp attribute with the target value
         if 'target' in synoptic_entry:
@@ -77,12 +81,18 @@ def append_synoptic_links_funct(root, parameters):
                 corresp_value = str(target_value)
             gap.set('corresp', corresp_value)
         
-        # Insert gap before any text content by handling text and tail
-        if element.text and element.text.strip():
-            # If element has text content, move it after the gap
-            gap.tail = element.text
-            element.text = None
-        
-        element.insert(0, gap)  # Insert as first child
+        if pos is None:    
+            # Insert gap before any text content by handling text and tail
+            if element.text and element.text.strip():
+                # If element has text content, move it after the gap
+                gap.tail = element.text
+                element.text = None
+            element.insert(0, gap)  # Insert as first child
+        elif pos == 'right':
+            
+            parent = element.getparent()
+            element_index = parent.index(element)
+            parent.insert(element_index + 1, gap)
+            
     
     return root

@@ -1151,8 +1151,22 @@ class HeiCritApp {
                 this.currentProjectDirectory = firstFilePath.split('/')[0];
             }
             
-            // Read all files and store them
-            const fileReadPromises = files.map(file => {
+            // Filter files to only process relevant folders: apparatus, synopses, texts
+            const relevantFolders = ['apparatus', 'synopses', 'texts'];
+            const filteredFiles = files.filter(file => {
+                const relativePath = file.webkitRelativePath || file.name;
+                const pathParts = relativePath.split('/');
+                
+                // Skip files in root directory or irrelevant folders
+                if (pathParts.length < 2) return false;
+                
+                // Check if the first folder (after project root) is in our relevant folders
+                const folderName = pathParts[1];
+                return relevantFolders.includes(folderName);
+            });
+            
+            // Read filtered files and store them
+            const fileReadPromises = filteredFiles.map(file => {
                 return new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -1173,7 +1187,7 @@ class HeiCritApp {
             await Promise.all(fileReadPromises);
             
             this.updateLoadingStep('step-reading', 'completed');
-            this.updateStatus(`Loaded ${this.projectFiles.size} files from project directory`);
+            this.updateStatus(`Loaded ${this.projectFiles.size} files from relevant folders (apparatus, synopses, texts)`);
             
             // Auto-detect and process apparatus and synoptic map files
             await this.autoProcessProjectFiles();

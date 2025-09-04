@@ -18,23 +18,23 @@
 
   <xsl:param name="editorial" as="xs:boolean" select="false()"/>
   
-    <xsl:template match="w | c | choice | pc | g">
+    <xsl:template match="w | c | choice | pc | g | hi">
         <xsl:apply-templates select="node()"/>
     </xsl:template>
 
-    <xsl:template match="orig | sic | abbr">
+    <xsl:template match="orig | sic | abbr | am">
         <xsl:choose>
             <xsl:when test="$editorial">
             </xsl:when>
             <xsl:otherwise>
-                <xsl:apply-templates select="@*|node()"/>
+                <xsl:apply-templates select="node()"/>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
 
-    <xsl:template match="reg | corr | expan">
+    <xsl:template match="reg | corr | expan | ex">
         <xsl:if test="$editorial">
-            <xsl:apply-templates select="@*|node()"/>
+            <xsl:apply-templates select="node()"/>
         </xsl:if>
     </xsl:template>
   

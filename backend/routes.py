@@ -324,7 +324,6 @@ def open_project():
             if leiths_path:
                 main_text_content = resolve_text_file_from_project(leiths_path, apparatus_filepath, project_files)
             
-            
             result = {
                 'success': True,
                 'message': f'Found {len(apparatus_entries)} apparatus entries',
@@ -365,11 +364,14 @@ def resolve_text_file_from_project(target_path, apparatus_filepath, project_file
     Resolve text file from project files using relative path resolution
     """
     try:
+        
         resolved_path = resolve_relative_path(target_path, apparatus_filepath)
+        
         file_data = find_file_in_project(resolved_path, project_files)
         
         if file_data:
-            return parse_main_text_file_content(file_data['content'])
+            result = parse_main_text_file_content(file_data['content'])
+            return result
         
         return None
         
@@ -381,6 +383,7 @@ def parse_main_text_file_content(content):
     Parse text file using HeiCritPipe and return the result
     """
     try:
+        
         pipeline = HeiCritPipe()
         # Get witness mapping from apparatus if available
         witness_mapping = apparatus.get_witness_to_prefix_mapping() if apparatus else {}
@@ -389,10 +392,13 @@ def parse_main_text_file_content(content):
                           before_step= 'create_html',
                           parameters= {'witness_mapping': witness_mapping, 
                                        'synoptic_map': synoptic_map.get_loci()})
-        result = pipeline.execute(content)
+        
+        result = pipeline.execute(content, serial=True)
         return result
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return None
 
 @api.route('/apparatus/validate', methods=['POST'])

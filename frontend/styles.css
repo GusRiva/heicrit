@@ -1,3 +1,36 @@
+/* Junicode font family for scholarly text */
+@font-face {
+    font-family: 'Junicode';
+    src: url('fonts/junicode-1.002/Junicode.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Junicode';
+    src: url('fonts/junicode-1.002/Junicode-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Junicode';
+    src: url('fonts/junicode-1.002/Junicode-Italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Junicode';
+    src: url('fonts/junicode-1.002/Junicode-BoldItalic.ttf') format('truetype');
+    font-weight: bold;
+    font-style: italic;
+    font-display: swap;
+}
+
 /* Web font optimization */
 @font-face {
     font-family: 'JetBrains Mono';
@@ -18,11 +51,44 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Junicode', Georgia, serif;
     background-color: #f5f5f5;
     height: 100vh;
     display: flex;
     flex-direction: column;
+}
+
+/* Keep system fonts for menus and navigation */
+.navbar, 
+.navbar *, 
+.dropdown-menu,
+.dropdown-menu *,
+.toolbar,
+.toolbar *,
+button,
+input,
+select,
+#status {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Ensure Junicode is used for all scholarly content */
+.tab-content,
+.apparatus-display,
+.apparatus-entry,
+.apparatus-lemma,
+.apparatus-readings,
+.classical-apparatus,
+.synoptic-unit,
+#main-text-content,
+.syn-token,
+.tei-gap-synoptic,
+.apparatus-details,
+#apparatus-content,
+#apparatus-details-content,
+.editor-panel textarea,
+.xml-editor-container {
+    font-family: 'Junicode', Georgia, serif !important;
 }
 
 #app {
