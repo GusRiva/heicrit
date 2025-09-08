@@ -70,22 +70,25 @@
         </span>
     </xsl:template>
 
-    <xsl:template match="tei:gap">
+    <xsl:template match="tei:gap[@corresp]">
         <xsl:param name="data-container-id"/>
-        <xsl:choose>
-            <xsl:when test="$data-container-id">
-                <div>
-                    <xsl:attribute name="class">tei-gap-synoptic</xsl:attribute>
+        <div>
+            <xsl:attribute name="class">tei-gap-synoptic</xsl:attribute>
+            <xsl:choose>
+                <xsl:when test="$data-container-id">
                     <xsl:attribute name="data-container-id" select="$data-container-id"/>
-                    <xsl:attribute name="data-link" select="@corresp"/>
-                    <xsl:text>◎</xsl:text>
-                </div>
-            </xsl:when>
-            <xsl:otherwise>
-                <span class="tei-gap">[…]</span>
-            </xsl:otherwise>
-        </xsl:choose>
-        
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:attribute name="data-container-id" select="'A'"/>
+                </xsl:otherwise>
+            </xsl:choose>
+            <xsl:attribute name="data-link" select="@corresp"/>
+            <xsl:text>◎</xsl:text>
+        </div>
+    </xsl:template>
+    
+    <xsl:template match="tei:gap[not(@corresp)]">
+        <span class="tei-gap">[…]</span>
     </xsl:template>
 
     

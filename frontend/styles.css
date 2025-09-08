@@ -888,7 +888,7 @@ main {
 }
 
 /* Gap symbol column - fixed narrow width */
-.synoptic-unit .tei-gap-synoptic {
+.tei-gap-synoptic {
     flex: 0 0 20px;
     text-align: center;
     font-weight: bold;
@@ -898,7 +898,7 @@ main {
 }
 
 /* Gap symbols with apparatus content - different color */
-.synoptic-unit .tei-gap-synoptic.has-content {
+.tei-gap-synoptic.has-content {
     color: #007bff; /* Blue color for entries with actual apparatus content */
 }
 
