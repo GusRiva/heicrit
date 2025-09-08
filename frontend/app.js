@@ -2336,6 +2336,7 @@ class HeiCritApp {
         const tokenId = token.getAttribute('data-token-id');
         
         
+        
         if (!tokenId) {
             return;
         }
@@ -2348,18 +2349,37 @@ class HeiCritApp {
         const readingGroup = isMainText ? 'lemma' : this.currentReadingGroup;
         
         
-        // Toggle token selection
-        if (token.classList.contains(`selected-${readingGroup}`)) {
-            // Remove from selection
+        console.log(`DEBUG: Token ${tokenId} switching to group: ${readingGroup}`);
+        console.log(`DEBUG: selectedTokens before:`, JSON.parse(JSON.stringify(this.selectedTokens)));
+        
+        // Get witness information to distinguish tokens with same ID from different witnesses
+        const witnessInfo = this.getWitnessInfoFromLine(synLine);
+        const witnessId = witnessInfo ? witnessInfo.witnessId : null;
+        
+        // Find which group (if any) currently contains this specific token (same tokenId AND witnessId)
+        let currentGroup = null;
+        for (const group of Object.keys(this.selectedTokens)) {
+            if (this.selectedTokens[group] && this.selectedTokens[group].some(t => 
+                t.tokenId === tokenId && t.witnessInfo && t.witnessInfo.witnessId === witnessId)) {
+                currentGroup = group;
+                break;
+            }
+        }
+        
+        if (currentGroup === readingGroup) {
+            // Token is already in target group - remove it (toggle off)
+            this.selectedTokens[readingGroup] = this.selectedTokens[readingGroup].filter(t => 
+                !(t.tokenId === tokenId && t.witnessInfo && t.witnessInfo.witnessId === witnessId));
             token.classList.remove(`selected-${readingGroup}`);
-            this.selectedTokens[readingGroup] = this.selectedTokens[readingGroup].filter(t => t.tokenId !== tokenId);
         } else {
-            // Add to selection
-            token.classList.add(`selected-${readingGroup}`);
+            // Remove token from current group (if any)
+            if (currentGroup && this.selectedTokens[currentGroup]) {
+                this.selectedTokens[currentGroup] = this.selectedTokens[currentGroup].filter(t => 
+                    !(t.tokenId === tokenId && t.witnessInfo && t.witnessInfo.witnessId === witnessId));
+                token.classList.remove(`selected-${currentGroup}`);
+            }
             
-            // Get witness information from the line
-            const witnessInfo = this.getWitnessInfoFromLine(synLine);
-            
+            // Add token to target group
             if (!this.selectedTokens[readingGroup]) {
                 this.selectedTokens[readingGroup] = [];
             }
@@ -2370,7 +2390,11 @@ class HeiCritApp {
                 witnessInfo: witnessInfo
             });
             
+            token.classList.add(`selected-${readingGroup}`);
         }
+        
+        console.log(`DEBUG: Token ${tokenId} moved from '${currentGroup}' to '${readingGroup}' (or toggled off)`);
+        console.log(`DEBUG: selectedTokens after:`, JSON.parse(JSON.stringify(this.selectedTokens)));
         
         // Save entry immediately after any token change
         this.saveNewEntry(tabId);
@@ -2472,6 +2496,7 @@ class HeiCritApp {
     }
     
     saveNewEntry(tabId) {
+        console.log(`DEBUG: saveNewEntry called with selectedTokens:`, JSON.parse(JSON.stringify(this.selectedTokens)));
         const tab = this.tabs.get(tabId);
         if (!tab) return;
         
@@ -2494,7 +2519,9 @@ class HeiCritApp {
         
         if (hasSelections) {
             // Create apparatus entry from current selections
+            console.log(`DEBUG: About to create apparatus entry with selectedTokens:`, JSON.parse(JSON.stringify(this.selectedTokens)));
             const entryData = this.createApparatusEntry(currentLoc);
+            console.log(`DEBUG: Created apparatus entry:`, entryData);
             
             if (!tab.currentlyEditingEntry || tab.currentlyEditingEntry.corresp !== currentCorresp) {
                 // Starting to edit a new entry - create it

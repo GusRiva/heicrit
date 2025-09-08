@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Any
 from io import BytesIO
 from lxml import etree as et
 from heipy.parsers import HeiEditionsParser
-from heipy.namespaces import ns
+from heipy.namespaces import ns, prefix_format
 from load_functions import resolve_relative_path, find_file_in_project
 
 
@@ -393,3 +393,72 @@ class Apparatus:
     def __repr__(self) -> str:
         """Detailed string representation of the Apparatus."""
         return f"Apparatus(apparatus_filepath='{self._apparatus_filepath}', entries_count={self.get_entries_count()}, leiths_path='{self._leiths_path}')"
+    
+
+def process_synoptic_token(el:et.Element) -> str:
+    tag_name = el.tag.split('}')[-1] if '}' in el.tag else el.tag
+    result = ''
+    if tag_name in ['w', 'pc']:
+        result += f"<span class='syn-token syn-tei-{tag_name}' data-token-id='{el.get(prefix_format('xml','id'))}'>"
+        if el.text is not None:
+            result += el.text.strip()
+        for child in el:
+            result += process_synoptic_token(child)
+        result += "</span>"
+    elif tag_name in ['c']:
+        result += "<span class='syn-token syn-tei-space'> </span>"
+    elif tag_name in ['choice', 'lg', 'l']:
+        for child in el:
+            result += process_synoptic_token(child)
+        if el.tail is not None and el.tail.strip() != '':
+            result += el.tail
+    elif tag_name in ['orig', 'sic', 'hi', 'initial']:
+        if el.text is not None:
+            result += el.text.strip()
+        for child in el:
+            result += process_synoptic_token(child)
+        if el.tail is not None and el.tail.strip() != '':
+            result += el.tail
+    elif tag_name in ['titlePart']:
+        if el.text is not None:
+            result += el.text.strip()
+        for child in el:
+            result += process_synoptic_token(child)
+            
+        
+    return result
+
+
+def process_synoptic_unit_for_comparison(element:et.Element) -> str:
+    """
+    Process an XML synoptic unit and return a string representation for comparison.
+    
+    Args:
+        element: The lxml etree Element to process
+        
+    Returns:
+        String representation of the element content
+    """
+    if element is None:
+        return '<div class="synoptic-content-no-data">Stelle nicht gefunden</div>'
+    
+    try:
+        # Get the text content of the element, stripping whitespace
+        # line_content = ''.join(element.itertext()).strip()
+        line_content = ''
+        for el in element:
+            line_content += process_synoptic_token(el)
+        
+        # If no text content, try to get element info
+        if not line_content:
+            for el in element:
+                print(el)
+            tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+            if tag_name == 'gap':
+                return "<div class='synoptic-content-om'>om.</div>"
+            return f"[{tag_name} element - no text content]"
+        
+        return line_content
+        
+    except Exception as e:
+        return f"[Error processing element: {str(e)}]"

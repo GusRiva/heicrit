@@ -3,13 +3,12 @@ import os
 from lxml import etree as et
 
 from heipy.heipipe.steps import PythonStep
-from heipy.namespaces import prefix_format
 # from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
 
 from load_functions import resolve_relative_path, find_file_in_project
 from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
 from synoptic_map import SynopticMap
-from apparatus import Apparatus
+from apparatus import Apparatus, process_synoptic_unit_for_comparison
 
 
 
@@ -18,77 +17,6 @@ api = Blueprint('api', __name__)
 # Global variables
 synoptic_map = SynopticMap()
 apparatus = None  # Global apparatus object for frontend modifications 
-
-
-def process_synoptic_token(el:et.Element) -> str:
-    tag_name = el.tag.split('}')[-1] if '}' in el.tag else el.tag
-    result = ''
-    if tag_name in ['w', 'pc']:
-        result += f"<span class='syn-token syn-tei-{tag_name}' data-token-id='{el.get(prefix_format('xml','id'))}'>"
-        if el.text is not None:
-            result += el.text.strip()
-        for child in el:
-            result += process_synoptic_token(child)
-        result += "</span>"
-    elif tag_name in ['c']:
-        result += "<span class='syn-token syn-tei-space'> </span>"
-    elif tag_name in ['choice', 'lg', 'l']:
-        for child in el:
-            result += process_synoptic_token(child)
-        if el.tail is not None and el.tail.strip() != '':
-            result += el.tail
-    elif tag_name in ['orig', 'sic', 'hi', 'initial']:
-        if el.text is not None:
-            result += el.text.strip()
-        for child in el:
-            result += process_synoptic_token(child)
-        if el.tail is not None and el.tail.strip() != '':
-            result += el.tail
-    elif tag_name in ['titlePart']:
-        if el.text is not None:
-            result += el.text.strip()
-        for child in el:
-            result += process_synoptic_token(child)
-            
-        
-    return result
-
-
-def process_synoptic_unit_for_comparison(element:et.Element) -> str:
-    """
-    Process an XML synoptic unit and return a string representation for comparison.
-    
-    Args:
-        element: The lxml etree Element to process
-        
-    Returns:
-        String representation of the element content
-    """
-    if element is None:
-        return '<div class="synoptic-content-no-data">Stelle nicht gefunden</div>'
-    
-    try:
-        # Get the text content of the element, stripping whitespace
-        # line_content = ''.join(element.itertext()).strip()
-        line_content = ''
-        for el in element:
-            line_content += process_synoptic_token(el)
-        
-        # If no text content, try to get element info
-        if not line_content:
-            for el in element:
-                print(el)
-            tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
-            if tag_name == 'gap':
-                return "<div class='synoptic-content-om'>om.</div>"
-            return f"[{tag_name} element - no text content]"
-        
-        return line_content
-        
-    except Exception as e:
-        return f"[Error processing element: {str(e)}]"
-
-
 
 @api.route('/sigla-mapping', methods=['GET'])
 def get_sigla_mapping():
@@ -339,9 +267,6 @@ def open_project():
                 'synoptic_wits_count': synoptic_map.get_wits_count(),
                 'main_text': main_text_content
             }
-            
-            
-            
             
         except Exception as processing_error:
             print(f"ERROR in open_project processing: {processing_error}")
