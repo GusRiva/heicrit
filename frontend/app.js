@@ -582,6 +582,9 @@ class HeiCritApp {
             const containerId = currentCorresp.includes(':') ? currentCorresp.split(':')[1] : currentCorresp;
             this.highlightSynopticUnit(containerId);
         }
+        
+        // Set up drag-and-drop sorting for apparatus entries
+        this.setupApparatusSorting(tabId);
     }
 
     updateNavigationControls(tabId) {
@@ -1563,7 +1566,14 @@ class HeiCritApp {
             
             html += `<div class="classical-subentry${entry.is_placeholder ? ' placeholder-entry' : ''}${isActive ? ' active' : ''}" 
                          data-subentry-index="${index}" 
-                         data-corresp="${this.escapeHtml(corresp)}">`;
+                         data-corresp="${this.escapeHtml(corresp)}"
+                         draggable="true"
+                         data-entry-id="${entry.id || index}">`;
+            
+            // Add drag handle for sortable entries (only for non-placeholder entries)
+            if (!entry.is_placeholder) {
+                html += '<span class="drag-handle" title="Drag to reorder">⋮⋮</span>';
+            }
             
             // Handle placeholder entries (no apparatus data)
             if (entry.is_placeholder) {
@@ -2389,6 +2399,94 @@ class HeiCritApp {
         
         // Add the delegation handler
         document.addEventListener('click', this.delegationHandler);
+    }
+    
+    setupApparatusSorting(tabId) {
+        const apparatusContent = document.getElementById(`apparatus-content-${tabId}`);
+        if (!apparatusContent) return;
+        
+        const sortableEntries = apparatusContent.querySelectorAll('.classical-subentry[draggable="true"]');
+        
+        sortableEntries.forEach(entry => {
+            // Remove existing listeners to avoid duplicates
+            entry.removeEventListener('dragstart', this.handleDragStart);
+            entry.removeEventListener('dragend', this.handleDragEnd);
+            entry.removeEventListener('dragover', this.handleDragOver);
+            entry.removeEventListener('drop', this.handleDrop);
+            
+            // Add drag event listeners
+            entry.addEventListener('dragstart', this.handleDragStart.bind(this));
+            entry.addEventListener('dragend', this.handleDragEnd.bind(this));
+            entry.addEventListener('dragover', this.handleDragOver.bind(this));
+            entry.addEventListener('drop', this.handleDrop.bind(this, tabId));
+        });
+    }
+    
+    handleDragStart(e) {
+        e.target.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', e.target.outerHTML);
+        e.dataTransfer.setData('text/plain', e.target.dataset.subentryIndex);
+    }
+    
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+        
+        // Remove drag-over class from all entries
+        document.querySelectorAll('.classical-subentry').forEach(entry => {
+            entry.classList.remove('drag-over');
+        });
+    }
+    
+    handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        // Add visual feedback
+        if (e.target.classList.contains('classical-subentry')) {
+            e.target.classList.add('drag-over');
+        }
+    }
+    
+    handleDrop(tabId, e) {
+        e.preventDefault();
+        e.target.classList.remove('drag-over');
+        
+        if (!e.target.classList.contains('classical-subentry')) return;
+        
+        const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        const targetIndex = parseInt(e.target.dataset.subentryIndex);
+        const corresp = e.target.dataset.corresp;
+        
+        if (draggedIndex === targetIndex) return;
+        
+        // Update the data structure
+        this.reorderApparatusEntries(tabId, corresp, draggedIndex, targetIndex);
+        
+        // Refresh the display
+        this.updateApparatusDisplay(tabId);
+    }
+    
+    reorderApparatusEntries(tabId, corresp, fromIndex, toIndex) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.groupedEntries || !tab.groupedEntries[corresp]) return;
+        
+        const entries = tab.groupedEntries[corresp];
+        
+        // Move the entry from fromIndex to toIndex
+        const [movedEntry] = entries.splice(fromIndex, 1);
+        entries.splice(toIndex, 0, movedEntry);
+        
+        // Update the activeSubentryIndex if needed
+        if (tab.activeSubentryIndex === fromIndex) {
+            tab.activeSubentryIndex = toIndex;
+        } else if (tab.activeSubentryIndex > fromIndex && tab.activeSubentryIndex <= toIndex) {
+            tab.activeSubentryIndex--;
+        } else if (tab.activeSubentryIndex < fromIndex && tab.activeSubentryIndex >= toIndex) {
+            tab.activeSubentryIndex++;
+        }
+        
+        console.log('DEBUG: Reordered apparatus entries:', entries);
     }
     
     setupKeyboardShortcuts(tabId) {

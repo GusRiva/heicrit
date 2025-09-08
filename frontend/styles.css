@@ -669,6 +669,51 @@ main {
     transition: background-color 0.2s ease;
 }
 
+/* Sortable apparatus entries */
+.classical-subentry[draggable="true"] {
+    cursor: grab;
+    user-select: none;
+}
+
+.classical-subentry[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.classical-subentry.drag-over {
+    background-color: rgba(0, 123, 255, 0.1);
+    border: 2px dashed #007bff;
+    border-radius: 3px;
+}
+
+.classical-subentry.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+}
+
+.classical-entry-group {
+    min-height: 40px; /* Ensure drop zone is always available */
+}
+
+.drag-handle {
+    color: #999;
+    cursor: grab;
+    margin-right: 6px;
+    font-weight: bold;
+    opacity: 0.6;
+    font-size: 0.8rem;
+    vertical-align: middle;
+    transition: opacity 0.2s;
+}
+
+.drag-handle:hover {
+    opacity: 1;
+    color: #666;
+}
+
+.classical-subentry:hover .drag-handle {
+    opacity: 1;
+}
+
 .classical-subentry {
     cursor: pointer;
     transition: background-color 0.2s ease;
