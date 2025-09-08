@@ -545,6 +545,7 @@ class HeiCritApp {
         // Get current entry data
         const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
         const currentEntries = tab.groupedEntries[currentCorresp];
+        console.log(currentEntries);
         const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
         // Generate HTML for current entry
@@ -997,6 +998,7 @@ class HeiCritApp {
         // Navbar dropdown menu events
         document.getElementById('openFile').addEventListener('click', () => this.openFile());
         document.getElementById('openProjectDirectory').addEventListener('click', () => this.openProjectDirectory());
+        document.getElementById('saveProjectIcon').addEventListener('click', () => this.saveProject());
         document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
         document.getElementById('saveAsFile').addEventListener('click', () => this.saveAsFile());
         document.getElementById('saveProject').addEventListener('click', () => this.saveProject());
@@ -1574,9 +1576,10 @@ class HeiCritApp {
                         let readingPart = ` ${this.escapeHtml(reading.text)}`;
                         
                         // Add witnesses in italics
-                        if (reading.wit) {
+                        const wit = reading.attributes?.wit || reading.wit; // Support both new and old format
+                        if (wit) {
                             // Clean up witness list (remove # symbols and extra spaces)
-                            const witnesses = reading.wit.replace(/#/g, '').trim().split(/\s+/).join(' ');
+                            const witnesses = wit.replace(/#/g, '').trim().split(/\s+/).join(' ');
                             if (witnesses) {
                                 readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(witnesses)}</em>`;
                             }
@@ -2223,6 +2226,9 @@ class HeiCritApp {
             this.setupTokenClickHandlers(tabId);
             this.setupTokenEventDelegation();
             
+            // Set up keyboard shortcuts for reading group switching
+            this.setupKeyboardShortcuts(tabId);
+            
         } else {
             // Exit creation mode
             this.exitCreationMode(tabId);
@@ -2253,6 +2259,9 @@ class HeiCritApp {
             document.removeEventListener('click', this.delegationHandler);
             this.delegationHandler = null;
         }
+        
+        // Remove keyboard shortcuts
+        this.removeKeyboardShortcuts();
         
         // Update the apparatus display now that we're exiting creation mode
         this.updateApparatusDisplay(tabId);
@@ -2314,6 +2323,128 @@ class HeiCritApp {
         document.addEventListener('click', this.delegationHandler);
     }
     
+    setupKeyboardShortcuts(tabId) {
+        // Create keyboard shortcut handler
+        this.keyboardHandler = (event) => {
+            // Only handle keyboard shortcuts during creation mode
+            if (!this.creationMode) return;
+            
+            // Only handle number keys 0-9
+            if (event.key >= '0' && event.key <= '9') {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const keyNumber = parseInt(event.key);
+                this.switchToReadingGroupByNumber(tabId, keyNumber);
+            }
+        };
+        
+        // Add keyboard event listener
+        document.addEventListener('keydown', this.keyboardHandler);
+    }
+    
+    removeKeyboardShortcuts() {
+        if (this.keyboardHandler) {
+            document.removeEventListener('keydown', this.keyboardHandler);
+            this.keyboardHandler = null;
+        }
+    }
+    
+    switchToReadingGroupByNumber(tabId, number) {
+        let targetGroup;
+        
+        if (number === 0) {
+            targetGroup = 'lemma';
+        } else {
+            targetGroup = `reading-${number}`;
+        }
+        
+        // Get available reading groups (groups that have tokens or are the next available)
+        const availableGroups = this.getAvailableReadingGroups();
+        
+        // Check if this is a valid group to switch to
+        if (targetGroup === 'lemma' || availableGroups.includes(targetGroup)) {
+            this.currentReadingGroup = targetGroup;
+            
+            // Update the dropdown to reflect the change
+            const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+            if (readingGroupSelect) {
+                // If this is a new group that doesn't exist in dropdown yet, create it
+                if (targetGroup !== 'lemma' && !readingGroupSelect.querySelector(`option[value="${targetGroup}"]`)) {
+                    this.createNewReadingGroupOption(tabId, targetGroup);
+                }
+                
+                readingGroupSelect.value = targetGroup;
+            }
+        } 
+    }
+    
+    getAvailableReadingGroups() {
+        const availableGroups = [];
+        
+        // Add all groups that currently have selected tokens
+        Object.keys(this.selectedTokens).forEach(group => {
+            if (group !== 'lemma' && this.selectedTokens[group] && this.selectedTokens[group].length > 0) {
+                availableGroups.push(group);
+            }
+        });
+        
+        // Add the next available reading group (one number higher than the highest existing)
+        let maxReadingIndex = 0;
+        availableGroups.forEach(group => {
+            const match = group.match(/reading-(\d+)/);
+            if (match) {
+                maxReadingIndex = Math.max(maxReadingIndex, parseInt(match[1]));
+            }
+        });
+        
+        // Always allow switching to reading-1, or the next number after the highest existing
+        const nextGroup = `reading-${Math.max(1, maxReadingIndex + 1)}`;
+        if (!availableGroups.includes(nextGroup)) {
+            availableGroups.push(nextGroup);
+        }
+        
+        // Also always allow reading-1 if it doesn't exist yet
+        if (!availableGroups.includes('reading-1')) {
+            availableGroups.push('reading-1');
+        }
+        
+        return availableGroups;
+    }
+    
+    createNewReadingGroupOption(tabId, groupName) {
+        const select = document.getElementById(`reading-group-select-${tabId}`);
+        if (!select) return;
+        
+        const match = groupName.match(/reading-(\d+)/);
+        if (!match) return;
+        
+        const readingNumber = parseInt(match[1]);
+        
+        // Initialize selectedTokens for this new group
+        if (!this.selectedTokens[groupName]) {
+            this.selectedTokens[groupName] = [];
+        }
+        
+        // Create new option
+        const newOption = document.createElement('option');
+        newOption.value = groupName;
+        newOption.textContent = `Reading ${readingNumber}`;
+        
+        // Insert in the correct position (before the "new group" option)
+        const newGroupOption = select.querySelector('option[value="new-group"]');
+        if (newGroupOption) {
+            select.insertBefore(newOption, newGroupOption);
+        } else {
+            select.appendChild(newOption);
+        }
+        
+        // Update the next reading group index if needed
+        if (readingNumber >= this.nextReadingGroupIndex) {
+            this.nextReadingGroupIndex = readingNumber + 1;
+        }
+    }
+    
     removeTokenClickHandlers(tabId) {
         const tabPanel = document.getElementById(`panel-${tabId}`);
         if (!tabPanel) return;
@@ -2348,9 +2479,6 @@ class HeiCritApp {
         // If clicking on main text (first line), force lemma selection
         const readingGroup = isMainText ? 'lemma' : this.currentReadingGroup;
         
-        
-        console.log(`DEBUG: Token ${tokenId} switching to group: ${readingGroup}`);
-        console.log(`DEBUG: selectedTokens before:`, JSON.parse(JSON.stringify(this.selectedTokens)));
         
         // Get witness information to distinguish tokens with same ID from different witnesses
         const witnessInfo = this.getWitnessInfoFromLine(synLine);
@@ -2393,8 +2521,8 @@ class HeiCritApp {
             token.classList.add(`selected-${readingGroup}`);
         }
         
-        console.log(`DEBUG: Token ${tokenId} moved from '${currentGroup}' to '${readingGroup}' (or toggled off)`);
-        console.log(`DEBUG: selectedTokens after:`, JSON.parse(JSON.stringify(this.selectedTokens)));
+
+
         
         // Save entry immediately after any token change
         this.saveNewEntry(tabId);
@@ -2496,7 +2624,7 @@ class HeiCritApp {
     }
     
     saveNewEntry(tabId) {
-        console.log(`DEBUG: saveNewEntry called with selectedTokens:`, JSON.parse(JSON.stringify(this.selectedTokens)));
+
         const tab = this.tabs.get(tabId);
         if (!tab) return;
         
@@ -2519,9 +2647,7 @@ class HeiCritApp {
         
         if (hasSelections) {
             // Create apparatus entry from current selections
-            console.log(`DEBUG: About to create apparatus entry with selectedTokens:`, JSON.parse(JSON.stringify(this.selectedTokens)));
             const entryData = this.createApparatusEntry(currentLoc);
-            console.log(`DEBUG: Created apparatus entry:`, entryData);
             
             if (!tab.currentlyEditingEntry || tab.currentlyEditingEntry.corresp !== currentCorresp) {
                 // Starting to edit a new entry - create it

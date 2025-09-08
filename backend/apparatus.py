@@ -137,7 +137,6 @@ class Apparatus:
                 for rdg in rdg_elements:
                     reading = {
                         'text': ''.join(rdg.itertext()).strip(),
-                        'wit': rdg.get('wit', ''),
                         'attributes': dict(rdg.attrib)
                     }
                     entry['readings'].append(reading)
