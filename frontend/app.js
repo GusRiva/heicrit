@@ -168,7 +168,8 @@ class HeiCritApp {
                                     <div class="apparatus-details-title">
                                         <h4>Location Details</h4>
                                         <div class="apparatus-toolbar">
-                                            <button id="new-reading-btn-${tabId}" class="new-reading-btn">New Reading</button>
+                                            <button id="new-reading-btn-${tabId}" class="apparatus-btn">New Reading</button>
+                                            <button id="edit-reading-btn-${tabId}" class="apparatus-btn">Edit Reading</button>
                                             <select id="reading-group-select-${tabId}" class="reading-group-select" style="display: none;">
                                                 <option value="lemma">Lemma</option>
                                                 <option value="reading-1">Reading 1</option>
@@ -353,10 +354,15 @@ class HeiCritApp {
         
         // Setup entry creation events
         const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+        const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
         if (newReadingBtn) {
             newReadingBtn.addEventListener('click', () => this.toggleCreationMode(tabId));
+        }
+        
+        if (editReadingBtn) {
+            editReadingBtn.addEventListener('click', () => this.toggleEditMode(tabId));
         }
         
         if (readingGroupSelect) {
@@ -414,6 +420,9 @@ class HeiCritApp {
                 navigation.style.display = 'flex';
             }
         }
+        
+        // Set up token click event delegation for edit mode detection
+        this.setupTokenEventDelegation();
     }
 
     markGapSymbolsWithContent(tab) {
@@ -2201,15 +2210,29 @@ class HeiCritApp {
 
     // Entry creation mode methods
     toggleCreationMode(tabId) {
-        this.creationMode = !this.creationMode;
-        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
-        const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
-        
-        if (this.creationMode) {
+        // Handle button click for both creation and edit modes
+        if (this.editMode) {
+            // Currently in edit mode - finish editing
+            this.exitEditMode(tabId);
+        } else if (this.creationMode) {
+            // Currently in creation mode - exit creation mode
+            this.exitCreationMode(tabId);
+        } else {
+            // Not in any mode - enter creation mode
+            this.creationMode = true;
+            const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+            const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+            
             // Enter creation mode
             newReadingBtn.textContent = 'Finish';
             newReadingBtn.classList.add('active');
             readingGroupSelect.style.display = 'inline-block';
+            
+            // Hide the Edit Reading button during creation mode
+            const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
+            if (editReadingBtn) {
+                editReadingBtn.style.display = 'none';
+            }
             
             // Reset dropdown to initial state
             this.resetReadingGroupDropdown(tabId);
@@ -2228,21 +2251,59 @@ class HeiCritApp {
             
             // Set up keyboard shortcuts for reading group switching
             this.setupKeyboardShortcuts(tabId);
-            
-        } else {
-            // Exit creation mode
+        }
+    }
+    
+    toggleEditMode(tabId) {
+        // Handle button click for edit mode
+        if (this.editMode) {
+            // Currently in edit mode - finish editing
+            this.exitEditMode(tabId);
+        } else if (this.creationMode) {
+            // Currently in creation mode - exit creation mode first, then enter edit mode
             this.exitCreationMode(tabId);
+            // Get the currently active entry and enter edit mode
+            const tab = this.tabs.get(tabId);
+            if (tab && tab.entryKeys && tab.currentEntryIndex >= 0) {
+                const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
+                const currentEntries = tab.groupedEntries[currentCorresp];
+                if (currentEntries && tab.activeSubentryIndex >= 0 && tab.activeSubentryIndex < currentEntries.length) {
+                    const currentEntry = currentEntries[tab.activeSubentryIndex];
+                    if (!currentEntry.is_placeholder) {
+                        this.enterEditMode(tabId, currentEntry);
+                    }
+                }
+            }
+        } else {
+            // Not in any mode - enter edit mode for currently active entry
+            const tab = this.tabs.get(tabId);
+            if (tab && tab.entryKeys && tab.currentEntryIndex >= 0) {
+                const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
+                const currentEntries = tab.groupedEntries[currentCorresp];
+                if (currentEntries && tab.activeSubentryIndex >= 0 && tab.activeSubentryIndex < currentEntries.length) {
+                    const currentEntry = currentEntries[tab.activeSubentryIndex];
+                    if (!currentEntry.is_placeholder) {
+                        this.enterEditMode(tabId, currentEntry);
+                    }
+                }
+            }
         }
     }
     
     exitCreationMode(tabId) {
         this.creationMode = false;
         const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+        const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
         newReadingBtn.textContent = 'New Reading';
         newReadingBtn.classList.remove('active');
         readingGroupSelect.style.display = 'none';
+        
+        // Show the Edit Reading button again
+        if (editReadingBtn) {
+            editReadingBtn.style.display = '';
+        }
         
         // Clear all selected tokens
         this.clearSelectedTokens(tabId);
@@ -2253,15 +2314,14 @@ class HeiCritApp {
             tab.currentlyEditingEntry = null;
         }
         
-        // Remove token click handlers and event delegation
+        // Remove token click handlers for creation mode
         this.removeTokenClickHandlers(tabId);
-        if (this.delegationHandler) {
-            document.removeEventListener('click', this.delegationHandler);
-            this.delegationHandler = null;
-        }
         
         // Remove keyboard shortcuts
         this.removeKeyboardShortcuts();
+        
+        // Restore token event delegation for navigation (non-creation mode)
+        this.setupTokenEventDelegation();
         
         // Update the apparatus display now that we're exiting creation mode
         this.updateApparatusDisplay(tabId);
@@ -2310,12 +2370,20 @@ class HeiCritApp {
         
         // Create new delegation handler
         this.delegationHandler = (event) => {
-            // Check if the clicked element is a token in creation mode
-            if (this.creationMode && 
-                event.target.classList.contains('syn-token') && 
-                event.target.hasAttribute('data-creation-clickable')) {
-                
-                this.handleTokenClick(this.activeTabId, event);
+            // Check if the clicked element is a token
+            if (event.target.classList.contains('syn-token')) {
+                // Handle creation mode (requires data-creation-clickable attribute)
+                if (this.creationMode && event.target.hasAttribute('data-creation-clickable')) {
+                    this.handleTokenClick(this.activeTabId, event);
+                }
+                // Handle edit mode detection (any token click when not in creation/edit mode)
+                else if (!this.creationMode && !this.editMode) {
+                    this.handleTokenClick(this.activeTabId, event);
+                }
+                // Handle edit mode (requires data-creation-clickable attribute)
+                else if (this.editMode && event.target.hasAttribute('data-creation-clickable')) {
+                    this.handleTokenClick(this.activeTabId, event);
+                }
             }
         };
         
@@ -2326,8 +2394,8 @@ class HeiCritApp {
     setupKeyboardShortcuts(tabId) {
         // Create keyboard shortcut handler
         this.keyboardHandler = (event) => {
-            // Only handle keyboard shortcuts during creation mode
-            if (!this.creationMode) return;
+            // Only handle keyboard shortcuts during creation mode or edit mode
+            if (!this.creationMode && !this.editMode) return;
             
             // Only handle number keys 0-9
             if (event.key >= '0' && event.key <= '9') {
@@ -2457,8 +2525,11 @@ class HeiCritApp {
     }
     
     handleTokenClick(tabId, event) {
+        console.log('DEBUG: handleTokenClick called, creationMode:', this.creationMode, 'editMode:', this.editMode);
         
-        if (!this.creationMode) {
+        if (!this.creationMode && !this.editMode) {
+            // Check if this token is part of an existing apparatus entry
+            this.checkTokenForEdit(tabId, event);
             return;
         }
         
@@ -2524,8 +2595,10 @@ class HeiCritApp {
 
 
         
-        // Save entry immediately after any token change
-        this.saveNewEntry(tabId);
+        // Save entry immediately after any token change (only in creation mode)
+        if (this.creationMode) {
+            this.saveNewEntry(tabId);
+        }
         
         // Check if event handlers are still attached
         const tokens = document.querySelectorAll('.syn-token');
@@ -2535,6 +2608,384 @@ class HeiCritApp {
                 tokensWithHandlers++;
             }
         });
+    }
+    
+    checkTokenForEdit(tabId, event) {
+        console.log('DEBUG: checkTokenForEdit called');
+        event.stopPropagation();
+        const token = event.target;
+        const tokenId = token.getAttribute('data-token-id');
+        
+        console.log('DEBUG: Clicked token:', token, 'tokenId:', tokenId);
+        
+        if (!tokenId) {
+            console.log('DEBUG: No tokenId found');
+            return;
+        }
+        
+        // Get witness information for this token
+        const synLine = token.closest('.syn-line');
+        const witnessInfo = this.getWitnessInfoFromLine(synLine);
+        if (!witnessInfo) {
+            return;
+        }
+        
+        // Create the token reference that would be used in apparatus entries
+        const tokenRef = `${witnessInfo.prefix}:${tokenId}`;
+        
+        // Find apparatus entry that contains this token
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.apparatusEntries) {
+            return;
+        }
+        
+        const entryToEdit = this.findApparatusEntryForToken(tab, tokenRef, witnessInfo.witnessId);
+        
+        if (entryToEdit) {
+            // Navigate to this entry (make it the active entry)
+            this.navigateToApparatusEntry(tabId, entryToEdit);
+        }
+    }
+    
+    navigateToApparatusEntry(tabId, entry) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !entry) return;
+        
+        // Find the corresp (location) for this entry
+        const targetCorresp = entry.corresp;
+        if (!targetCorresp) return;
+        
+        // Find the index of this corresp in the entry keys
+        const targetIndex = tab.entryKeys.indexOf(targetCorresp);
+        if (targetIndex === -1) return;
+        
+        // Navigate to this location
+        tab.currentEntryIndex = targetIndex;
+        
+        // Find the index of this specific entry within the grouped entries
+        const entriesAtLocation = tab.groupedEntries[targetCorresp];
+        if (entriesAtLocation) {
+            const subentryIndex = entriesAtLocation.indexOf(entry);
+            if (subentryIndex !== -1) {
+                tab.activeSubentryIndex = subentryIndex;
+            } else {
+                // Fallback to first non-placeholder entry
+                tab.activeSubentryIndex = this.findFirstNonPlaceholderEntry(entriesAtLocation);
+            }
+        }
+        
+        // Update the display
+        this.updateApparatusDisplay(tabId);
+        
+        console.log('DEBUG: Navigated to apparatus entry:', entry);
+    }
+    
+    findApparatusEntryForToken(tab, tokenRef, witnessId) {
+        // Check all apparatus entries to see if any contain this token reference
+        for (const entry of tab.apparatusEntries) {
+            // Check lemma
+            if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
+                const lemmaCorresp = entry.lemma.attributes.corresp;
+                if (lemmaCorresp.includes(tokenRef)) {
+                    return entry;
+                }
+            }
+            
+            // Check readings
+            if (entry.readings) {
+                for (const reading of entry.readings) {
+                    if (reading.attributes && reading.attributes.corresp) {
+                        const readingCorresp = reading.attributes.corresp;
+                        const readingWit = reading.attributes.wit;
+                        
+                        // Check if this token is in this reading and this witness is included
+                        if (readingCorresp.includes(tokenRef) && readingWit && readingWit.includes(`#${witnessId}`)) {
+                            return entry;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    enterEditMode(tabId, entry) {
+        // Set edit mode flag and store the entry being edited
+        this.editMode = true;
+        this.editingEntry = entry;
+        this.creationMode = false; // Not creation mode, but edit mode
+        
+        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+        const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
+        const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+        
+        // Change the Edit Reading button to show Finish
+        if (editReadingBtn) {
+            editReadingBtn.textContent = 'Finish';
+            editReadingBtn.classList.add('active');
+        }
+        
+        // Hide the New Reading button during edit mode
+        if (newReadingBtn) {
+            newReadingBtn.style.display = 'none';
+        }
+        
+        if (readingGroupSelect) {
+            readingGroupSelect.style.display = 'inline-block';
+        }
+        
+        // Clear all existing token selections before populating new ones
+        this.clearSelectedTokens(tabId);
+        
+        // Reset and populate selectedTokens based on the entry
+        this.populateSelectedTokensFromEntry(tabId, entry);
+        
+        // Set up token click handlers and keyboard shortcuts  
+        this.setupTokenClickHandlersForEdit(tabId);
+        this.setupKeyboardShortcuts(tabId);
+        
+        console.log('DEBUG: Entered edit mode for entry:', entry);
+    }
+    
+    populateSelectedTokensFromEntry(tabId, entry) {
+        console.log('DEBUG: populateSelectedTokensFromEntry called with entry:', entry);
+        
+        // Reset selectedTokens
+        this.selectedTokens = {
+            lemma: [],
+            'reading-1': []
+        };
+        this.nextReadingGroupIndex = 2;
+        
+        // Parse lemma tokens
+        if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
+            const lemmaCorresp = entry.lemma.attributes.corresp;
+            console.log('DEBUG: Processing lemma corresp:', lemmaCorresp);
+            const lemmaTokens = this.parseTokensFromCorresp(lemmaCorresp);
+            console.log('DEBUG: Parsed lemma tokens:', lemmaTokens);
+            this.selectedTokens.lemma = lemmaTokens;
+        }
+        
+        // Parse reading tokens
+        if (entry.readings) {
+            console.log('DEBUG: Processing readings:', entry.readings);
+            entry.readings.forEach((reading, index) => {
+                if (reading.attributes && reading.attributes.corresp) {
+                    const readingGroup = `reading-${index + 1}`;
+                    console.log(`DEBUG: Processing reading ${index + 1}, corresp:`, reading.attributes.corresp);
+                    
+                    // Ensure the reading group exists in selectedTokens
+                    if (!this.selectedTokens[readingGroup]) {
+                        this.selectedTokens[readingGroup] = [];
+                    }
+                    
+                    const readingTokens = this.parseTokensFromCorresp(reading.attributes.corresp);
+                    console.log(`DEBUG: Parsed reading tokens for ${readingGroup}:`, readingTokens);
+                    this.selectedTokens[readingGroup] = readingTokens;
+                    
+                    // Update next reading group index
+                    this.nextReadingGroupIndex = Math.max(this.nextReadingGroupIndex, index + 2);
+                }
+            });
+        }
+        
+        // Add visual selection to tokens
+        this.applyTokenSelections(tabId);
+        
+        // Reset dropdown to lemma
+        this.currentReadingGroup = 'lemma';
+        this.resetReadingGroupDropdownForEdit(tabId);
+    }
+    
+    parseTokensFromCorresp(corresp) {
+        // Parse corresp like "a:w_7_2 a:w_7_3" or "bb:w_2_4 bb:w_2_5"
+        console.log('DEBUG: parseTokensFromCorresp called with corresp:', corresp);
+        const tokens = [];
+        const tokenRefs = corresp.split(' ');
+        console.log('DEBUG: Token refs:', tokenRefs);
+        
+        tokenRefs.forEach(ref => {
+            if (ref.includes(':')) {
+                const [prefix, tokenId] = ref.split(':');
+                console.log('DEBUG: Looking for token with prefix:', prefix, 'tokenId:', tokenId);
+                
+                // Find ALL token elements with this tokenId
+                const tokenElements = document.querySelectorAll(`[data-token-id="${tokenId}"]`);
+                console.log('DEBUG: Found token elements:', tokenElements);
+                
+                // Find the one that matches the expected prefix
+                let foundToken = false;
+                tokenElements.forEach(tokenElement => {
+                    const synLine = tokenElement.closest('.syn-line');
+                    const witnessInfo = this.getWitnessInfoFromLine(synLine);
+                    console.log('DEBUG: Checking token element:', tokenElement, 'Witness info:', witnessInfo);
+                    
+                    if (witnessInfo && witnessInfo.prefix === prefix) {
+                        const tokenData = {
+                            tokenId: tokenId,
+                            text: tokenElement.textContent.trim(),
+                            witnessInfo: witnessInfo
+                        };
+                        console.log('DEBUG: Adding token data:', tokenData);
+                        tokens.push(tokenData);
+                        foundToken = true;
+                    }
+                });
+                
+                if (!foundToken) {
+                    console.log('DEBUG: No token found matching prefix:', prefix, 'for tokenId:', tokenId);
+                }
+            }
+        });
+        
+        return tokens;
+    }
+    
+    applyTokenSelections(tabId) {
+        console.log('DEBUG: applyTokenSelections called with selectedTokens:', this.selectedTokens);
+        
+        // Apply visual selection classes based on selectedTokens
+        Object.keys(this.selectedTokens).forEach(group => {
+            console.log(`DEBUG: Applying selections for group ${group}:`, this.selectedTokens[group]);
+            
+            this.selectedTokens[group].forEach(tokenData => {
+                // Find ALL elements with this tokenId and pick the right witness
+                const tokenElements = document.querySelectorAll(`[data-token-id="${tokenData.tokenId}"]`);
+                
+                tokenElements.forEach(tokenElement => {
+                    const synLine = tokenElement.closest('.syn-line');
+                    const witnessInfo = this.getWitnessInfoFromLine(synLine);
+                    
+                    if (witnessInfo && witnessInfo.witnessId === tokenData.witnessInfo.witnessId) {
+                        console.log(`DEBUG: Adding class selected-${group} to token:`, tokenElement);
+                        tokenElement.classList.add(`selected-${group}`);
+                    }
+                });
+            });
+        });
+    }
+    
+    setupTokenClickHandlersForEdit(tabId) {
+        // Similar to setupTokenClickHandlers but for edit mode
+        const tabPanel = document.getElementById(`panel-${tabId}`);
+        if (!tabPanel) return;
+        
+        const tokens = tabPanel.querySelectorAll('.syn-token');
+        tokens.forEach(token => {
+            token.style.cursor = 'pointer';
+            token.setAttribute('data-creation-clickable', 'true');
+        });
+        
+        // Set up event delegation if not already done
+        if (!this.delegationHandler) {
+            this.setupTokenEventDelegation();
+        }
+    }
+    
+    resetReadingGroupDropdownForEdit(tabId) {
+        const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+        if (!readingGroupSelect) return;
+        
+        // Clear existing options except lemma
+        readingGroupSelect.innerHTML = '<option value="lemma">Lemma</option>';
+        
+        // Add options for existing reading groups
+        Object.keys(this.selectedTokens).forEach(group => {
+            if (group !== 'lemma') {
+                const match = group.match(/reading-(\d+)/);
+                if (match) {
+                    const readingNumber = parseInt(match[1]);
+                    const option = document.createElement('option');
+                    option.value = group;
+                    option.textContent = `Reading ${readingNumber}`;
+                    readingGroupSelect.appendChild(option);
+                }
+            }
+        });
+        
+        // Add "new group" option
+        const newGroupOption = document.createElement('option');
+        newGroupOption.value = 'new-group';
+        newGroupOption.textContent = '+ New Reading';
+        readingGroupSelect.appendChild(newGroupOption);
+        
+        // Set to lemma
+        readingGroupSelect.value = 'lemma';
+    }
+    
+    exitEditMode(tabId) {
+        // Save the edited entry
+        this.saveEditedEntry(tabId);
+        
+        // Clean up edit mode
+        this.editMode = false;
+        this.editingEntry = null;
+        
+        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+        const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
+        const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+        
+        // Restore the New Reading button
+        if (newReadingBtn) {
+            newReadingBtn.textContent = 'New Reading';
+            newReadingBtn.classList.remove('active');
+            newReadingBtn.style.backgroundColor = '';
+            newReadingBtn.style.display = ''; // Show it again
+        }
+        
+        // Restore the Edit Reading button
+        if (editReadingBtn) {
+            editReadingBtn.textContent = 'Edit Reading';
+            editReadingBtn.classList.remove('active');
+        }
+        
+        if (readingGroupSelect) {
+            readingGroupSelect.style.display = 'none';
+        }
+        
+        // Clear all selected tokens
+        this.clearSelectedTokens(tabId);
+        
+        // Remove token click handlers for edit mode
+        this.removeTokenClickHandlers(tabId);
+        this.removeKeyboardShortcuts();
+        
+        // Restore token event delegation for navigation (non-edit mode)
+        this.setupTokenEventDelegation();
+        
+        // Update the apparatus display
+        this.updateApparatusDisplay(tabId);
+    }
+    
+    saveEditedEntry(tabId) {
+        if (!this.editingEntry) return;
+        
+        // Get current location from the editing entry
+        const currentLoc = this.editingEntry.loc;
+        
+        // Create new entry data from current selections
+        const updatedEntryData = this.createApparatusEntry(currentLoc);
+        
+        // Update the editing entry with new data, preserving original structure
+        this.editingEntry.lemma = updatedEntryData.lemma;
+        this.editingEntry.readings = updatedEntryData.readings;
+        
+        // Since this.editingEntry is a reference to the original entry object,
+        // the changes should automatically be reflected in all data structures
+        console.log('DEBUG: Saved edited entry:', this.editingEntry);
+    }
+    
+    updateGroupedEntriesForEditedEntry(tab, editedEntry) {
+        const corresp = editedEntry.corresp;
+        
+        if (tab.groupedEntries && tab.groupedEntries[corresp]) {
+            // Find and update the entry in grouped entries
+            const entryIndex = tab.groupedEntries[corresp].findIndex(entry => entry === editedEntry);
+            if (entryIndex >= 0) {
+                tab.groupedEntries[corresp][entryIndex] = editedEntry;
+            }
+        }
     }
     
     getWitnessInfoFromLine(synLine) {

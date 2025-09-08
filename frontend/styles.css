@@ -1289,7 +1289,7 @@ main {
     align-items: center;
 }
 
-.new-reading-btn {
+.apparatus-btn {
     background: #007bff;
     color: white;
     border: none;
@@ -1300,15 +1300,15 @@ main {
     transition: background-color 0.2s;
 }
 
-.new-reading-btn:hover {
+.apparatus-btn:hover {
     background: #0056b3;
 }
 
-.new-reading-btn.active {
+.apparatus-btn.active {
     background: #28a745;
 }
 
-.new-reading-btn.active:hover {
+.apparatus-btn.active:hover {
     background: #218838;
 }
 
