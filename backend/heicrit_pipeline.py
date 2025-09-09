@@ -81,6 +81,9 @@ def append_synoptic_links_funct(root, parameters):
                 corresp_value = str(target_value)
             gap.set('corresp', corresp_value)
         
+        if 'n' in synoptic_entry:
+            gap.set('n', synoptic_entry.get('n'))
+        
         if pos is None:    
             # Insert gap before any text content by handling text and tail
             if element.text and element.text.strip():

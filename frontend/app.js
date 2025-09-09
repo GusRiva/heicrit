@@ -560,7 +560,6 @@ class HeiCritApp {
         // Use max(0, activeSubentryIndex) to handle -1 case (no non-placeholder entries)
         const displayIndex = Math.max(0, tab.activeSubentryIndex || 0);
         const htmlContent = this.generateLocationHTML(currentLoc, currentEntries, displayIndex);
-        console.log(htmlContent);
         
         // Set content
         const content = document.getElementById(`apparatus-content-${tabId}`);
@@ -2150,6 +2149,8 @@ class HeiCritApp {
 
 
     goToCorrespEntry(containerId) {
+        console.log(containerId);
+        
         if (!containerId) {
             return;
         }
@@ -2486,8 +2487,7 @@ class HeiCritApp {
         } else if (tab.activeSubentryIndex < fromIndex && tab.activeSubentryIndex >= toIndex) {
             tab.activeSubentryIndex++;
         }
-        
-        console.log('DEBUG: Reordered apparatus entries:', entries);
+    
     }
     
     setupKeyboardShortcuts(tabId) {
@@ -2772,7 +2772,6 @@ class HeiCritApp {
         // Update the display
         this.updateApparatusDisplay(tabId);
         
-        console.log('DEBUG: Navigated to apparatus entry:', entry);
     }
     
     // findApparatusEntryForToken(tab, tokenRef, witnessId) {
@@ -2841,11 +2840,9 @@ class HeiCritApp {
         this.setupTokenClickHandlersForEdit(tabId);
         this.setupKeyboardShortcuts(tabId);
         
-        console.log('DEBUG: Entered edit mode for entry:', entry);
     }
     
     populateSelectedTokensFromEntry(tabId, entry) {
-        console.log('DEBUG: populateSelectedTokensFromEntry called with entry:', entry);
         
         // Reset selectedTokens
         this.selectedTokens = {
@@ -2857,19 +2854,15 @@ class HeiCritApp {
         // Parse lemma tokens
         if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
             const lemmaCorresp = entry.lemma.attributes.corresp;
-            console.log('DEBUG: Processing lemma corresp:', lemmaCorresp);
             const lemmaTokens = this.parseTokensFromCorresp(lemmaCorresp);
-            console.log('DEBUG: Parsed lemma tokens:', lemmaTokens);
             this.selectedTokens.lemma = lemmaTokens;
         }
         
         // Parse reading tokens
         if (entry.readings) {
-            console.log('DEBUG: Processing readings:', entry.readings);
             entry.readings.forEach((reading, index) => {
                 if (reading.attributes && reading.attributes.corresp) {
                     const readingGroup = `reading-${index + 1}`;
-                    console.log(`DEBUG: Processing reading ${index + 1}, corresp:`, reading.attributes.corresp);
                     
                     // Ensure the reading group exists in selectedTokens
                     if (!this.selectedTokens[readingGroup]) {
@@ -2877,7 +2870,6 @@ class HeiCritApp {
                     }
                     
                     const readingTokens = this.parseTokensFromCorresp(reading.attributes.corresp);
-                    console.log(`DEBUG: Parsed reading tokens for ${readingGroup}:`, readingTokens);
                     this.selectedTokens[readingGroup] = readingTokens;
                     
                     // Update next reading group index
@@ -2896,26 +2888,21 @@ class HeiCritApp {
     
     parseTokensFromCorresp(corresp) {
         // Parse corresp like "a:w_7_2 a:w_7_3" or "bb:w_2_4 bb:w_2_5"
-        console.log('DEBUG: parseTokensFromCorresp called with corresp:', corresp);
         const tokens = [];
         const tokenRefs = corresp.split(' ');
-        console.log('DEBUG: Token refs:', tokenRefs);
         
         tokenRefs.forEach(ref => {
             if (ref.includes(':')) {
                 const [prefix, tokenId] = ref.split(':');
-                console.log('DEBUG: Looking for token with prefix:', prefix, 'tokenId:', tokenId);
                 
                 // Find ALL token elements with this tokenId
                 const tokenElements = document.querySelectorAll(`[data-token-id="${tokenId}"]`);
-                console.log('DEBUG: Found token elements:', tokenElements);
                 
                 // Find the one that matches the expected prefix
                 let foundToken = false;
                 tokenElements.forEach(tokenElement => {
                     const synLine = tokenElement.closest('.syn-line');
                     const witnessInfo = this.getWitnessInfoFromLine(synLine);
-                    console.log('DEBUG: Checking token element:', tokenElement, 'Witness info:', witnessInfo);
                     
                     if (witnessInfo && witnessInfo.prefix === prefix) {
                         const tokenData = {
@@ -2923,15 +2910,11 @@ class HeiCritApp {
                             text: tokenElement.textContent.trim(),
                             witnessInfo: witnessInfo
                         };
-                        console.log('DEBUG: Adding token data:', tokenData);
                         tokens.push(tokenData);
                         foundToken = true;
                     }
                 });
                 
-                if (!foundToken) {
-                    console.log('DEBUG: No token found matching prefix:', prefix, 'for tokenId:', tokenId);
-                }
             }
         });
         
@@ -2939,12 +2922,9 @@ class HeiCritApp {
     }
     
     applyTokenSelections(tabId) {
-        console.log('DEBUG: applyTokenSelections called with selectedTokens:', this.selectedTokens);
         
         // Apply visual selection classes based on selectedTokens
         Object.keys(this.selectedTokens).forEach(group => {
-            console.log(`DEBUG: Applying selections for group ${group}:`, this.selectedTokens[group]);
-            
             this.selectedTokens[group].forEach(tokenData => {
                 // Find ALL elements with this tokenId and pick the right witness
                 const tokenElements = document.querySelectorAll(`[data-token-id="${tokenData.tokenId}"]`);
@@ -2954,7 +2934,6 @@ class HeiCritApp {
                     const witnessInfo = this.getWitnessInfoFromLine(synLine);
                     
                     if (witnessInfo && witnessInfo.witnessId === tokenData.witnessInfo.witnessId) {
-                        console.log(`DEBUG: Adding class selected-${group} to token:`, tokenElement);
                         tokenElement.classList.add(`selected-${group}`);
                     }
                 });
@@ -3069,7 +3048,6 @@ class HeiCritApp {
         
         // Since this.editingEntry is a reference to the original entry object,
         // the changes should automatically be reflected in all data structures
-        console.log('DEBUG: Saved edited entry:', this.editingEntry);
     }
     
     updateGroupedEntriesForEditedEntry(tab, editedEntry) {

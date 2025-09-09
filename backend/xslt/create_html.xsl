@@ -79,7 +79,9 @@
                     <xsl:attribute name="data-container-id" select="$data-container-id"/>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:attribute name="data-container-id" select="'A'"/>
+                    <xsl:if test="@n">
+                        <xsl:attribute name="data-container-id" select="@n"/>
+                    </xsl:if>
                 </xsl:otherwise>
             </xsl:choose>
             <xsl:attribute name="data-link" select="@corresp"/>
