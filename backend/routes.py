@@ -621,33 +621,23 @@ def save_apparatus_entries():
     Save new apparatus entries to the apparatus file
     """
     try:
-        print("=== apparatus/save endpoint called ===")
-        
         data = request.get_json()
         if not data:
-            print("ERROR: No data provided")
             return jsonify({'error': 'No data provided'}), 400
-        
-        print(f"Received data: {data}")
         
         apparatus_file = data.get('apparatus_file')
         new_entries = data.get('new_entries', [])
         project_directory = data.get('project_directory', '')
         
-        print(f"apparatus_file: {apparatus_file}")
-        print(f"project_directory: {project_directory}")
-        print(f"new_entries count: {len(new_entries)}")
-        
         if not apparatus_file:
-            print("ERROR: No apparatus file specified")
             return jsonify({'error': 'No apparatus file specified'}), 400
         
         if not new_entries:
-            print("ERROR: No new entries to save")
             return jsonify({'error': 'No new entries to save'}), 400
         
         # Resolve apparatus file path
         # Check if apparatus_file already starts with project_directory
+        print(apparatus_file, project_directory)
         if not os.path.isabs(apparatus_file):
             if apparatus_file.startswith(project_directory + '/'):
                 # apparatus_file already contains project_directory, use as-is
@@ -672,45 +662,30 @@ def save_apparatus_entries():
             print(f"ERROR: File not found at {apparatus_file}")
             return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
         
-        # Load and parse the apparatus file
-        print("Loading apparatus file...")
         with open(apparatus_file, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        print(f"File loaded, content length: {len(content)}")
-        
-        print("Parsing XML...")
         root = et.fromstring(content.encode('utf-8'))
-        print("XML parsed successfully")
         
         # Find the text body where apparatus entries are stored
         body = root.find('.//{http://www.tei-c.org/ns/1.0}body')
         if body is None:
-            print("ERROR: No body element found")
             return jsonify({'error': 'Could not find body element in apparatus file'}), 400
         
-        print("Body element found")
         
         # Create new apparatus entries and insert them in location order
         entries_added = 0
         for entry_data in new_entries:
-            print(f"Processing entry: {entry_data}")
             new_app = create_apparatus_element(entry_data)
             insert_apparatus_entry_in_order(body, new_app, entry_data['loc'])
             entries_added += 1
         
-        print(f"Processed {entries_added} entries")
-        
-        # Write back to file
-        print("Generating output XML...")
         output_content = et.tostring(root, encoding='unicode', pretty_print=True)
         
-        print("Writing to file...")
         with open(apparatus_file, 'w', encoding='utf-8') as f:
             f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
             f.write(output_content)
-        
-        print("File written successfully")
+
         
         return jsonify({
             'success': True,

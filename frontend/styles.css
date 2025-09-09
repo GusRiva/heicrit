@@ -86,8 +86,9 @@ select,
 .apparatus-details,
 #apparatus-content,
 #apparatus-details-content,
-.editor-panel textarea,
-.xml-editor-container {
+.editor-textarea,
+.xml-editor-container,
+.editor-highlight {
     font-family: 'Junicode', Georgia, serif !important;
 }
 
@@ -632,7 +633,6 @@ main {
     font-family: 'Times New Roman', Times, serif;
     line-height: 1.8;
     font-size: 16px;
-    max-width: 800px;
 }
 
 .classical-entry-group {

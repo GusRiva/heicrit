@@ -476,7 +476,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_78" data-link="a:l_78 a-tr:l_78 ba:l_78 ba-tr:l_78 bb:l_78 c:gap_leaf_1 d:gap_leaf_1 e:right(l_59) f:left(l_199)">◎</div>
             <div class="tei-container-n" data-container-id="l_78">78</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unde froͤliches muͦtes ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_78a ba-tr:l_78a bb:l_78a a:right(l_78) a-tr:right(l_78) c:gap_leaf_1 d:gap_leaf_1 e:right(l_59) f:left(l_199) ba:l_78b ba-tr:l_78b bb:l_78b a:right(l_78) a-tr:right(l_78) c:gap_leaf_1 d:gap_leaf_1 e:right(l_59) f:left(l_199)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_79" data-link="a:l_79 a-tr:l_79 ba:l_79 ba-tr:l_79 bb:l_79 c:gap_leaf_1 d:gap_leaf_1 e:right(l_59) f:left(l_199)">◎</div>
@@ -763,7 +765,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_126" data-link="a:l_126 a-tr:l_126 ba:l_126 ba-tr:l_126 bb:l_126 e:l_126 c:gap_leaf_1 d:gap_leaf_1 f:left(l_199)">◎</div>
             <div class="tei-container-n" data-container-id="l_126">126</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unn wart nu alſe unmere ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_126a ba-tr:l_126a bb:l_126a e:l_126a a:right(l_126) a-tr:right(l_126) c:gap_leaf_1 d:gap_leaf_1 f:left(l_199) ba:l_126b ba-tr:l_126b bb:l_126b e:l_126b a:right(l_126) a-tr:right(l_126) c:gap_leaf_1 d:gap_leaf_1 f:left(l_199)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_127" data-link="a:l_127 a-tr:l_127 ba:l_127 ba-tr:l_127 bb:l_127 e:l_127 c:gap_leaf_1 d:gap_leaf_1 f:left(l_199)">◎</div>
@@ -942,7 +946,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_156" data-link="a:l_156 a-tr:l_156 ba:l_156 ba-tr:l_156 bb:l_156 c:gap_leaf_1 d:gap_leaf_1 e:right(l_142) f:left(l_199)">◎</div>
             <div class="tei-container-n" data-container-id="l_156">156</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Bedaht ime ſinre ſunnen blik ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_156a ba-tr:l_156a bb:l_156a a:right(l_156) a-tr:right(l_156) c:gap_leaf_1 d:gap_leaf_1 e:right(l_142) f:left(l_199) ba:l_156b ba-tr:l_156b bb:l_156b a:right(l_156) a-tr:right(l_156) c:gap_leaf_1 d:gap_leaf_1 e:right(l_142) f:left(l_199)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_157" data-link="a:l_157 a-tr:l_157 ba:l_157 ba-tr:l_157 bb:l_157 c:gap_leaf_1 d:gap_leaf_1 e:right(l_142) f:left(l_199)">◎</div>
@@ -1368,11 +1374,15 @@
             <div class="tei-gap-synoptic" data-container-id="l_227" data-link="a:l_227 a-tr:l_227 ba:l_227 ba-tr:l_227 bb:l_227 e:l_227 c:gap_leaf_1 d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_227">227</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Daz ſu̓ den tot durch u̓ch litte ·</div>
-         </div><span class="tei-gap">[…]</span><div class="synoptic-unit">
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_227a ba-tr:l_227a bb:l_227a a:right(l_227) a-tr:right(l_227) c:gap_leaf_1 d:gap_leaf_1 e:right(l_227) f:right(l_204)">◎</div>
+         <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_228" data-link="a:l_228 a-tr:l_228 ba:l_228 ba-tr:l_228 bb:l_228 e:l_228 c:gap_leaf_1 d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_228">228</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Nu en iſt es niht der lu̓te ſitte ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="bb:l_228a a:right(l_228) a-tr:right(l_228) ba:right(l_228) ba-tr:right(l_228) c:gap_leaf_1 d:gap_leaf_1 e:right(l_228) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_229" data-link="a:l_229 a-tr:l_229 ba:l_229 ba-tr:l_229 bb:l_229 e:l_229 c:gap_leaf_1 d:gap_leaf_1 f:right(l_204)">◎</div>
@@ -1419,7 +1429,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_236" data-link="a:l_236 a-tr:l_236 ba:l_236 ba-tr:l_236 bb:l_236 e:l_236 c:gap_leaf_1 d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_236">236</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Der gerne fu̓r in ſtu̓rbe ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_236a ba-tr:l_236a bb:l_236a a:right(l_236) a-tr:right(l_236) c:gap_leaf_1 d:gap_leaf_1 e:right(l_236) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_237" data-link="a:l_237 a-tr:l_237 ba:l_237 ba-tr:l_237 bb:l_237 e:l_237 c:gap_leaf_1 d:gap_leaf_1 f:right(l_204)">◎</div>
@@ -1502,7 +1514,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_250" data-link="a:l_250 a-tr:l_250 ba:l_250 ba-tr:l_250 bb:l_250 e:l_250 c:gap_leaf_1 d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_250">250</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Do er s aller beſte bekerte ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="bb:l_250a a:right(l_250) a-tr:right(l_250) ba:right(l_250) ba-tr:right(l_250) c:gap_leaf_1 d:gap_leaf_1 e:right(l_250) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_251" data-link="a:l_251 a-tr:l_251 ba:l_251 ba-tr:l_251 bb:l_251 e:l_251 c:gap_leaf_1 d:gap_leaf_1 f:right(l_204)">◎</div>
@@ -1537,7 +1551,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_256" data-link="a:l_256 a-tr:l_256 ba:l_256 ba-tr:l_256 bb:l_256 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_256">256</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Gottes hu̓ſern viel dz ander teil ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_256a ba-tr:l_256a bb:l_256a a:right(l_256) a-tr:right(l_256) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_256b ba-tr:l_256b bb:l_256b a:right(l_256) a-tr:right(l_256) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_257" data-link="a:l_257 a-tr:l_257 ba:l_257 ba-tr:l_257 bb:l_257 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -1560,7 +1576,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_260" data-link="a:l_260 a-tr:l_260 ba:l_260 ba-tr:l_260 bb:l_260 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_260">260</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Dar floch er die lu̓te ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_260a ba-tr:l_260a bb:l_260a a:right(l_260) a-tr:right(l_260) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_260b ba-tr:l_260b bb:l_260b a:right(l_260) a-tr:right(l_260) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_261" data-link="a:l_261 a-tr:l_261 ba:right(l_260b) ba-tr:right(l_260b) bb:right(l_260b) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -1679,7 +1697,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_280" data-link="a:l_280 a-tr:l_280 ba:l_280 ba-tr:l_280 bb:l_280 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_280">280</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Von froͤmdem gewalte leit ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_280a ba-tr:l_280a bb:l_280a a:right(l_280) a-tr:right(l_280) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_281" data-link="a:l_281 a-tr:l_281 ba:l_281 ba-tr:l_281 bb:l_281 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -2279,7 +2299,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_380" data-link="a:l_380 a-tr:l_380 ba:l_380 ba-tr:l_380 bb:l_380 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_380">380</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Mit bitterlichem ſmerzen ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_380a ba-tr:l_380a bb:l_380a a:right(l_380) a-tr:right(l_380) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_380b ba-tr:l_380b bb:l_380b a:right(l_380) a-tr:right(l_380) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_381" data-link="a:l_381 a-tr:l_381 ba:right(l_380b) ba-tr:right(l_380b) bb:right(l_380b) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -2686,7 +2708,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_448" data-link="a:l_448 a-tr:l_448 ba:l_448 ba-tr:l_448 bb:l_448 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_448">448</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unn oͮch des willen were ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_448a ba-tr:l_448a bb:l_448a a:right(l_448) a-tr:right(l_448) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_449" data-link="a:l_449 a-tr:l_449 ba:l_449 ba-tr:l_449 bb:l_449 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -2853,7 +2877,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_476" data-link="a:l_476 a-tr:l_476 ba:l_476 ba-tr:l_476 bb:l_476 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_476">476</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Umbe irs herren ſchmerzen ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_476a ba-tr:l_476a bb:l_476a a:right(l_476) a-tr:right(l_476) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_476b ba-tr:l_476b bb:l_476b a:right(l_476) a-tr:right(l_476) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_477" data-link="a:l_477 a-tr:l_477 ba:l_477 ba-tr:l_477 bb:l_477 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -3188,7 +3214,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_532" data-link="a:l_532 a-tr:l_532 ba:l_532 ba-tr:l_532 bb:l_532 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_532">532</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Wan eine vorhte die tet ir we ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_532a ba-tr:l_532a bb:l_532a a:right(l_532) a-tr:right(l_532) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_532b ba-tr:l_532b bb:l_532b a:right(l_532) a-tr:right(l_532) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_533" data-link="a:l_533 a-tr:l_533 ba:l_533 ba-tr:l_533 bb:l_533 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -3218,7 +3246,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_537" data-link="a:l_537 a-tr:l_537 ba:l_537 ba-tr:l_537 bb:l_537 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_537">537</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Der gehenge niht en fu̓nde ·</div>
-         </div><span class="tei-gap">[…]</span><div class="synoptic-unit">
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_537a ba-tr:l_537a bb:l_537a a:right(l_537) a-tr:right(l_537) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+         <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_538" data-link="a:l_538 a-tr:l_538 ba:right(l_537a) ba-tr:right(l_537a) bb:right(l_537a) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_538">538</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Daz men s ir iht gu̓nde ·</div>
@@ -3450,7 +3480,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_576" data-link="a:l_576 a-tr:l_576 ba:l_576 ba-tr:l_576 bb:l_576 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_576">576</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Du en maht es nu̓t fu̓r bringen ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_576a ba-tr:l_576a bb:l_576a a:right(l_576) a-tr:right(l_576) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_576b ba-tr:l_576b bb:l_576b a:right(l_576) a-tr:right(l_576) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_577" data-link="a:l_577 a-tr:l_577 ba:right(l_576b) ba-tr:right(l_576b) bb:right(l_576b) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -3629,7 +3661,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_606" data-link="a:l_606 a-tr:l_606 ba:l_606 ba-tr:l_606 bb:l_606 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_606">606</div>
             <div class="tei-container-content"><span class="tei-lb"></span>So wer er beſſer ungeborn ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_606a ba-tr:l_606a bb:l_606a a:right(l_606) a-tr:right(l_606) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_606b ba-tr:l_606b bb:l_606b a:right(l_606) a-tr:right(l_606) c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_607" data-link="a:l_607 a-tr:l_607 ba:l_607 ba-tr:l_607 bb:l_607 c:gap_leaf_1 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -3904,7 +3938,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_652" data-link="a:l_652 a-tr:l_652 ba:l_652 ba-tr:l_652 bb:l_652 c:l_652 d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_652">652</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Gerne lebent das iſt durh dich ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="c:l_652a a:right(l_652) a-tr:right(l_652) ba:right(l_652) ba-tr:right(l_652) bb:right(l_652) d:gap_leaf_1 e:right(l_255) f:right(l_204) c:l_652b a:right(l_652) a-tr:right(l_652) ba:right(l_652) ba-tr:right(l_652) bb:right(l_652) d:gap_leaf_1 e:right(l_255) f:right(l_204) c:l_652c a:right(l_652) a-tr:right(l_652) ba:right(l_652) ba-tr:right(l_652) bb:right(l_652) d:gap_leaf_1 e:right(l_255) f:right(l_204) c:l_652d a:right(l_652) a-tr:right(l_652) ba:right(l_652) ba-tr:right(l_652) bb:right(l_652) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_653" data-link="a:l_653 a-tr:l_653 ba:l_653 ba-tr:l_653 bb:l_653 c:right(l_652d) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -3915,7 +3951,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_654" data-link="a:l_654 a-tr:l_654 ba:l_654 ba-tr:l_654 bb:l_654 c:right(l_652d) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_654">654</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unſer beider froͤide ſin ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_654a ba-tr:l_654a bb:l_654a a:right(l_654) a-tr:right(l_654) c:right(l_652d) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_654b ba-tr:l_654b bb:l_654b a:right(l_654) a-tr:right(l_654) c:right(l_652d) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_655" data-link="a:l_655 a-tr:l_655 ba:l_655 ba-tr:l_655 bb:l_655 c:right(l_652d) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -3962,7 +4000,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_662" data-link="a:l_662 a-tr:l_662 ba:l_662 ba-tr:l_662 bb:l_662 c:right(l_652d) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_662">662</div>
             <div class="tei-container-content"><span class="tei-lb"></span>D z koͮfeſt an uns beiden ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_662a ba-tr:l_662a bb:l_662a c:l_662a a:right(l_662) a-tr:right(l_662) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_662b ba-tr:l_662b bb:l_662b c:l_662b a:right(l_662) a-tr:right(l_662) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_662c ba-tr:l_662c bb:l_662c a:right(l_662) a-tr:right(l_662) c:right(l_662b) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_662d ba-tr:l_662d bb:l_662d a:right(l_662) a-tr:right(l_662) c:right(l_662b) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_663" data-link="a:l_663 a-tr:l_663 ba:l_663 ba-tr:l_663 bb:l_663 c:right(l_662b) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -4237,7 +4277,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_708" data-link="a:l_708 a-tr:l_708 ba:l_708 ba-tr:l_708 bb:l_708 c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_708">708</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Mir behaget die welt nu̓t ſo wol ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_708a ba-tr:l_708a bb:l_708a a:right(l_708) a-tr:right(l_708) c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_709" data-link="a:l_709 a-tr:l_709 ba:l_709 ba-tr:l_709 bb:l_709 c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -4622,7 +4664,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_772" data-link="a:l_772 a-tr:l_772 ba:l_772 ba-tr:l_772 bb:l_772 c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_772">772</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unn ſu̓ zuͦ froͤiden irret ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_772a ba-tr:l_772a bb:l_772a a:right(l_772) a-tr:right(l_772) c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_772b ba-tr:l_772b bb:l_772b a:right(l_772) a-tr:right(l_772) c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_772c ba-tr:l_772c bb:l_772c a:right(l_772) a-tr:right(l_772) c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_772d ba-tr:l_772d bb:l_772d a:right(l_772) a-tr:right(l_772) c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_773" data-link="a:l_773 a-tr:l_773 ba:l_773 ba-tr:l_773 bb:l_773 c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -4705,7 +4749,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_786" data-link="a:l_786 a-tr:l_786 ba:l_786 ba-tr:l_786 bb:l_786 c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_786">786</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Do en iſt froſt noch hunger ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_786a ba-tr:l_786a bb:l_786a a:right(l_786) a-tr:right(l_786) c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_786b ba-tr:l_786b bb:l_786b a:right(l_786) a-tr:right(l_786) c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_787" data-link="a:l_787 a-tr:l_787 ba:l_787 ba-tr:l_787 bb:l_787 c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -4824,7 +4870,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_806" data-link="a:l_806 a-tr:l_806 ba:l_806 ba-tr:l_806 bb:l_806 c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_806">806</div>
             <div class="tei-container-content"><span class="tei-lb"></span>So lant mich keren ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="bb:l_806a a:right(l_806) a-tr:right(l_806) ba:right(l_806) ba-tr:right(l_806) c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_807" data-link="a:l_807 a-tr:l_807 ba:l_807 ba-tr:l_807 bb:l_807 c:right(l_695) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -5027,7 +5075,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_840" data-link="a:l_840 a-tr:l_840 ba:l_840 ba-tr:l_840 bb:l_840 c:right(l_838) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_840">840</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unn getroͤſtent ir u̓ch min ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_840a ba-tr:l_840a bb:l_840a a:right(l_840) a-tr:right(l_840) c:right(l_838) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_840b ba-tr:l_840b bb:l_840b a:right(l_840) a-tr:right(l_840) c:right(l_838) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_840c ba-tr:l_840c bb:l_840c a:right(l_840) a-tr:right(l_840) c:right(l_838) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_840d ba-tr:l_840d bb:l_840d a:right(l_840) a-tr:right(l_840) c:right(l_838) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_841" data-link="a:l_841 a-tr:l_841 ba:l_841 ba-tr:l_841 bb:l_841 c:right(l_838) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -5410,7 +5460,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_902" data-link="a:l_902 a-tr:l_902 ba:l_902 ba-tr:l_902 bb:l_902 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_902">902</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Daz ſu̓ der rede werent fro ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_902a ba-tr:l_902a bb:l_902a a:right(l_902) a-tr:right(l_902) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_902b ba-tr:l_902b bb:l_902b a:right(l_902) a-tr:right(l_902) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_903" data-link="a:l_903 a-tr:l_903 ba:l_903 ba-tr:l_903 bb:l_903 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -5553,7 +5605,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_926" data-link="a:l_926 a-tr:l_926 ba:l_926 ba-tr:l_926 bb:l_926 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_926">926</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Uwer leben iſt nu̓zer dan dz min ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_926a ba-tr:l_926a bb:l_926a a:right(l_926) a-tr:right(l_926) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_926b ba-tr:l_926b bb:l_926b a:right(l_926) a-tr:right(l_926) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_926c ba-tr:l_926c bb:l_926c a:right(l_926) a-tr:right(l_926) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_926d ba-tr:l_926d bb:l_926d a:right(l_926) a-tr:right(l_926) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_927" data-link="a:l_927 a-tr:l_927 ba:l_927 ba-tr:l_927 bb:l_927 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -5828,7 +5882,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_972" data-link="a:l_972 a-tr:l_972 ba:l_972 ba-tr:l_972 bb:l_972 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_972">972</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Der vatter und die muͦter ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_972a ba-tr:l_972a bb:l_972a a:right(l_972) a-tr:right(l_972) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_973" data-link="a:l_973 a-tr:l_973 ba:l_973 ba-tr:l_973 bb:l_973 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -5875,7 +5931,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_980" data-link="a:l_980 a-tr:l_980 ba:l_980 ba-tr:l_980 bb:l_980 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_980">980</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Des gu̓nne wir ir harte wol ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_980a ba-tr:l_980a bb:l_980a a:right(l_980) a-tr:right(l_980) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_980b ba-tr:l_980b bb:l_980b a:right(l_980) a-tr:right(l_980) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_981" data-link="a:l_981 a-tr:l_981 ba:l_981 ba-tr:l_981 bb:l_981 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -6006,7 +6064,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1002" data-link="a:l_1002 a-tr:l_1002 ba:l_1002 ba-tr:l_1002 bb:l_1002 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1002">1002</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unn begreif in oͮch ein ruwe ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1002a ba-tr:l_1002a bb:l_1002a a:right(l_1002) a-tr:right(l_1002) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_1002b ba-tr:l_1002b bb:l_1002b a:right(l_1002) a-tr:right(l_1002) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_1002c ba-tr:l_1002c bb:l_1002c a:right(l_1002) a-tr:right(l_1002) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_1002d ba-tr:l_1002d bb:l_1002d a:right(l_1002) a-tr:right(l_1002) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1003" data-link="a:l_1003 a-tr:l_1003 ba:l_1003 ba-tr:l_1003 bb:l_1003 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -6149,7 +6209,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1026" data-link="a:l_1026 a-tr:l_1026 ba:l_1026 ba-tr:l_1026 bb:l_1026 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1026">1026</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Daz waz der megde gewant ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1026a ba-tr:l_1026a bb:l_1026a a:right(l_1026) a-tr:right(l_1026) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204) ba:l_1026b ba-tr:l_1026b bb:l_1026b a:right(l_1026) a-tr:right(l_1026) c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1027" data-link="a:l_1027 a-tr:l_1027 ba:l_1027 ba-tr:l_1027 bb:l_1027 c:right(l_888) d:gap_leaf_1 e:right(l_255) f:right(l_204)">◎</div>
@@ -6299,7 +6361,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1051" data-link="a:l_1051 a-tr:l_1051 ba:l_1051 ba-tr:l_1051 bb:l_1051 e:l_1051 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1051">1051</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Die maget mit irm herren ·</div>
-         </div><span class="tei-gap">[…]</span><div class="synoptic-unit">
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1051a ba-tr:l_1051a bb:l_1051a a:right(l_1051) a-tr:right(l_1051) c:right(l_888) d:gap_leaf_1 e:right(l_1051) f:right(l_204)">◎</div>
+         <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1052" data-link="a:l_1052 a-tr:l_1052 e:l_1052 ba:right(l_1051a) ba-tr:right(l_1051a) bb:right(l_1051a) c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1052">1052</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Waz moͤht ir nu gewerren ·</div>
@@ -6315,7 +6379,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1054" data-link="a:l_1054 a-tr:l_1054 ba:l_1054 ba-tr:l_1054 bb:l_1054 e:l_1054 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1054">1054</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Daz ſu̓ ſo lange genas ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1054a ba-tr:l_1054a bb:l_1054a a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054j ba-tr:l_1054j bb:l_1054j a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054k ba-tr:l_1054k bb:l_1054k a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054l ba-tr:l_1054l bb:l_1054l a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054m ba-tr:l_1054m bb:l_1054m a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054n ba-tr:l_1054n bb:l_1054n a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054o ba-tr:l_1054o bb:l_1054o a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054p ba-tr:l_1054p bb:l_1054p a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054q ba-tr:l_1054q bb:l_1054q a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054r ba-tr:l_1054r bb:l_1054r a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054b ba-tr:l_1054b bb:l_1054b a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054c ba-tr:l_1054c bb:l_1054c a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054d ba-tr:l_1054d bb:l_1054d a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054e ba-tr:l_1054e bb:l_1054e a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054f ba-tr:l_1054f bb:l_1054f a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054g ba-tr:l_1054g bb:l_1054g a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054h ba-tr:l_1054h bb:l_1054h a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204) ba:l_1054i ba-tr:l_1054i bb:l_1054i a:right(l_1054) a-tr:right(l_1054) c:right(l_888) d:gap_leaf_1 e:right(l_1054) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1055" data-link="a:l_1055 a-tr:l_1055 ba:l_1055 ba-tr:l_1055 bb:l_1055 e:l_1055 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
@@ -6585,7 +6651,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1099" data-link="a:l_1099 a-tr:l_1099 ba:l_1099 ba-tr:l_1099 bb:l_1099 e:l_1099 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1099">1099</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Do han ich mich angeſt zuͦ ·</div>
-         </div><span class="tei-gap">[…]</span><div class="synoptic-unit">
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1100 ba-tr:l_1100 bb:l_1100 e:l_1100 a:right(l_1099) a-tr:right(l_1099) c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
+         <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1100" data-link="a:l_1100 a-tr:l_1100 ba:right(l_1100) ba-tr:right(l_1100) bb:right(l_1100) c:right(l_888) d:gap_leaf_1 e:right(l_1100) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1100">1100</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Nu gedenke ſelber oͮch dar zuͦ ·</div>
@@ -6673,7 +6741,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1114" data-link="a:l_1114 a-tr:l_1114 ba:l_1114 ba-tr:l_1114 bb:l_1114 e:l_1114 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1114">1114</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Entruwen ich bin ein teil verzaget ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="e:l_1114a a:right(l_1114) a-tr:right(l_1114) ba:right(l_1114) ba-tr:right(l_1114) bb:right(l_1114) c:right(l_888) d:gap_leaf_1 f:right(l_204) e:l_1114b a:right(l_1114) a-tr:right(l_1114) ba:right(l_1114) ba-tr:right(l_1114) bb:right(l_1114) c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1115" data-link="a:l_1115 a-tr:l_1115 e:l_1115 ba:right(l_1114) ba-tr:right(l_1114) bb:right(l_1114) c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
@@ -6768,7 +6838,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1130" data-link="a:l_1130 a-tr:l_1130 ba:l_1130 ba-tr:l_1130 bb:l_1130 e:l_1130 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1130">1130</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Ich getar es wol erliden ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1130a ba-tr:l_1130a bb:l_1130a a:right(l_1130) a-tr:right(l_1130) c:right(l_888) d:gap_leaf_1 e:right(l_1130) f:right(l_204) ba:l_1130b ba-tr:l_1130b bb:l_1130b a:right(l_1130) a-tr:right(l_1130) c:right(l_888) d:gap_leaf_1 e:right(l_1130) f:right(l_204) ba:l_1130c ba-tr:l_1130c bb:l_1130c a:right(l_1130) a-tr:right(l_1130) c:right(l_888) d:gap_leaf_1 e:right(l_1130) f:right(l_204) ba:l_1130d ba-tr:l_1130d bb:l_1130d a:right(l_1130) a-tr:right(l_1130) c:right(l_888) d:gap_leaf_1 e:right(l_1130) f:right(l_204) ba:l_1130e ba-tr:l_1130e bb:l_1130e e:l_1130e a:right(l_1130) a-tr:right(l_1130) c:right(l_888) d:gap_leaf_1 f:right(l_204) ba:l_1130f ba-tr:l_1130f bb:l_1130f e:l_1130f a:right(l_1130) a-tr:right(l_1130) c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1131" data-link="a:l_1131 a-tr:l_1131 ba:l_1131 ba-tr:l_1131 bb:l_1131 e:l_1131 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
@@ -6839,7 +6911,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1142" data-link="a:l_1142 a-tr:l_1142 ba:l_1142 ba-tr:l_1142 bb:l_1142 e:l_1142 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1142">1142</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Als ich ze tanze ſu̓lle gan ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1142a ba-tr:l_1142a bb:l_1142a a:right(l_1142) a-tr:right(l_1142) c:right(l_888) d:gap_leaf_1 e:right(l_1142) f:right(l_204) ba:l_1142b ba-tr:l_1142b bb:l_1142b a:right(l_1142) a-tr:right(l_1142) c:right(l_888) d:gap_leaf_1 e:right(l_1142) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1143" data-link="a:l_1143 a-tr:l_1143 ba:l_1143 ba-tr:l_1143 bb:l_1143 e:l_1143 c:right(l_888) d:gap_leaf_1 f:right(l_204)">◎</div>
@@ -7138,7 +7212,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1192" data-link="a:l_1192 a-tr:l_1192 ba:l_1192 ba-tr:l_1192 bb:l_1192 c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1192">1192</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Des was ſu̓ fro unde gemeit ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1192a ba-tr:l_1192a bb:l_1192a a:right(l_1192) a-tr:right(l_1192) c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204) ba:l_1192b ba-tr:l_1192b bb:l_1192b a:right(l_1192) a-tr:right(l_1192) c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1193" data-link="a:l_1193 a-tr:l_1193 ba:l_1193 ba-tr:l_1193 bb:l_1193 c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
@@ -7221,7 +7297,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1206" data-link="a:l_1206 a-tr:l_1206 ba:l_1206 ba-tr:l_1206 bb:l_1206 c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1206">1206</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Do hies ſu̓ der meiſter uf gan ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1206a ba-tr:l_1206a bb:l_1206a a:right(l_1206) a-tr:right(l_1206) c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204) ba:l_1206b ba-tr:l_1206b bb:l_1206b a:right(l_1206) a-tr:right(l_1206) c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1207" data-link="a:l_1207 a-tr:l_1207 ba:l_1207 ba-tr:l_1207 bb:l_1207 c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
@@ -7328,7 +7406,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1224" data-link="a:l_1224 a-tr:l_1224 ba:l_1224 ba-tr:l_1224 bb:l_1224 c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1224">1224</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Do er ſtuͦnt vor der tu̓r ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1224a ba-tr:l_1224a bb:l_1224a a:right(l_1224) a-tr:right(l_1224) c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204) ba:l_1224b ba-tr:l_1224b bb:l_1224b a:right(l_1224) a-tr:right(l_1224) c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1225" data-link="a:l_1225 a-tr:l_1225 ba:l_1225 ba-tr:l_1225 bb:l_1225 c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
@@ -7442,7 +7522,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1243" data-link="a:l_1243 a-tr:l_1243 ba:l_1243 ba-tr:l_1243 bb:l_1243 c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1243">1243</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Du haſt einen tumben gedank ·</div>
-         </div><span class="tei-gap">[…]</span><div class="synoptic-unit">
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1244 ba-tr:l_1244 bb:l_1244 a:right(l_1243) a-tr:right(l_1243) c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
+         <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1244" data-link="a:l_1244 a-tr:l_1244 ba:right(l_1244) ba-tr:right(l_1244) bb:right(l_1244) c:right(l_888) d:gap_leaf_1 e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1244">1244</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Das du ſunder ſinen dank ·</div>
@@ -7662,7 +7744,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1280" data-link="a:l_1280 a-tr:l_1280 ba:l_1280 ba-tr:l_1280 bb:l_1280 d:l_1280 c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1280">1280</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Wir ſu̓lt die magt lazen leben ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1280a ba-tr:l_1280a bb:l_1280a a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280) e:right(l_1148) f:right(l_204) ba:l_1280j ba-tr:l_1280j bb:l_1280j a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280) e:right(l_1148) f:right(l_204) ba:l_1280k ba-tr:l_1280k bb:l_1280k a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280) e:right(l_1148) f:right(l_204) ba:l_1280l ba-tr:l_1280l bb:l_1280l a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280) e:right(l_1148) f:right(l_204) ba:l_1280m ba-tr:l_1280m bb:l_1280m a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280) e:right(l_1148) f:right(l_204) ba:l_1280n ba-tr:l_1280n bb:l_1280n a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280) e:right(l_1148) f:right(l_204) ba:l_1280o ba-tr:l_1280o bb:l_1280o a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280) e:right(l_1148) f:right(l_204) d:l_1280p a:right(l_1280) a-tr:right(l_1280) ba:right(l_1280o) ba-tr:right(l_1280o) bb:right(l_1280o) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1280q a:right(l_1280) a-tr:right(l_1280) ba:right(l_1280o) ba-tr:right(l_1280o) bb:right(l_1280o) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1280r a:right(l_1280) a-tr:right(l_1280) ba:right(l_1280o) ba-tr:right(l_1280o) bb:right(l_1280o) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1280s ba-tr:l_1280s bb:l_1280s d:l_1280s a:right(l_1280) a-tr:right(l_1280) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1280b ba-tr:l_1280b bb:l_1280b a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280t ba-tr:l_1280t bb:l_1280t a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280u ba-tr:l_1280u bb:l_1280u a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280c ba-tr:l_1280c bb:l_1280c a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280d ba-tr:l_1280d bb:l_1280d a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280e ba-tr:l_1280e bb:l_1280e a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280f ba-tr:l_1280f bb:l_1280f a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280g ba-tr:l_1280g bb:l_1280g a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280h ba-tr:l_1280h bb:l_1280h a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204) ba:l_1280i ba-tr:l_1280i bb:l_1280i a:right(l_1280) a-tr:right(l_1280) c:right(l_888) d:right(l_1280s) e:right(l_1148) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1281" data-link="a:l_1281 a-tr:l_1281 ba:l_1281 ba-tr:l_1281 bb:l_1281 d:l_1281 c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
@@ -7685,7 +7769,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1284" data-link="a:l_1284 a-tr:l_1284 ba:l_1284 ba-tr:l_1284 bb:l_1284 d:l_1284 c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1284">1284</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Su̓ brach ir zuht unn ir ſitte ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1284a ba-tr:l_1284a bb:l_1284a d:l_1284a a:right(l_1284) a-tr:right(l_1284) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1284b ba-tr:l_1284b bb:l_1284b d:l_1284b a:right(l_1284) a-tr:right(l_1284) c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1285" data-link="a:l_1285 a-tr:l_1285 ba:l_1285 ba-tr:l_1285 bb:l_1285 c:right(l_888) d:right(l_1284b) e:right(l_1148) f:right(l_204)">◎</div>
@@ -7720,7 +7806,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1290" data-link="a:l_1290 a-tr:l_1290 ba:l_1290 ba-tr:l_1290 bb:l_1290 c:right(l_888) d:right(l_1284b) e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1290">1290</div>
             <div class="tei-container-content"><span class="tei-lb"></span>We mir vil armen unn owe ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1291 ba-tr:l_1291 bb:l_1291 a:right(l_1290) a-tr:right(l_1290) c:right(l_888) d:right(l_1284b) e:right(l_1148) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1291" data-link="a:l_1291 a-tr:l_1291 d:l_1291 ba:right(l_1291) ba-tr:right(l_1291) bb:right(l_1291) c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
@@ -7911,7 +7999,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1322" data-link="a:l_1322 a-tr:l_1322 d:l_1322 ba:right(l_1320) ba-tr:right(l_1320) bb:right(l_1320) c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1322">1322</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Daz ich doch liden getar ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="d:l_1322a a:right(l_1322) a-tr:right(l_1322) ba:right(l_1320) ba-tr:right(l_1320) bb:right(l_1320) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1322m a:right(l_1322) a-tr:right(l_1322) ba:right(l_1320) ba-tr:right(l_1320) bb:right(l_1320) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1322n a:right(l_1322) a-tr:right(l_1322) ba:right(l_1320) ba-tr:right(l_1320) bb:right(l_1320) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1322o a:right(l_1322) a-tr:right(l_1322) ba:right(l_1320) ba-tr:right(l_1320) bb:right(l_1320) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1322p a:right(l_1322) a-tr:right(l_1322) ba:right(l_1320) ba-tr:right(l_1320) bb:right(l_1320) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1322q ba-tr:l_1322q bb:l_1322q d:l_1322q a:right(l_1322) a-tr:right(l_1322) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1322r ba-tr:l_1322r bb:l_1322r d:l_1322r a:right(l_1322) a-tr:right(l_1322) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1322s ba-tr:l_1322s bb:l_1322s d:l_1322s a:right(l_1322) a-tr:right(l_1322) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1322t ba-tr:l_1322t bb:l_1322t d:l_1322t a:right(l_1322) a-tr:right(l_1322) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1322b a:right(l_1322) a-tr:right(l_1322) ba:right(l_1322t) ba-tr:right(l_1322t) bb:right(l_1322t) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1322c a:right(l_1322) a-tr:right(l_1322) ba:right(l_1322t) ba-tr:right(l_1322t) bb:right(l_1322t) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1322d a:right(l_1322) a-tr:right(l_1322) ba:right(l_1322t) ba-tr:right(l_1322t) bb:right(l_1322t) c:right(l_888) e:right(l_1148) f:right(l_204) d:l_1322e a:right(l_1322) a-tr:right(l_1322) ba:right(l_1322t) ba-tr:right(l_1322t) bb:right(l_1322t) c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1323" data-link="a:l_1323 a-tr:l_1323 ba:l_1323 ba-tr:l_1323 bb:l_1323 d:l_1323 c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
@@ -7970,7 +8060,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1332" data-link="a:l_1332 a-tr:l_1332 ba:l_1332 ba-tr:l_1332 bb:l_1332 d:l_1332 c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1332">1332</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unn iſt u̓ch nu̓tze unn guͦt ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1332a ba-tr:l_1332a bb:l_1332a d:l_1332a a:right(l_1332) a-tr:right(l_1332) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1332j ba-tr:l_1332j bb:l_1332j a:right(l_1332) a-tr:right(l_1332) c:right(l_888) d:right(l_1332a) e:right(l_1148) f:right(l_204) ba:l_1332k ba-tr:l_1332k bb:l_1332k a:right(l_1332) a-tr:right(l_1332) c:right(l_888) d:right(l_1332a) e:right(l_1148) f:right(l_204) ba:l_1332l ba-tr:l_1332l bb:l_1332l a:right(l_1332) a-tr:right(l_1332) c:right(l_888) d:right(l_1332a) e:right(l_1148) f:right(l_204) ba:l_1332b ba-tr:l_1332b bb:l_1332b d:l_1332b a:right(l_1332) a-tr:right(l_1332) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1332c ba-tr:l_1332c bb:l_1332c d:l_1332c a:right(l_1332) a-tr:right(l_1332) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1332d ba-tr:l_1332d bb:l_1332d d:l_1332d a:right(l_1332) a-tr:right(l_1332) c:right(l_888) e:right(l_1148) f:right(l_204) ba:l_1332e ba-tr:l_1332e bb:l_1332e a:right(l_1332) a-tr:right(l_1332) c:right(l_888) d:right(l_1332d) e:right(l_1148) f:right(l_204) ba:l_1332f ba-tr:l_1332f bb:l_1332f a:right(l_1332) a-tr:right(l_1332) c:right(l_888) d:right(l_1332d) e:right(l_1148) f:right(l_204) ba:l_1332g ba-tr:l_1332g bb:l_1332g a:right(l_1332) a-tr:right(l_1332) c:right(l_888) d:right(l_1332d) e:right(l_1148) f:right(l_204) ba:l_1332h ba-tr:l_1332h bb:l_1332h a:right(l_1332) a-tr:right(l_1332) c:right(l_888) d:right(l_1332d) e:right(l_1148) f:right(l_204) ba:l_1332i ba-tr:l_1332i bb:l_1332i a:right(l_1332) a-tr:right(l_1332) c:right(l_888) d:right(l_1332d) e:right(l_1148) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1333" data-link="a:l_1333 a-tr:l_1333 d:l_1333 ba:right(l_1332i) ba-tr:right(l_1332i) bb:right(l_1332i) c:right(l_888) e:right(l_1148) f:right(l_204)">◎</div>
@@ -8161,7 +8253,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1364" data-link="a:l_1364 a-tr:l_1364 ba:l_1364 ba-tr:l_1364 bb:l_1364 d:l_1364 e:l_1364 c:right(l_888) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1364">1364</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Sam iobe den richen ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="d:l_1364a e:l_1364a a:right(l_1364) a-tr:right(l_1364) ba:right(l_1364) ba-tr:right(l_1364) bb:right(l_1364) c:right(l_888) f:right(l_204) d:l_1364b e:l_1364b a:right(l_1364) a-tr:right(l_1364) ba:right(l_1364) ba-tr:right(l_1364) bb:right(l_1364) c:right(l_888) f:right(l_204) d:l_1364c e:l_1364c a:right(l_1364) a-tr:right(l_1364) ba:right(l_1364) ba-tr:right(l_1364) bb:right(l_1364) c:right(l_888) f:right(l_204) d:l_1364d e:l_1364d a:right(l_1364) a-tr:right(l_1364) ba:right(l_1364) ba-tr:right(l_1364) bb:right(l_1364) c:right(l_888) f:right(l_204) d:l_1364e e:l_1364e a:right(l_1364) a-tr:right(l_1364) ba:right(l_1364) ba-tr:right(l_1364) bb:right(l_1364) c:right(l_888) f:right(l_204) d:l_1364f e:l_1364f a:right(l_1364) a-tr:right(l_1364) ba:right(l_1364) ba-tr:right(l_1364) bb:right(l_1364) c:right(l_888) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1365" data-link="a:l_1365 a-tr:l_1365 ba:l_1365 ba-tr:l_1365 bb:l_1365 d:l_1365 e:l_1365 c:right(l_888) f:right(l_204)">◎</div>
@@ -8220,7 +8314,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1374" data-link="a:l_1374 a-tr:l_1374 ba:l_1374 ba-tr:l_1374 bb:l_1374 e:l_1374 c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1374">1374</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Von unſers herren gottes pflege ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1374a ba-tr:l_1374a bb:l_1374a a:right(l_1374) a-tr:right(l_1374) c:right(l_888) d:right(l_1372) e:right(l_1374) f:right(l_204) ba:l_1374b ba-tr:l_1374b bb:l_1374b a:right(l_1374) a-tr:right(l_1374) c:right(l_888) d:right(l_1372) e:right(l_1374) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1375" data-link="a:l_1375 a-tr:l_1375 e:l_1375 ba:right(l_1374b) ba-tr:right(l_1374b) bb:right(l_1374b) c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
@@ -8238,7 +8334,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1377" data-link="a:l_1377 a-tr:l_1377 ba:l_1377 ba-tr:l_1377 bb:l_1377 e:l_1377 c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1377">1377</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Unn was alſe vor zwenzig iaren ·</div>
-         </div><span class="tei-gap">[…]</span><div class="synoptic-unit">
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1377a ba-tr:l_1377a bb:l_1377a a:right(l_1377) a-tr:right(l_1377) c:right(l_888) d:right(l_1372) e:right(l_1377) f:right(l_204) ba:l_1377b ba-tr:l_1377b bb:l_1377b a:right(l_1377) a-tr:right(l_1377) c:right(l_888) d:right(l_1372) e:right(l_1377) f:right(l_204) ba:l_1377c ba-tr:l_1377c bb:l_1377c a:right(l_1377) a-tr:right(l_1377) c:right(l_888) d:right(l_1372) e:right(l_1377) f:right(l_204) ba:l_1377d ba-tr:l_1377d bb:l_1377d a:right(l_1377) a-tr:right(l_1377) c:right(l_888) d:right(l_1372) e:right(l_1377) f:right(l_204)">◎</div>
+         <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1378" data-link="a:l_1378 a-tr:l_1378 e:l_1378 ba:right(l_1377d) ba-tr:right(l_1377d) bb:right(l_1377d) c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1378">1378</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Do ſu̓ ſus erfrowet waren ·</div>
@@ -8290,7 +8388,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1386" data-link="a:l_1386 a-tr:l_1386 e:l_1386 ba:right(l_1377d) ba-tr:right(l_1377d) bb:right(l_1377d) c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1386">1386</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Die got hat an ime getan ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1386a ba-tr:l_1386a bb:l_1386a e:l_1386a a:right(l_1386) a-tr:right(l_1386) c:right(l_888) d:right(l_1372) f:right(l_204) ba:l_1386b ba-tr:l_1386b bb:l_1386b e:l_1386b a:right(l_1386) a-tr:right(l_1386) c:right(l_888) d:right(l_1372) f:right(l_204) ba:l_1386c ba-tr:l_1386c bb:l_1386c e:l_1386c a:right(l_1386) a-tr:right(l_1386) c:right(l_888) d:right(l_1372) f:right(l_204) ba:l_1386d ba-tr:l_1386d bb:l_1386d e:l_1386d a:right(l_1386) a-tr:right(l_1386) c:right(l_888) d:right(l_1372) f:right(l_204) ba:l_1386e ba-tr:l_1386e bb:l_1386e e:l_1386e a:right(l_1386) a-tr:right(l_1386) c:right(l_888) d:right(l_1372) f:right(l_204) ba:l_1386f ba-tr:l_1386f bb:l_1386f e:l_1386f a:right(l_1386) a-tr:right(l_1386) c:right(l_888) d:right(l_1372) f:right(l_204) ba:l_1386g ba-tr:l_1386g bb:l_1386g e:l_1386g a:right(l_1386) a-tr:right(l_1386) c:right(l_888) d:right(l_1372) f:right(l_204) ba:l_1386h ba-tr:l_1386h bb:l_1386h e:l_1386h a:right(l_1386) a-tr:right(l_1386) c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1387" data-link="a:l_1387 a-tr:l_1387 ba:l_1387 ba-tr:l_1387 bb:l_1387 e:l_1387 c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
@@ -8433,7 +8533,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1410" data-link="a:l_1410 a-tr:l_1410 e:l_1410 ba:right(l_1409) ba-tr:right(l_1409) bb:right(l_1405) c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1410">1410</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Su̓ en wuſten wie ſu̓ gebaren ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1410a ba-tr:l_1410a bb:l_1410a e:l_1410a a:right(l_1410) a-tr:right(l_1410) c:right(l_888) d:right(l_1372) f:right(l_204) ba:l_1410b ba-tr:l_1410b bb:l_1410b e:l_1410b a:right(l_1410) a-tr:right(l_1410) c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1411" data-link="a:l_1411 a-tr:l_1411 ba:l_1411 ba-tr:l_1411 bb:l_1411 e:l_1411 c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
@@ -8468,7 +8570,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1416" data-link="a:l_1416 a-tr:l_1416 ba:l_1416 ba-tr:l_1416 bb:l_1416 e:l_1416 c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1416">1416</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Die rede iſt ane loͮgen ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="e:l_1416a a:right(l_1416) a-tr:right(l_1416) ba:right(l_1416) ba-tr:right(l_1416) bb:right(l_1416) c:right(l_888) d:right(l_1372) f:right(l_204) e:l_1416b a:right(l_1416) a-tr:right(l_1416) ba:right(l_1416) ba-tr:right(l_1416) bb:right(l_1416) c:right(l_888) d:right(l_1372) f:right(l_204) e:l_1416c a:right(l_1416) a-tr:right(l_1416) ba:right(l_1416) ba-tr:right(l_1416) bb:right(l_1416) c:right(l_888) d:right(l_1372) f:right(l_204) e:l_1416d a:right(l_1416) a-tr:right(l_1416) ba:right(l_1416) ba-tr:right(l_1416) bb:right(l_1416) c:right(l_888) d:right(l_1372) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1417" data-link="a:l_1417 a-tr:l_1417 ba:l_1417 ba-tr:l_1417 bb:l_1417 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
@@ -8671,7 +8775,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1450" data-link="a:l_1450 a-tr:l_1450 ba:l_1450 ba-tr:l_1450 bb:l_1450 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1450">1450</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Das reht gebot ime oͮch das ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1450a ba-tr:l_1450a bb:l_1450a a:right(l_1450) a-tr:right(l_1450) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1450b ba-tr:l_1450b bb:l_1450b a:right(l_1450) a-tr:right(l_1450) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1451" data-link="a:l_1451 a-tr:l_1451 ba:l_1451 ba-tr:l_1451 bb:l_1451 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
@@ -8910,7 +9016,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1488" data-link="a:l_1488 a-tr:l_1488 ba:l_1488 ba-tr:l_1488 bb:l_1488 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1488">1488</div>
             <div class="tei-container-content"><span class="tei-cb n-c facs-#A_208-c"></span><span class="tei-lb"></span>Daz ime lip unde guͦt ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1488a ba-tr:l_1488a bb:l_1488a a:right(l_1488) a-tr:right(l_1488) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1489" data-link="a:l_1489 a-tr:l_1489 ba:l_1489 ba-tr:l_1489 bb:l_1489 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
@@ -8993,7 +9101,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1502" data-link="a:l_1502 a-tr:l_1502 ba:l_1502 ba-tr:l_1502 bb:l_1502 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1502">1502</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Zwar mag das nu̓t ergan ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1502a ba-tr:l_1502a bb:l_1502a a:right(l_1502) a-tr:right(l_1502) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
+      </div>
       <div class="tei-lg hc:Couplet">
          <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1503" data-link="a:l_1503 a-tr:l_1503 ba:l_1503 ba-tr:l_1503 bb:l_1503 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
@@ -9059,7 +9169,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1513" data-link="a:l_1513 a-tr:l_1513 ba:l_1513 ba-tr:l_1513 bb:l_1513 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1513">1513</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Die gaben ſu̓ ime ze wibe ·</div>
-         </div><span class="tei-gap">[…]</span><div class="synoptic-unit">
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1513a ba-tr:l_1513a bb:l_1513a a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513j ba-tr:l_1513j bb:l_1513j a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513k ba-tr:l_1513k bb:l_1513k a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513l ba-tr:l_1513l bb:l_1513l a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513m ba-tr:l_1513m bb:l_1513m a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513b ba-tr:l_1513b bb:l_1513b a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513c ba-tr:l_1513c bb:l_1513c a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513d ba-tr:l_1513d bb:l_1513d a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513e ba-tr:l_1513e bb:l_1513e a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513f ba-tr:l_1513f bb:l_1513f a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513g ba-tr:l_1513g bb:l_1513g a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513h ba-tr:l_1513h bb:l_1513h a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1513i ba-tr:l_1513i bb:l_1513i a:right(l_1513) a-tr:right(l_1513) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
+         <div class="synoptic-unit">
             <div class="tei-gap-synoptic" data-container-id="l_1514" data-link="a:l_1514 a-tr:l_1514 ba:right(l_1513i) ba-tr:right(l_1513i) bb:right(l_1513i) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1514">1514</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Nach ſuͤzem lang libe ·</div>
@@ -9099,7 +9211,9 @@
             <div class="tei-gap-synoptic" data-container-id="l_1520" data-link="a:l_1520 a-tr:l_1520 ba:l_1520 ba-tr:l_1520 bb:l_1520 c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
             <div class="tei-container-n" data-container-id="l_1520">1520</div>
             <div class="tei-container-content"><span class="tei-lb"></span>Des helfe uns got · Amen ·</div>
-         </div><span class="tei-gap">[…]</span></div>
+         </div>
+         <div class="tei-gap-synoptic" data-container-id="A" data-link="ba:l_1520a ba-tr:l_1520a bb:l_1520a a:right(l_1520) a-tr:right(l_1520) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204) ba:l_1520b ba-tr:l_1520b bb:l_1520b a:right(l_1520) a-tr:right(l_1520) c:right(l_888) d:right(l_1372) e:right(l_1416d) f:right(l_204)">◎</div>
+      </div>
       <anchor xmlns="http://www.tei-c.org/ns/1.0" xml:id="d0e9"/>
    </div>
 </div>

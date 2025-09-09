@@ -168,8 +168,8 @@ class HeiCritApp {
                                     <div class="apparatus-details-title">
                                         <h4>Location Details</h4>
                                         <div class="apparatus-toolbar">
-                                            <button id="new-reading-btn-${tabId}" class="apparatus-btn">New Reading</button>
-                                            <button id="edit-reading-btn-${tabId}" class="apparatus-btn">Edit Reading</button>
+                                            <button id="new-variant-btn-${tabId}" class="apparatus-btn">New Variant</button>
+                                            <button id="edit-variant-btn-${tabId}" class="apparatus-btn">Edit Variant</button>
                                             <select id="reading-group-select-${tabId}" class="reading-group-select" style="display: none;">
                                                 <option value="lemma">Lemma</option>
                                                 <option value="reading-1">Reading 1</option>
@@ -189,9 +189,9 @@ class HeiCritApp {
         } else if (tab.type === 'file') {
             panel.innerHTML = `
                 <!-- Recreate original working structure -->
-                <div id="xml-editor-container-${tabId}" style="position: relative; width: 100%; height: 100%;">
-                    <textarea id="editor-textarea-${tabId}" placeholder="Open or create a file to start editing..." spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-                    <pre id="editor-highlight-${tabId}"><code id="editor-code-${tabId}" class="language-xml"></code></pre>
+                <div id="xml-editor-container-${tabId}" class="xml-editor-container" style="position: relative; width: 100%; height: 100%;">
+                    <textarea id="editor-textarea-${tabId}" class="editor-textarea" placeholder="Open or create a file to start editing..." spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                    <pre id="editor-highlight-${tabId}" class="editor-highlight"><code id="editor-code-${tabId}" class="language-xml"></code></pre>
                 </div>
             `;
         }
@@ -353,16 +353,16 @@ class HeiCritApp {
         }
         
         // Setup entry creation events
-        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
-        const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
+        const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
+        const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
-        if (newReadingBtn) {
-            newReadingBtn.addEventListener('click', () => this.toggleCreationMode(tabId));
+        if (newVariantBtn) {
+            newVariantBtn.addEventListener('click', () => this.toggleCreationMode(tabId));
         }
         
-        if (editReadingBtn) {
-            editReadingBtn.addEventListener('click', () => this.toggleEditMode(tabId));
+        if (editVariantBtn) {
+            editVariantBtn.addEventListener('click', () => this.toggleEditMode(tabId));
         }
         
         if (readingGroupSelect) {
@@ -554,13 +554,13 @@ class HeiCritApp {
         // Get current entry data
         const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
         const currentEntries = tab.groupedEntries[currentCorresp];
-        console.log(currentEntries);
         const currentLoc = currentEntries.length > 0 && currentEntries[0].loc ? currentEntries[0].loc : '';
 
         // Generate HTML for current entry
         // Use max(0, activeSubentryIndex) to handle -1 case (no non-placeholder entries)
         const displayIndex = Math.max(0, tab.activeSubentryIndex || 0);
-        const htmlContent = this.generateSingleEntryHTML(currentLoc, currentEntries, displayIndex);
+        const htmlContent = this.generateLocationHTML(currentLoc, currentEntries, displayIndex);
+        console.log(htmlContent);
         
         // Set content
         const content = document.getElementById(`apparatus-content-${tabId}`);
@@ -878,14 +878,9 @@ class HeiCritApp {
     }
 
     clearTokenHighlights(tabId) {
-        // Remove all token highlighting classes
+        // Remove navigation highlighting classes but keep .has-apparatus class
         const tabPanel = document.getElementById(`panel-${tabId}`);
         if (tabPanel) {
-            // Remove apparatus background highlighting
-            tabPanel.querySelectorAll('.syn-token.has-apparatus').forEach(token => {
-                token.classList.remove('has-apparatus');
-            });
-            
             // Remove lemma highlighting
             tabPanel.querySelectorAll('.syn-token.highlight-lemma').forEach(token => {
                 token.classList.remove('highlight-lemma');
@@ -897,6 +892,8 @@ class HeiCritApp {
                 const classesToRemove = Array.from(token.classList).filter(cls => cls.startsWith('highlight-reading'));
                 token.classList.remove(...classesToRemove);
             });
+            
+            // Keep .has-apparatus class - it provides useful visual context during editing
         }
     }
 
@@ -1540,7 +1537,7 @@ class HeiCritApp {
 
 
 
-    generateSingleEntryHTML(loc, entries, activeSubentryIndex = 0) {
+    generateLocationHTML(loc, entries, activeSubentryIndex = 0) {
         const corresp = entries.length > 0 && entries[0].corresp ? entries[0].corresp : '';
         let html = `
         <div class="apparatus-display">
@@ -1549,8 +1546,8 @@ class HeiCritApp {
 
         // Show location as bold span
         html += `<span class="apparatus-loc-span" 
-                                data-loc="${this.escapeHtml(loc)}" 
-                                data-corresp="${this.escapeHtml(corresp)}">${this.escapeHtml(loc)}</span>`;
+                    data-loc="${this.escapeHtml(loc)}" 
+                    data-corresp="${this.escapeHtml(corresp)}">${this.escapeHtml(loc)}</span>`;
         
         // Check if there are any real (non-placeholder) entries in this group
         const hasRealEntries = entries.some(entry => !entry.is_placeholder);
@@ -1582,10 +1579,8 @@ class HeiCritApp {
                 // Lemma content
                 if (entry.lemma && entry.lemma.text) {
                     html += ` ${this.escapeHtml(entry.lemma.text)}`;
+                    html += ' ]';
                 }
-                
-                // Closing bracket
-                html += ' ]';
                 
                 // Readings with witnesses
                 if (entry.readings && entry.readings.length > 0) {
@@ -1609,6 +1604,9 @@ class HeiCritApp {
                     
                     // Join readings with semicolons
                     html += readingParts.join(' ;');
+                } else {
+                    // When there is only lemma
+                    html += "<i>om. alii</i>"
                 }
             }
             
@@ -2230,22 +2228,25 @@ class HeiCritApp {
         } else {
             // Not in any mode - enter creation mode
             this.creationMode = true;
-            const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
+            const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
             const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
             
             // Enter creation mode
-            newReadingBtn.textContent = 'Finish';
-            newReadingBtn.classList.add('active');
+            newVariantBtn.textContent = 'Finish';
+            newVariantBtn.classList.add('active');
             readingGroupSelect.style.display = 'inline-block';
             
             // Hide the Edit Reading button during creation mode
-            const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
-            if (editReadingBtn) {
-                editReadingBtn.style.display = 'none';
+            const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
+            if (editVariantBtn) {
+                editVariantBtn.style.display = 'none';
             }
             
             // Reset dropdown to initial state
             this.resetReadingGroupDropdown(tabId);
+            
+            // Clear navigation highlights when entering creation mode
+            this.clearTokenHighlights(tabId);
             
             // Reset selected tokens
             this.selectedTokens = {
@@ -2302,17 +2303,17 @@ class HeiCritApp {
     
     exitCreationMode(tabId) {
         this.creationMode = false;
-        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
-        const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
+        const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
+        const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
-        newReadingBtn.textContent = 'New Reading';
-        newReadingBtn.classList.remove('active');
+        newVariantBtn.textContent = 'New Variant';
+        newVariantBtn.classList.remove('active');
         readingGroupSelect.style.display = 'none';
         
         // Show the Edit Reading button again
-        if (editReadingBtn) {
-            editReadingBtn.style.display = '';
+        if (editVariantBtn) {
+            editVariantBtn.style.display = '';
         }
         
         // Clear all selected tokens
@@ -2623,19 +2624,15 @@ class HeiCritApp {
     }
     
     handleTokenClick(tabId, event) {
-        console.log('DEBUG: handleTokenClick called, creationMode:', this.creationMode, 'editMode:', this.editMode);
-        
         if (!this.creationMode && !this.editMode) {
             // Check if this token is part of an existing apparatus entry
-            this.checkTokenForEdit(tabId, event);
+            // this.checkTokenForEdit(tabId, event);
             return;
         }
         
         event.stopPropagation();
         const token = event.target;
         const tokenId = token.getAttribute('data-token-id');
-        
-        
         
         if (!tokenId) {
             return;
@@ -2708,42 +2705,42 @@ class HeiCritApp {
         });
     }
     
-    checkTokenForEdit(tabId, event) {
-        console.log('DEBUG: checkTokenForEdit called');
-        event.stopPropagation();
-        const token = event.target;
-        const tokenId = token.getAttribute('data-token-id');
+    // checkTokenForEdit(tabId, event) {
+    //     console.log('DEBUG: checkTokenForEdit called');
+    //     event.stopPropagation();
+    //     const token = event.target;
+    //     const tokenId = token.getAttribute('data-token-id');
         
-        console.log('DEBUG: Clicked token:', token, 'tokenId:', tokenId);
+    //     console.log('DEBUG: Clicked token:', token, 'tokenId:', tokenId);
         
-        if (!tokenId) {
-            console.log('DEBUG: No tokenId found');
-            return;
-        }
+    //     if (!tokenId) {
+    //         console.log('DEBUG: No tokenId found');
+    //         return;
+    //     }
         
-        // Get witness information for this token
-        const synLine = token.closest('.syn-line');
-        const witnessInfo = this.getWitnessInfoFromLine(synLine);
-        if (!witnessInfo) {
-            return;
-        }
+    //     // Get witness information for this token
+    //     const synLine = token.closest('.syn-line');
+    //     const witnessInfo = this.getWitnessInfoFromLine(synLine);
+    //     if (!witnessInfo) {
+    //         return;
+    //     }
         
-        // Create the token reference that would be used in apparatus entries
-        const tokenRef = `${witnessInfo.prefix}:${tokenId}`;
+    //     // Create the token reference that would be used in apparatus entries
+    //     const tokenRef = `${witnessInfo.prefix}:${tokenId}`;
         
-        // Find apparatus entry that contains this token
-        const tab = this.tabs.get(tabId);
-        if (!tab || !tab.apparatusEntries) {
-            return;
-        }
+    //     // Find apparatus entry that contains this token
+    //     const tab = this.tabs.get(tabId);
+    //     if (!tab || !tab.apparatusEntries) {
+    //         return;
+    //     }
         
-        const entryToEdit = this.findApparatusEntryForToken(tab, tokenRef, witnessInfo.witnessId);
+    //     const entryToEdit = this.findApparatusEntryForToken(tab, tokenRef, witnessInfo.witnessId);
         
-        if (entryToEdit) {
-            // Navigate to this entry (make it the active entry)
-            this.navigateToApparatusEntry(tabId, entryToEdit);
-        }
-    }
+    //     if (entryToEdit) {
+    //         // Navigate to this entry (make it the active entry)
+    //         this.navigateToApparatusEntry(tabId, entryToEdit);
+    //     }
+    // }
     
     navigateToApparatusEntry(tabId, entry) {
         const tab = this.tabs.get(tabId);
@@ -2778,35 +2775,35 @@ class HeiCritApp {
         console.log('DEBUG: Navigated to apparatus entry:', entry);
     }
     
-    findApparatusEntryForToken(tab, tokenRef, witnessId) {
-        // Check all apparatus entries to see if any contain this token reference
-        for (const entry of tab.apparatusEntries) {
-            // Check lemma
-            if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
-                const lemmaCorresp = entry.lemma.attributes.corresp;
-                if (lemmaCorresp.includes(tokenRef)) {
-                    return entry;
-                }
-            }
+    // findApparatusEntryForToken(tab, tokenRef, witnessId) {
+    //     // Check all apparatus entries to see if any contain this token reference
+    //     for (const entry of tab.apparatusEntries) {
+    //         // Check lemma
+    //         if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
+    //             const lemmaCorresp = entry.lemma.attributes.corresp;
+    //             if (lemmaCorresp.includes(tokenRef)) {
+    //                 return entry;
+    //             }
+    //         }
             
-            // Check readings
-            if (entry.readings) {
-                for (const reading of entry.readings) {
-                    if (reading.attributes && reading.attributes.corresp) {
-                        const readingCorresp = reading.attributes.corresp;
-                        const readingWit = reading.attributes.wit;
+    //         // Check readings
+    //         if (entry.readings) {
+    //             for (const reading of entry.readings) {
+    //                 if (reading.attributes && reading.attributes.corresp) {
+    //                     const readingCorresp = reading.attributes.corresp;
+    //                     const readingWit = reading.attributes.wit;
                         
-                        // Check if this token is in this reading and this witness is included
-                        if (readingCorresp.includes(tokenRef) && readingWit && readingWit.includes(`#${witnessId}`)) {
-                            return entry;
-                        }
-                    }
-                }
-            }
-        }
+    //                     // Check if this token is in this reading and this witness is included
+    //                     if (readingCorresp.includes(tokenRef) && readingWit && readingWit.includes(`#${witnessId}`)) {
+    //                         return entry;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
         
-        return null;
-    }
+    //     return null;
+    // }
     
     enterEditMode(tabId, entry) {
         // Set edit mode flag and store the entry being edited
@@ -2814,27 +2811,28 @@ class HeiCritApp {
         this.editingEntry = entry;
         this.creationMode = false; // Not creation mode, but edit mode
         
-        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
-        const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
+        const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
+        const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
         // Change the Edit Reading button to show Finish
-        if (editReadingBtn) {
-            editReadingBtn.textContent = 'Finish';
-            editReadingBtn.classList.add('active');
+        if (editVariantBtn) {
+            editVariantBtn.textContent = 'Finish';
+            editVariantBtn.classList.add('active');
         }
         
-        // Hide the New Reading button during edit mode
-        if (newReadingBtn) {
-            newReadingBtn.style.display = 'none';
+        // Hide the New App button during edit mode
+        if (newVariantBtn) {
+            newVariantBtn.style.display = 'none';
         }
         
         if (readingGroupSelect) {
             readingGroupSelect.style.display = 'inline-block';
         }
         
-        // Clear all existing token selections before populating new ones
+        // Clear all existing token selections and navigation highlights
         this.clearSelectedTokens(tabId);
+        this.clearTokenHighlights(tabId);
         
         // Reset and populate selectedTokens based on the entry
         this.populateSelectedTokensFromEntry(tabId, entry);
@@ -3020,22 +3018,22 @@ class HeiCritApp {
         this.editMode = false;
         this.editingEntry = null;
         
-        const newReadingBtn = document.getElementById(`new-reading-btn-${tabId}`);
-        const editReadingBtn = document.getElementById(`edit-reading-btn-${tabId}`);
+        const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
+        const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
-        // Restore the New Reading button
-        if (newReadingBtn) {
-            newReadingBtn.textContent = 'New Reading';
-            newReadingBtn.classList.remove('active');
-            newReadingBtn.style.backgroundColor = '';
-            newReadingBtn.style.display = ''; // Show it again
+        // Restore the New Variant button
+        if (newVariantBtn) {
+            newVariantBtn.textContent = 'New Variant';
+            newVariantBtn.classList.remove('active');
+            newVariantBtn.style.backgroundColor = '';
+            newVariantBtn.style.display = ''; // Show it again
         }
         
         // Restore the Edit Reading button
-        if (editReadingBtn) {
-            editReadingBtn.textContent = 'Edit Reading';
-            editReadingBtn.classList.remove('active');
+        if (editVariantBtn) {
+            editVariantBtn.textContent = 'Edit Reading';
+            editVariantBtn.classList.remove('active');
         }
         
         if (readingGroupSelect) {

@@ -398,14 +398,15 @@ def process_synoptic_token(el:et.Element) -> str:
     tag_name = el.tag.split('}')[-1] if '}' in el.tag else el.tag
     result = ''
     if tag_name in ['w', 'pc']:
-        result += f"<span class='syn-token syn-tei-{tag_name}' data-token-id='{el.get(prefix_format('xml','id'))}'>"
+        xml_id = el.get(prefix_format('xml','id'))
+        result += f"<span class='syn-token syn-token-pre' data-token-id={xml_id}> </span><span class='syn-token syn-tei-{tag_name}' data-token-id='{xml_id}'>"
         if el.text is not None:
             result += el.text.strip()
         for child in el:
             result += process_synoptic_token(child)
         result += "</span>"
-    elif tag_name in ['c']:
-        result += "<span class='syn-token syn-tei-space'> </span>"
+    # elif tag_name in ['c']:
+    #     result += "<span class='syn-tei-space'> </span>"
     elif tag_name in ['choice', 'lg', 'l']:
         for child in el:
             result += process_synoptic_token(child)
@@ -447,11 +448,10 @@ def process_synoptic_unit_for_comparison(element:et.Element) -> str:
         line_content = ''
         for el in element:
             line_content += process_synoptic_token(el)
-        
+        if line_content:
+            line_content += "<span class='syn-token syn-token-post'> </span>"
+        else:
         # If no text content, try to get element info
-        if not line_content:
-            for el in element:
-                print(el)
             tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
             if tag_name == 'gap':
                 return "<div class='synoptic-content-om'>om.</div>"
