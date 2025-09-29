@@ -1,0 +1,1728 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+ 
+<!DOCTYPE TEI 
+[ 
+<!ENTITY % heiEDITIONS_entities SYSTEM "https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/heieditions-entities.txt">
+%heiEDITIONS_entities; ]>
+
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS">
+   <teiHeader>
+      <fileDesc>
+         <titleStmt>
+            <title ana="hc:MainTitle">Der arme Heinrich</title>
+            <title ana="hc:Subtitle">Digitale Edition des Fragments D</title>
+            <author>
+               <persName>Hartmann von Aue</persName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/118546228</idno>
+            </author>
+            <editor>
+               <persName>Victor Millet</persName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/1053149832</idno>
+               <idno ana="hc:ORCIDURI">https://orcid.org/0000-0002-7683-8892</idno>
+               <affiliation>
+                  <orgName>Universidade de Santiago de Compostela</orgName>
+                  <idno ana="hc:GNDURI">https://d-nb.info/gnd/1016480-7</idno>
+               </affiliation>
+            </editor>
+            <editor>
+               <persName>Gustavo Fernández Riva</persName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/1162466510</idno>
+               <idno ana="hc:ORCIDURI">https://orcid.org/0000-0002-2202-6354</idno>
+               <affiliation>
+                  <orgName>Universität Heidelberg</orgName>
+                  <idno ana="hc:GNDURI">https://d-nb.info/gnd/2024349-2</idno>
+               </affiliation>
+            </editor>
+            <funder>
+               <orgName>Ministerio de Ciencia e Innovación</orgName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/16325456-4</idno>
+            </funder>
+         </titleStmt>
+         <editionStmt>
+            <edition>Transkription, Edition, Anmerkungen</edition>
+         </editionStmt>
+         <publicationStmt>
+            <publisher>
+               <orgName>Universitätsbibliothek Heidelberg</orgName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/2002498-8</idno>
+               <listRef>
+                  <ptr ana="hc:URLReference" target="https://www.ub.uni-heidelberg.de/"/>
+               </listRef>
+            </publisher>
+            <pubPlace>
+               <placeName>Heidelberg</placeName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/4023996-2</idno>
+            </pubPlace>
+            <date when="2025">2025</date>
+            <availability>
+               <licence target="https://creativecommons.org/licenses/by-sa/4.0">
+                  <p>Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</p>
+               </licence>
+            </availability>
+             <idno ana="hc:DOI hc:EditionWebsiteIdentifier">https://doi.org/10.11588/edition.ahd</idno>
+            <listBibl>
+                <bibl ana="hc:RecommendedBibliographicReferenceForEditionWebsite">Hartmann von Aue: <emph>Der arme Heinrich</emph>. Textgeschichtliche digitale Edition, hg. von Gustavo Fernández Riva und Victor Millet, unter Mitarbeit von Jakub Šimek, mit Übersetzungen von Dietmar Peschel. 2. Auflage, Heidelberg: Universitätsbibliothek, 2025 (1. Auflage 2016). DOI: <ref ana="hc:URLReference">https://doi.org/10.11588/edition.ahd</ref>.</bibl>
+                <bibl ana="hc:RecommendedBibliographicReferenceForExpression">Hartmann von Aue: <emph>Der arme Heinrich</emph>. Digitale Edition des Fragments D, hg. von Gustavo Fernández Riva und Victor Millet. In: Hartmann von Aue: <emph>Der arme Heinrich</emph>. Textgeschichtliche digitale Edition, hg. von Gustavo Fernández Riva und Victor Millet, unter Mitarbeit von Jakub Šimek, mit Übersetzungen von Dietmar Peschel. 2. Auflage, Heidelberg: Universitätsbibliothek, 2025 (1. Auflage 2016).</bibl>
+            </listBibl>
+         </publicationStmt>
+         <notesStmt>
+            <note xml:lang="en">This publication is part of the research project FFI2015-67537-R, funded jointly by the Ministerio de Economía y Competitividad, Spain, and by the European Fund of Regional Development (FEDER), financial frame 2014–2020.</note>
+         </notesStmt>
+         <sourceDesc>
+            <msDesc>
+               <msIdentifier>
+                  <settlement>
+                     <placeName>München</placeName>
+                     <idno ana="hc:GNDURI">https://d-nb.info/gnd/4127793-4</idno>
+                  </settlement>
+                  <repository>
+                     <orgName>Bayerische Staatsbibliothek</orgName>
+                     <idno ana="hc:GNDURI">https://d-nb.info/gnd/2031351-2</idno>
+                  </repository>
+                  <idno ana="hc:Shelfmark">Cgm 5249(29 a + 30 a</idno>
+                  <idno ana="hc:EditorialSiglum">D</idno>
+               </msIdentifier>
+               <additional>
+                  <surrogates>
+                     <listBibl>
+                        <bibl ana="hc:BibliographicReferenceForOnlineFacsimile">Hartmann, von Aue: Der arme Heinrich - BSB Cgm 5249(29 a + 30 a. Online-Ausgabe. München: Bayerische Staatsbibliothek 2016 (Permalink: <ptr ana="hc:URLReference" target="https://mdz-nbn-resolving.de/details:bsb00107009"/>; ; IIIF-Manifest [v3.0]: <ptr ana="hc:IIIFManifestURL" target="https://api.digitale-sammlungen.de/iiif/presentation/v2/bsb00107009/manifest"/>)</bibl>
+                     </listBibl>
+                  </surrogates>
+               </additional>
+            </msDesc>
+         </sourceDesc>
+      </fileDesc>
+      <encodingDesc>
+         <listPrefixDef>
+            <prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"> </prefixDef>
+            <prefixDef ident="char" matchPattern="(.+)" replacementPattern="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/chars.xml#$1"> </prefixDef>
+         </listPrefixDef>
+         <hei:elementsWithTokenizedContent include="l head ab trailer"/>
+      </encodingDesc>
+   </teiHeader>
+   
+   <facsimile>
+      <surface xml:id="D_1r" ana="hc:Page" n="1r">
+         <graphic url="https://digi.ub.uni-heidelberg.de/diglit/bsb_cgm5249_29a_30a/0001" mimeType="image/*"/>
+         <zone xml:id="D_1r-a" ana="hc:Column" n="a">
+            <zone ana="hc:GapZone" xml:id="D_1r_a1"/>
+            <zone ana="hc:TextZone" xml:id="D_1r_a2"/>
+            <zone ana="hc:GapZone" xml:id="D_1r_a3"/>
+         </zone>
+      </surface>
+      <surface xml:id="D_1v" ana="hc:Page" n="1v">
+         <graphic url="https://digi.ub.uni-heidelberg.de/diglit/bsb_cgm5249_29a_30a/0002" mimeType="image/*"/>
+         <zone xml:id="D_1v-a" ana="hc:Column" n="a">
+            <zone ana="hc:GapZone" xml:id="D_1v_a1"/>
+            <zone ana="hc:TextZone" xml:id="D_1v_a2"/>
+            <zone ana="hc:GapZone" xml:id="D_1v_a3"/>
+         </zone>
+      </surface>
+      <surface xml:id="D_2r" ana="hc:Page" n="2r">
+         <graphic url="https://digi.ub.uni-heidelberg.de/diglit/bsb_cgm5249_29a_30a/0003" mimeType="image/*"/>
+         <zone xml:id="D_2r-a" ana="hc:Column hc:TextZone" n="a"/>
+      </surface>
+      <surface xml:id="D_2v" ana="hc:Page" n="2v">
+         <graphic url="https://digi.ub.uni-heidelberg.de/diglit/bsb_cgm5249_29a_30a/0004" mimeType="image/*"/>
+         <zone xml:id="D_2v-a" ana="hc:Column hc:TextZone" n="a"/>
+      </surface>
+   </facsimile>
+   
+   <text ana="hc:ExpressionFragmentThroughLoss hc:ShortNarrativePoem">
+      <body>
+         <gap rendition="hc:Lost" unit="leaf" extent="unknown" xml:id="gap_leaf_1"/>
+            <pb n="1r" facs="#D_1r"/>
+            <cb n="a" facs="#D_1r-a"/>
+            <milestone ana="hc:ZoneBeginning" facs="#D_1r_a1"/>
+            <gap rendition="hc:CutOff" unit="line" extent="unknown"/>
+            <milestone ana="hc:ZoneBeginning" facs="#D_1r_a2"/>
+            <lg xml:id="lg_1266">
+               <l n="1266" xml:id="l_1266" hei:altN="1">
+                  <lb n="1"/>
+                  <w xml:id="w_1266_1"><gap rendition="hc:CutOff" quantity="6" unit="character"/>et</w>
+                  <c> </c>
+                  <w xml:id="w_1266_2">mich</w>
+                  <c> </c>
+                  <w xml:id="w_1266_3">e</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc><pc>‹</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1267" xml:id="l_1267" hei:altN="2">
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc ana="hc:PunctuationRegularization">›</pc></reg></choice>
+                  <w xml:id="w_1267_1"><hi rendition="hc:RedStroke"><choice><orig>N</orig><reg>n</reg></choice></hi>u</w>
+                  <c> </c>
+                  <w xml:id="w_1267_2">ſait</w>
+                  <c> </c>
+                  <w xml:id="w_1267_3">mir</w>
+                  <w xml:id="w_1267_4">z</w>
+                  <c> </c>
+                  <w xml:id="w_1267_5">her</w>
+                  <c> </c>
+                  <w xml:id="w_1267_6">durch</w>
+                  <c> </c>
+                  <w xml:id="w_1267_7">di</w>
+                  <lb n="2"/>
+                  <w xml:id="w_1267_8">want</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc><pc>‹</pc></reg></choice>
+               </l>
+               <l n="1268" xml:id="l_1268" hei:altN="3">
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc ana="editorial">›</pc></reg></choice>
+                  <w xml:id="w_1268_1"><hi rendition="hc:RedStroke"><choice><orig>M</orig><reg>m</reg></choice></hi>aister</w>
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc ana="editorial">,</pc><c> </c></reg></choice>
+                  <w xml:id="w_1268_2">ez</w>
+                  <c> </c>
+                  <w xml:id="w_1268_3">iſt</w>
+                  <c> </c>
+                  <w xml:id="w_1268_4">niht</w>
+                  <c> </c>
+                  <w xml:id="w_1268_5">ſo</w>
+                  <c> </c>
+                  <w xml:id="w_1268_6">gewant</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc><pc>‹</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1269" xml:id="l_1269" hei:altN="4">
+                  <lb n="3"/>
+                  <w xml:id="w_1269_1"><choice><orig>A</orig><reg>a</reg></choice>lſuz</w>
+                  <c> </c>
+                  <w xml:id="w_1269_2">liez</w>
+                  <c> </c>
+                  <w xml:id="w_1269_3">er</w>
+                  <c> </c>
+                  <w xml:id="w_1269_4">in</w>
+                  <c> </c>
+                  <w xml:id="w_1269_5">da</w>
+                  <gap rendition="hc:Perforated" quantity="2" unit="character"/>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1270" xml:id="l_1270" hei:altN="5">
+                  <w xml:id="w_1270_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <c> </c>
+                  <damage rendition="hc:Stained">
+                     <w xml:id="w_1270_2">gie</w>
+                  </damage>
+                  <w xml:id="w_1270_3">d<choice><am>&er;</am><ex>er</ex></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1270_4">arm</w>
+                  <lb n="4"/>
+                  <w xml:id="w_1270_5"><choice><orig>h</orig><reg>H</reg></choice>ainreih</w>
+                  <c> </c>
+                  <w xml:id="w_1270_6">hin</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1271" xml:id="l_1271" hei:altN="6">
+                  <w xml:id="w_1271_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <gap rendition="hc:Perforated" quantity="2" unit="character"/>
+                  <w xml:id="w_1271_2"><gap rendition="hc:Perforated" quantity="1" unit="character"/>ei</w>
+                  <c> </c>
+                  <w xml:id="w_1271_3">g<gap rendition="hc:Perforated" quantity="1" unit="character"/>punden</w>
+                  <c> </c>
+                  <w xml:id="w_1271_4">ſach</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1272" xml:id="l_1272" hei:altN="7">
+                  <lb n="5"/>
+                  <w xml:id="w_1272_1"><choice><orig>Z</orig><reg>z</reg></choice><choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1272_2">dem</w>
+                  <c> </c>
+                  <w xml:id="w_1272_3">maiſter</w>
+                  <c> </c>
+                  <w xml:id="w_1272_4">er</w>
+                  <c> </c>
+                  <w xml:id="w_1272_5">do</w>
+                  <c> </c>
+                  <w xml:id="w_1272_6">ſprach</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>:</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1273" xml:id="l_1273" hei:altN="8">
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc>›</pc></reg></choice>
+                  <w xml:id="w_1273_1"><choice><orig>D</orig><reg>d</reg></choice>icz</w>
+                  <c> </c>
+                  <w xml:id="w_1273_2">chind</w>
+                  <lb n="6"/>
+                  <w xml:id="w_1273_3">iſt</w>
+                  <c> </c>
+                  <w xml:id="w_1273_4">so</w>
+                  <c> </c>
+                  <w xml:id="w_1273_5">ſaub<damage rendition="hc:Perforated">er</damage>leih</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1274" xml:id="l_1274" hei:altN="9">
+                  <w xml:id="w_1274_1">z</w>
+                  <damage rendition="hc:Stained">
+                     <w xml:id="w_1274_2">war</w>
+                  </damage>
+                  <w xml:id="w_1274_3"><choice><orig>i</orig><reg>j</reg></choice>a</w>
+                  <c> </c>
+                  <w xml:id="w_1274_4">en</w>
+                  <c> </c>
+                  <w xml:id="w_1274_5">mach</w>
+                  <c> </c>
+                  <w xml:id="w_1274_6">ich</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1275" xml:id="l_1275" hei:altN="10">
+                  <lb n="7"/>
+                  <w xml:id="w_1275_1">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1275_2">todez</w>
+                  <c> </c>
+                  <w xml:id="w_1275_3">niht</w>
+                  <c> </c>
+                  <w xml:id="w_1275_4">guſehen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+               </l>
+               <l n="1276" xml:id="l_1276" hei:altN="11">
+                  <w xml:id="w_1276_1"><hi rendition="hc:RedStroke"><choice><orig>G</orig><reg>g</reg></choice></hi>otez</w>
+                  <c> </c>
+                  <w xml:id="w_1276_2">wil</w>
+                  <c> </c>
+                  <w xml:id="w_1276_3">mu<choice><orig>&combuml;</orig><reg/></choice>z</w>
+                  <lb n="8"/>
+                  <w xml:id="w_1276_4">an</w>
+                  <c> </c>
+                  <w xml:id="w_1276_5">mir</w>
+                  <c> </c>
+                  <w xml:id="w_1276_6">guſchehen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1277" xml:id="l_1277" hei:altN="12">
+                  <w xml:id="w_1277_1"><hi rendition="hc:RedStroke"><choice><orig>N</orig><reg>n</reg></choice></hi>u</w>
+                  <damage rendition="hc:Stained">
+                     <w xml:id="w_1277_2"><gap rendition="hc:Stained" quantity="1" unit="character"/>at</w>
+                  </damage>
+                  <w xml:id="w_1277_3">ſei</w>
+                  <c> </c>
+                  <w xml:id="w_1277_4">wider</w>
+                  <c> </c>
+                  <w xml:id="w_1277_5">auf</w>
+                  <lb n="9"/>
+                  <w xml:id="w_1277_6">ſtan</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1278" xml:id="l_1278" hei:altN="13">
+                  <w xml:id="w_1278_1">alſo</w>
+                  <c> </c>
+                  <w xml:id="w_1278_2">ich</w>
+                  <c> </c>
+                  <w xml:id="w_1278_3">mit</w>
+                  <c> </c>
+                  <w xml:id="w_1278_4">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1278_5">g<gap rendition="hc:Stained" quantity="2" unit="character"/>inget</w>
+                  <c> </c>
+                  <w xml:id="w_1278_6">han</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1279" xml:id="l_1279" hei:altN="14">
+                  <w xml:id="w_1279_1">daz</w>
+                  <lb n="10"/>
+                  <w xml:id="w_1279_2">selb</w>
+                  <c> </c>
+                  <w xml:id="w_1279_3">gu<choice><orig>&combuml;</orig><reg/></choice>t</w>
+                  <c> </c>
+                  <w xml:id="w_1279_4">wil</w>
+                  <c> </c>
+                  <w xml:id="w_1279_5">ich</w>
+                  <c> </c>
+                  <w xml:id="w_1279_6">eu</w>
+                  <c> </c>
+                  <w xml:id="w_1279_7">geben</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1280" xml:id="l_1280" hei:altN="15">
+                  <gap rendition="hc:Stained" quantity="3" unit="character"/>
+                  <w xml:id="w_1280_1"><gap rendition="hc:Stained" quantity="1" unit="character"/>il</w>
+                  <c> </c>
+                  <w xml:id="w_1280_2">nah</w>
+                  <lb n="11"/>
+                  <w xml:id="w_1280_3">gotez</w>
+                  <c> </c>
+                  <w xml:id="w_1280_4">gnaden</w>
+                  <c> </c>
+                  <w xml:id="w_1280_5">leben</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc><pc>‹</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1280.16" xml:id="l_1280p" hei:altN="16">
+                  <w xml:id="w_1280p_1"><choice><orig>D</orig><reg>d</reg></choice>az</w>
+                  <c> </c>
+                  <w xml:id="w_1280p_2">hort</w>
+                  <c> </c>
+                  <w xml:id="w_1280p_3">vil</w>
+                  <c> </c>
+                  <w xml:id="w_1280p_4">gern</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1280.17" xml:id="l_1280q" hei:altN="17">
+                  <lb n="12"/>
+                  <w xml:id="w_1280q_1"><choice><orig>D</orig><reg>d</reg></choice>er</w>
+                  <c> </c>
+                  <w xml:id="w_1280q_2">maiſter</w>
+                  <c> </c>
+                  <w xml:id="w_1280q_3">von</w>
+                  <c> </c>
+                  <w xml:id="w_1280q_4"><choice><orig>ſ</orig><reg>S</reg></choice>alern</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1280.18" xml:id="l_1280r" hei:altN="18">
+                  <w xml:id="w_1280r_1"><choice><orig>V</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1280r_2">voligt</w>
+                  <c> </c>
+                  <w xml:id="w_1280r_3">im</w>
+                  <lb n="13"/>
+                  <w xml:id="w_1280r_4">zehant</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>:</pc></reg></choice>
+               </l>
+               <l n="1280.19" xml:id="l_1280s" hei:altN="19">
+                  <w xml:id="w_1280s_1">di</w>
+                  <c> </c>
+                  <w xml:id="w_1280s_2">mait</w>
+                  <c> </c>
+                  <w xml:id="w_1280s_3">er</w>
+                  <c> </c>
+                  <w xml:id="w_1280s_4">wider</w>
+                  <c> </c>
+                  <w xml:id="w_1280s_5">auf</w>
+                  <c> </c>
+                  <w xml:id="w_1280s_6">pant</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1281" xml:id="l_1281" hei:altN="20">
+                  <lb n="14"/>
+                  <w xml:id="w_1281_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1281_2">di</w>
+                  <c> </c>
+                  <w xml:id="w_1281_3"><choice><orig>i</orig><reg>j</reg></choice>unch</w>
+                  <c> </c>
+                  <w xml:id="w_1281_4">fraw</w>
+                  <c> </c>
+                  <w xml:id="w_1281_5">erſach</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1282" xml:id="l_1282" hei:altN="21">
+                  <w xml:id="w_1282_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>az</w>
+                  <c> </c>
+                  <w xml:id="w_1282_2">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1282_3">ſterben</w>
+                  <lb n="15"/>
+                  <w xml:id="w_1282_4">niht</w>
+                  <c> </c>
+                  <w xml:id="w_1282_5">geſchah</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1283" xml:id="l_1283" hei:altN="22">
+                  <w xml:id="w_1283_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1283_2">wart</w>
+                  <c> </c>
+                  <w xml:id="w_1283_3">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1283_4">mu<choice><orig>&combuml;</orig><reg/></choice>t</w>
+                  <c> </c>
+                  <w xml:id="w_1283_5">beſwær<lb n="16" break="no"/>et</w>
+                  <c> </c>
+                  <w xml:id="w_1283_6">mit</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>;</pc></reg></choice>
+               </l>
+               <l n="1284" xml:id="l_1284" hei:altN="23">
+                  <w xml:id="w_1284_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>i</w>
+                  <c> </c>
+                  <w xml:id="w_1284_2">brach</w>
+                  <c> </c>
+                  <w xml:id="w_1284_3">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1284_4">zuht</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"></reg></choice>
+                  <c> </c>
+                  <w xml:id="w_1284_5"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <add hei:placeRef="hc:AboveLine">
+                     <w xml:id="w_1284_6">ir</w>
+                  </add>
+                  <w xml:id="w_1284_7">ſit</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1284.2" xml:id="l_1284b" hei:altN="24">
+                  <w xml:id="w_1284b_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>i</w>
+                  <c> </c>
+                  <w xml:id="w_1284b_2">het</w>
+                  <lb n="17"/>
+                  <w xml:id="w_1284b_3">laidez</w>
+                  <c> </c>
+                  <w xml:id="w_1284b_4">genu<choice><orig>&combuml;</orig><reg/></choice>ch</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>:</pc></reg></choice>
+               </l>
+               <l n="1284.1" xml:id="l_1284a" hei:altN="25">
+                  <w xml:id="w_1284a_1"><hi rendition="hc:RedStroke"><choice><orig>Z</orig><reg>z</reg></choice></hi><choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1284a_2">den</w>
+                  <c> </c>
+                  <w xml:id="w_1284a_3">bruſten</w>
+                  <c> </c>
+                  <w xml:id="w_1284a_4">si</w>
+                  <c> </c>
+                  <w xml:id="w_1284a_5">ſich</w>
+                  <gap rendition="hc:CutOff" extent="unknown" unit="character"/>
+               </l>
+            </lg>
+            <milestone ana="hc:ZoneBeginning" facs="#D_1r_a3"/>
+            <pb n="1v" facs="#D_1v"/>
+            <cb n="a" facs="#D_1v-a"/>
+            <milestone ana="hc:ZoneBeginning" facs="#D_1v_a1"/>
+            <gap rendition="hc:CutOff" extent="unknown" unit="line"/>
+            <milestone ana="hc:ZoneBeginning" facs="#D_1v_a2"/>
+            <lg ana="hc:Couplet">
+               <l n="1291" xml:id="l_1291" hei:altN="26">
+                  <lb n="1"/>
+                  <w xml:id="w_1291_1">er<choice><orig><c> </c></orig><reg/></choice>gan</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1292" xml:id="l_1292" hei:altN="27">
+                  <w xml:id="w_1292_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>ol</w>
+                  <c> </c>
+                  <w xml:id="w_1292_2">ich</w>
+                  <c> </c>
+                  <w xml:id="w_1292_3">alſo</w>
+                  <c> </c>
+                  <w xml:id="w_1292_4">v<choice><am>&er;</am><ex>er</ex></choice>lorn</w>
+                  <c> </c>
+                  <w xml:id="w_1292_5">han</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1293" xml:id="l_1293" hei:altN="28">
+                  <w xml:id="w_1293_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>i</w>
+                  <c> </c>
+                  <w xml:id="w_1293_2">reich</w>
+                  <lb n="2"/>
+                  <w xml:id="w_1293_3">himel</w>
+                  <c> </c>
+                  <w xml:id="w_1293_4">chron</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>?</pc></reg></choice>
+               </l>
+               <l n="1294" xml:id="l_1294" hei:altN="29">
+                  <w xml:id="w_1294_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>eu</w>
+                  <c> </c>
+                  <w xml:id="w_1294_2">wær</w>
+                  <c> </c>
+                  <w xml:id="w_1294_3">mir</w>
+                  <c> </c>
+                  <w xml:id="w_1294_4">ze</w>
+                  <c> </c>
+                  <w xml:id="w_1294_5">lon</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1295" xml:id="l_1295" hei:altN="30">
+                  <w xml:id="w_1295_1">ge<lb n="3" break="no"/><choice><orig>u</orig><reg>v</reg></choice>allen</w>
+                  <c> </c>
+                  <w xml:id="w_1295_2">fur</w>
+                  <c> </c>
+                  <w xml:id="w_1295_3">diſeu</w>
+                  <c> </c>
+                  <w xml:id="w_1295_4"><gap rendition="hc:Perforated" quantity="2" unit="character"/>t</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1296" xml:id="l_1296" hei:altN="31">
+                  <w xml:id="w_1296_1"><hi rendition="hc:RedStroke"><choice><orig>N</orig><reg>n</reg></choice></hi>u</w>
+                  <c> </c>
+                  <w xml:id="w_1296_2">alreſt</w>
+                  <c> </c>
+                  <w xml:id="w_1296_3">pin</w>
+                  <lb n="4"/>
+                  <w xml:id="w_1296_4">ich</w>
+                  <c> </c>
+                  <w xml:id="w_1296_5">tod</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>!</pc><pc>‹</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1309" xml:id="l_1309" hei:altN="32">
+                  <w xml:id="w_1309_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1309_2"><damage rendition="hc:Perforated">h</damage>ue<gap rendition="hc:Perforated" quantity="1" unit="character"/></w>
+                 <c> </c>
+                  <w xml:id="w_1309_3">ſich</w>
+                  <gap rendition="hc:Perforated" quantity="3" unit="character"/>
+                  <w xml:id="w_1309_4">ſchelten</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1310" xml:id="l_1310" hei:altN="33">
+                  <w xml:id="w_1310_1"><choice><orig>S</orig><reg>s</reg></choice>i</w>
+                  <c> </c>
+                  <w xml:id="w_1310_2">ſp<lb n="5" break="no"/>rach</w>
+                  <choice><orig><c> </c></orig><reg ana="hc:PunctuationRegularization"><pc ana="editorial">:</pc><c> </c><pc ana="editorial">›</pc></reg></choice>
+                  <w xml:id="w_1310_3">ich</w>
+                  <c> </c>
+                  <w xml:id="w_1310_4">mu<choice><orig>&combuml;</orig><reg/></choice>z</w>
+                  <c> </c>
+                  <w xml:id="w_1310_5">engelten</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1311" xml:id="l_1311" hei:altN="34">
+                  <w xml:id="w_1311_1"><hi rendition="hc:RedStroke"><choice><orig>M</orig><reg>m</reg></choice></hi>einez</w>
+                  <c> </c>
+                  <w xml:id="w_1311_2">herr<lb n="6" break="no"/>en</w>
+                  <c> </c>
+                  <w xml:id="w_1311_3">zaghait</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1312" xml:id="l_1312" hei:altN="35">
+                  <w xml:id="w_1312_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>ie</w>
+                  <c> </c>
+                  <w xml:id="w_1312_2">leut</w>
+                  <c> </c>
+                  <w xml:id="w_1312_3">habent</w>
+                  <c> </c>
+                  <w xml:id="w_1312_4">mir</w>
+                  <c> </c>
+                  <w xml:id="w_1312_5">miz<lb n="7" break="no"/>zait</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1313" xml:id="l_1313" hei:altN="36">
+                  <w xml:id="w_1313_1"><choice><orig><hi rendition="hc:RedStroke">A</hi>uh</orig><reg>auh</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1313_2">han</w>
+                  <c> </c>
+                  <w xml:id="w_1313_3">ich</w>
+                  <c> </c>
+                  <w xml:id="w_1313_4">ez</w>
+                  <c> </c>
+                  <w xml:id="w_1313_5">ſelb</w>
+                  <c> </c>
+                  <w xml:id="w_1313_6">wol</w>
+                  <c> </c>
+                  <w xml:id="w_1313_7">geſeh<lb n="8" break="no"/>en</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1314" xml:id="l_1314" hei:altN="37">
+                  <w xml:id="w_1314_1"><hi rendition="hc:RedStroke"><choice><orig>I</orig><reg>i</reg></choice></hi>ch</w>
+                  <c> </c>
+                  <w xml:id="w_1314_2">hort</w>
+                  <c> </c>
+                  <w xml:id="w_1314_3">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1314_4">ie</w>
+                  <c> </c>
+                  <w xml:id="w_1314_5">di</w>
+                  <c> </c>
+                  <w xml:id="w_1314_6">leut</w>
+                  <c> </c>
+                  <w xml:id="w_1314_7"><choice><orig>i</orig><reg>j</reg></choice>ehen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1315" xml:id="l_1315" hei:altN="38">
+                  <w xml:id="w_1315_1"><hi rendition="hc:RedStroke"><choice><orig>I</orig><reg>i</reg></choice></hi>r</w>
+                  <lb n="9"/>
+                  <w xml:id="w_1315_2">wærd</w>
+                  <c> </c>
+                  <w xml:id="w_1315_3">pider</w>
+                  <c> </c>
+                  <w xml:id="w_1315_4"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1315_5">gu<choice><orig>&combuml;</orig><reg/></choice>t</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+               </l>
+               <l n="1316" xml:id="l_1316" hei:altN="39">
+                  <w xml:id="w_1316_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>n<choice><am>&bar;</am><ex>d</ex></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1316_2">het</w>
+                  <c> </c>
+                  <w xml:id="w_1316_3">veſtez</w>
+                  <lb n="10"/>
+                  <w xml:id="w_1316_4">mannez</w>
+                  <c> </c>
+                  <w xml:id="w_1316_5">mu<choice><orig>&combuml;</orig><reg/></choice>t</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1317" xml:id="l_1317" hei:altN="40">
+                  <w xml:id="w_1317_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1317_2">helf</w>
+                  <c> </c>
+                  <w xml:id="w_1317_3">mir</w>
+                  <c> </c>
+                  <w xml:id="w_1317_4">got</w>
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc ana="editorial">,</pc></reg></choice>
+                  <c> </c>
+                  <w xml:id="w_1317_5">ſe<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <lb n="11"/>
+                  <w xml:id="w_1317_6">hant</w>
+                  <c> </c>
+                  <w xml:id="w_1317_7">gelogen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>!</pc></reg></choice>
+               </l>
+               <l n="1318" xml:id="l_1318" hei:altN="41">
+                  <w xml:id="w_1318_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>i</w>
+                  <c> </c>
+                  <w xml:id="w_1318_2">welt</w>
+                  <c> </c>
+                  <w xml:id="w_1318_3">waz</w>
+                  <c> </c>
+                  <w xml:id="w_1318_4">ie</w>
+                  <c> </c>
+                  <w xml:id="w_1318_5">an</w>
+                  <c> </c>
+                  <w xml:id="w_1318_6">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <lb n="12"/>
+                  <w xml:id="w_1318_7"><choice><orig>w</orig><reg>b</reg></choice>etrogen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1319" xml:id="l_1319" hei:altN="42">
+                  <w xml:id="w_1319_1"><hi rendition="hc:RedStroke"><choice><orig>I</orig><reg>i</reg></choice></hi>r</w>
+                  <c> </c>
+                  <w xml:id="w_1319_2">ward</w>
+                  <c> </c>
+                  <w xml:id="w_1319_3">all</w>
+                  <c> </c>
+                  <w xml:id="w_1319_4">eur</w>
+                  <c> </c>
+                  <w xml:id="w_1319_5">tag</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1320" xml:id="l_1320" hei:altN="43">
+                  <w xml:id="w_1320_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>nd</w>
+                  <lb n="13"/>
+                  <w xml:id="w_1320_2">ſeit</w>
+                  <c> </c>
+                  <w xml:id="w_1320_3">heut</w>
+                  <c> </c>
+                  <w xml:id="w_1320_4">ein</w>
+                  <c> </c>
+                  <w xml:id="w_1320_5">po&combuml;ſer</w>
+                  <c> </c>
+                  <w xml:id="w_1320_6">zag</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1321" xml:id="l_1321" hei:altN="44">
+                  <w xml:id="w_1321_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>ez</w>
+                  <c> </c>
+                  <w xml:id="w_1321_2">nim</w>
+                  <lb n="14"/>
+                  <w xml:id="w_1321_3">ich</w>
+                  <c> </c>
+                  <w xml:id="w_1321_4">do</w>
+                  <c> </c>
+                  <w xml:id="w_1321_5">pei</w>
+                  <c> </c>
+                  <w xml:id="w_1321_6">vil</w>
+                  <c> </c>
+                  <w xml:id="w_1321_7">wol</w>
+                  <c> </c>
+                  <w xml:id="w_1321_8">war</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>:</pc></reg></choice>
+               </l>
+               <l n="1322" xml:id="l_1322" hei:altN="45">
+                  <w xml:id="w_1322_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>az</w>
+                  <c> </c>
+                  <w xml:id="w_1322_2">ich</w>
+                  <c> </c>
+                  <w xml:id="w_1322_3">lei<lb n="15" break="no"/>den</w>
+                  <c> </c>
+                  <w xml:id="w_1322_4">getar</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1322.1" xml:id="l_1322a" hei:altN="46">
+                  <w xml:id="w_1322a_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>ez</w>
+                  <c> </c>
+                  <w xml:id="w_1322a_2">getu&combuml;rret</w>
+                  <c> </c>
+                  <w xml:id="w_1322a_3">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1322a_4">niht</w>
+                  <c> </c>
+                  <w xml:id="w_1322a_5">ge<lb n="15" break="no"/>ſehen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1322.2" xml:id="l_1322b" hei:altN="47">
+                  <w xml:id="w_1322b_1"><hi rendition="hc:RedStroke"><choice><orig>I</orig><reg>i</reg></choice></hi>ch</w>
+                  <c> </c>
+                  <w xml:id="w_1322b_2">ho<add hei:placeRef="hc:AboveLine">r</add>t</w>
+                  <c> </c>
+                  <w xml:id="w_1322b_3">manigen</w>
+                  <c> </c>
+                  <w xml:id="w_1322b_4"><choice><orig>i</orig><reg>j</reg></choice>ehen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1322.3" xml:id="l_1322c" hei:altN="48">
+                  <w xml:id="w_1322c_1"><hi rendition="hc:RedStroke"><choice><orig>E</orig><reg>e</reg></choice></hi>u</w>
+                  <c> </c>
+                  <w xml:id="w_1322c_2">lob<lb n="16" break="no"/>ez</w>
+                  <c> </c>
+                  <w xml:id="w_1322c_3"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1322c_4">warhait</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1322.4" xml:id="l_1322d" hei:altN="49">
+                  <w xml:id="w_1322d_1"><hi rendition="hc:RedStroke"><choice><orig>N</orig><reg>n</reg></choice></hi><choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1322d_2">iſt</w>
+                  <c> </c>
+                  <w xml:id="w_1322d_3">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1322d_4">daz</w>
+                  <c> </c>
+                  <w xml:id="w_1322d_5">fu&combuml;r</w>
+                  <lb n="17"/>
+                  <gap rendition="hc:CutOff" unit="character" extent="unknown"/>
+               </l>
+            </lg>
+            <lg>
+               <l n="1322.5" xml:id="l_1322e" hei:altN="50">
+                   <gap rendition="hc:CutOff" unit="line" quantity="1"/>
+               </l>
+            </lg>
+            <milestone ana="hc:ZoneBeginning" facs="#D_1v_a3"/>
+            <gap rendition="hc:CutOff" unit="line" extent="unknown"/>
+            <pb n="2r" facs="#D_2r"/>
+            <cb n="a" facs="#D_2r-a"/>
+            <lg ana="hc:Couplet">
+               <l n="1322.13" xml:id="l_1322m" hei:altN="51">
+                  <lb n="1"/>
+                  <w xml:id="w_1322m_1">daz</w>
+                  <c> </c>
+                  <w xml:id="w_1322m_2">hart</w>
+                  <c> </c>
+                  <w xml:id="w_1322m_3">vil</w>
+                  <c> </c>
+                  <w xml:id="w_1322m_4">guſehen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1322.14" xml:id="l_1322n" hei:altN="52">
+                  <w xml:id="w_1322n_1"><hi rendition="hc:RedStroke"><choice><orig>E</orig><reg>e</reg></choice></hi>z</w>
+                  <c> </c>
+                  <w xml:id="w_1322n_2">iſt</w>
+                  <c> </c>
+                  <w xml:id="w_1322n_3">aber</w>
+                  <c> </c>
+                  <w xml:id="w_1322n_4">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <lb n="2"/>
+                  <w xml:id="w_1322n_5">niht</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+                  <c> </c>
+                  <w xml:id="w_1322n_6"><hi rendition="hc:RedStroke">g</hi>uſchehen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1322.15" xml:id="l_1322o" hei:altN="53">
+                  <w xml:id="w_1322o_1">daz</w>
+                  <c> </c>
+                  <w xml:id="w_1322o_2">ein</w>
+                  <c> </c>
+                  <w xml:id="w_1322o_3">man</w>
+                  <c> </c>
+                  <w xml:id="w_1322o_4"><hi rendition="hc:RedStroke">d</hi>reiſich</w>
+                  <lb n="3"/>
+                  <w xml:id="w_1322o_5">slueg</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1322.16" xml:id="l_1322p" hei:altN="54">
+                  <w xml:id="w_1322p_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1322p_2">ſih</w>
+                  <c> </c>
+                  <w xml:id="w_1322p_3">dez</w>
+                  <c> </c>
+                  <w xml:id="w_1322p_4">todez</w>
+                  <c> </c>
+                  <w xml:id="w_1322p_5"><choice><orig>v</orig><reg>u</reg></choice>ber<choice><orig><c> </c></orig><reg/></choice>trueg</w>
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc ana="editorial">.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1322.17" xml:id="l_1322q" hei:altN="55">
+                  <lb n="4"/>
+                  <w xml:id="w_1322q_1">n<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1322q_2">hulf</w>
+                  <c> </c>
+                  <w xml:id="w_1322q_3">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1322q_4">einz</w>
+                  <c> </c>
+                  <w xml:id="w_1322q_5">chindez</w>
+                  <c> </c>
+                  <w xml:id="w_1322q_6">tod</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1322.18" xml:id="l_1322r" hei:altN="56">
+                  <w xml:id="w_1322r_1"><hi rendition="hc:RedStroke"><choice><orig>A</orig><reg>a</reg></choice></hi>uz</w>
+                  <c> </c>
+                  <w xml:id="w_1322r_2">aller</w>
+                  <c> </c>
+                  <w xml:id="w_1322r_3">e<choice><orig>v</orig><reg>u</reg></choice>r</w>
+                  <lb n="5"/>
+                  <w xml:id="w_1322r_4">no<choice><orig>&combuml;</orig><reg/></choice>t</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1322.20" xml:id="l_1322t" hei:altN="57">
+                  <w xml:id="w_1322t_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>e</w>
+                  <w xml:id="w_1322t_2">ſt</w>
+                  <c> </c>
+                  <w xml:id="w_1322t_3">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1322t_4"><choice><orig>v</orig><reg>u</reg></choice>nlaſterbær</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+               </l>
+               <l n="1322.19" xml:id="l_1322s" hei:altN="58">
+                  <w xml:id="w_1322s_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1322s_2">an</w>
+                  <c> </c>
+                  <w xml:id="w_1322s_3">s<choice><orig>v</orig><reg>u</reg></choice>&combuml;n<lb n="6" break="no"/>de</w>
+                  <c> </c>
+                  <w xml:id="w_1322s_4">wær</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1323" xml:id="l_1323" hei:altN="59">
+                  <w xml:id="w_1323_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>ez</w>
+                  <c> </c>
+                  <w xml:id="w_1323_2">mu&combuml;get</w>
+                  <c> </c>
+                  <w xml:id="w_1323_3">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1323_4">niht</w>
+                  <c> </c>
+                  <w xml:id="w_1323_5">verdulden</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1324" xml:id="l_1324" hei:altN="60">
+                  <lb n="7"/>
+                  <w xml:id="w_1324_1"><hi rendition="hc:RedStroke"><choice><orig>H</orig><reg>h</reg></choice></hi>err</w>
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc ana="editorial">,</pc></reg></choice>
+                  <c> </c>
+                  <w xml:id="w_1324_2">von</w>
+                  <c> </c>
+                  <w xml:id="w_1324_3">welhen</w>
+                  <c> </c>
+                  <w xml:id="w_1324_4">ſchulden</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1325" xml:id="l_1325" hei:altN="61">
+                  <w xml:id="w_1325_1"><hi rendition="hc:RedStroke"><choice><orig>E</orig><reg>e</reg></choice></hi>rſchracht</w>
+                  <lb n="8"/>
+                  <w xml:id="w_1325_2">ir</w>
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc ana="editorial">,</pc></reg></choice>
+                  <c> </c>
+                  <w xml:id="w_1325_3">do</w>
+                  <c> </c>
+                  <w xml:id="w_1325_4">man</w>
+                  <c> </c>
+                  <w xml:id="w_1325_5">mih</w>
+                  <c> </c>
+                  <w xml:id="w_1325_6">pant</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>?</pc></reg></choice>
+               </l>
+               <l n="1326" xml:id="l_1326" hei:altN="62">
+                  <w xml:id="w_1326_1"><hi rendition="hc:RedStroke"><choice><orig>N</orig><reg>n</reg></choice></hi><choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1326_2">waz</w>
+                  <c> </c>
+                  <w xml:id="w_1326_3">doch</w>
+                  <c> </c>
+                  <w xml:id="w_1326_4">ein</w>
+                  <lb n="9"/>
+                  <w xml:id="w_1326_5">dicheu</w>
+                  <c> </c>
+                  <w xml:id="w_1326_6"><hi rendition="hc:RedStroke">w</hi>and</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1327" xml:id="l_1327" hei:altN="63">
+                  <w xml:id="w_1327_1"><hi rendition="hc:RedStroke"><choice><orig>Z</orig><reg>z</reg></choice></hi>wischen</w>
+                  <c> </c>
+                  <w xml:id="w_1327_2">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1327_3"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1327_4">mier</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1328" xml:id="l_1328" hei:altN="64">
+                  <lb n="10"/>
+                  <w xml:id="w_1328_1">herr</w>
+                  <choice><orig/><reg ana="hc:PunctuationRegularization"><pc ana="editorial">,</pc></reg></choice>
+                  <c> </c>
+                  <w xml:id="w_1328_2">getu&combuml;rret</w>
+                  <c> </c>
+                  <w xml:id="w_1328_3">ir</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1329" xml:id="l_1329" hei:altN="65">
+                  <w xml:id="w_1329_1"><hi rendition="hc:RedStroke"><choice><orig>E</orig><reg>e</reg></choice></hi>in</w>
+                  <c> </c>
+                  <w xml:id="w_1329_2">vro&combuml;mden</w>
+                  <c> </c>
+                  <w xml:id="w_1329_3">tod</w>
+                  <c> </c>
+                  <w xml:id="w_1329_4">niht</w>
+                  <lb n="11"/>
+                  <w xml:id="w_1329_5">v<choice><am>&er;</am><ex>er</ex></choice>tragen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>?</pc></reg></choice>
+               </l>
+               <l n="1330" xml:id="l_1330" hei:altN="66">
+                  <w xml:id="w_1330_1"><hi rendition="hc:RedStroke"><choice><orig>I</orig><reg>i</reg></choice></hi>ch</w>
+                  <c> </c>
+                  <w xml:id="w_1330_2">wil</w>
+                  <c> </c>
+                  <w xml:id="w_1330_3">eu</w>
+                  <c> </c>
+                  <w xml:id="w_1330_4">gehaizzen</w>
+                  <c> </c>
+                  <w xml:id="w_1330_5"><choice><orig>v</orig><reg>u</reg></choice>n<choice><am>&bar;</am><ex>d</ex></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1330_7">ſagen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1331" xml:id="l_1331" hei:altN="67">
+                  <lb n="12"/>
+                  <w xml:id="w_1331_1">daz</w>
+                  <c> </c>
+                  <w xml:id="w_1331_2">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1331_3">niement</w>
+                  <c> </c>
+                  <w xml:id="w_1331_4">nicht</w>
+                  <c> </c>
+                  <w xml:id="w_1331_5">tu<choice><orig>&combuml;</orig><reg/></choice>t</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1332" xml:id="l_1332" hei:altN="68">
+                  <w xml:id="w_1332_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1332_2">iſt</w>
+                  <c> </c>
+                  <w xml:id="w_1332_3">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <lb n="13"/>
+                  <w xml:id="w_1332_4">nu&combuml;tz</w>
+                  <c> </c>
+                  <w xml:id="w_1332_5"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1332_6">guet</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1332.1" xml:id="l_1332a" hei:altN="69">
+                  <w xml:id="w_1332a_1"><hi rendition="hc:RedStroke"><choice><orig>O</orig><reg>o</reg></choice></hi>b</w>
+                  <c> </c>
+                  <w xml:id="w_1332a_2">ir</w>
+                  <w xml:id="w_1332a_3">z</w>
+                  <c> </c>
+                  <w xml:id="w_1332a_4">durch</w>
+                  <c> </c>
+                  <w xml:id="w_1332a_5">eur</w>
+                  <c> </c>
+                  <w xml:id="w_1332a_6">t<choice><am>&er;</am><ex>re</ex></choice>w</w>
+                  <c> </c>
+                  <w xml:id="w_1332a_7">lat</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1332.2" xml:id="l_1332b" hei:altN="70">
+                  <lb n="14"/>
+                  <w xml:id="w_1332b_1">daz</w>
+                  <c> </c>
+                  <w xml:id="w_1332b_2">iſt</w>
+                  <c> </c>
+                  <w xml:id="w_1332b_3">ein</w>
+                  <c> </c>
+                  <w xml:id="w_1332b_4">vil</w>
+                  <c> </c>
+                  <w xml:id="w_1332b_5">ſwacher</w>
+                  <c> </c>
+                  <w xml:id="w_1332b_6">rat</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1332.3" xml:id="l_1332c" hei:altN="71">
+                  <w xml:id="w_1332c_1"><choice><orig>D</orig><reg>d</reg></choice>ez</w>
+                  <c> </c>
+                  <w xml:id="w_1332c_2">e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <lb n="15"/>
+                  <w xml:id="w_1332c_3">got</w>
+                  <c> </c>
+                  <w xml:id="w_1332c_4">niht</w>
+                  <c> </c>
+                  <w xml:id="w_1332c_5">lonen</w>
+                  <c> </c>
+                  <w xml:id="w_1332c_6">wil</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1332.4" xml:id="l_1332d" hei:altN="72">
+                  <w xml:id="w_1332d_1"><hi rendition="hc:RedStroke"><choice><orig>W</orig><reg>w</reg></choice></hi>an</w>
+                  <c> </c>
+                  <w xml:id="w_1332d_2">der</w>
+                  <c> </c>
+                  <w xml:id="w_1332d_3">t<choice><am>&er;</am><ex>re</ex></choice>wn</w>
+                  <c> </c>
+                  <w xml:id="w_1332d_4">iſt</w>
+                  <c> </c>
+                  <w xml:id="w_1332d_5">ze</w>
+                  <lb n="16"/>
+                  <w xml:id="w_1332d_6"><choice><orig>u</orig><reg>v</reg></choice>il</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc><pc>‹</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1333" xml:id="l_1333" hei:altN="73">
+                  <w xml:id="w_1333_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>wi</w>
+                  <c> </c>
+                  <w xml:id="w_1333_2">vil</w>
+                  <c> </c>
+                  <w xml:id="w_1333_3">si</w>
+                  <c> </c>
+                  <w xml:id="w_1333_4">ſcheltens</w>
+                  <c> </c>
+                  <w xml:id="w_1333_5"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1333_6">pet</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1334" xml:id="l_1334" hei:altN="74">
+                  <w xml:id="w_1334_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>n<choice><am>&bar;</am><ex>d</ex></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1334_3">fl<damage>u</damage>ch<lb n="17" break="no"/>enz</w>
+                  <c> </c>
+                  <w xml:id="w_1334_4">getet</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1335" xml:id="l_1335" hei:altN="75">
+                  <w xml:id="w_1335_1"><choice><orig><hi rendition="hc:RedStroke">D</hi>az</orig><reg>daz</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1335_2">moht</w>
+                  <c> </c>
+                  <w xml:id="w_1335_3">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1335_4">dehain</w>
+                  <c> </c>
+                  <w xml:id="w_1335_5">frum</w>
+                  <lb n="18"/>
+                  <w xml:id="w_1335_6">weſen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>:</pc></reg></choice>
+               </l>
+               <l n="1336" xml:id="l_1336" hei:altN="76">
+                  <w xml:id="w_1336_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>i</w>
+                  <c> </c>
+                  <w xml:id="w_1336_2">mu<choice><orig>&combuml;</orig><reg/></choice>ſt</w>
+                  <c> </c>
+                  <w xml:id="w_1336_3">dannoch</w>
+                  <c> </c>
+                  <w xml:id="w_1336_4">geneſen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1337" xml:id="l_1337" hei:altN="77">
+                  <w xml:id="w_1337_1">ſwaz</w>
+                  <lb n="19"/>
+                  <w xml:id="w_1337_2">do</w>
+                  <c> </c>
+                  <w xml:id="w_1337_3">ſcheltenz</w>
+                  <c> </c>
+                  <w xml:id="w_1337_4">ergie</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1338" xml:id="l_1338" hei:altN="78">
+                  <w xml:id="w_1338_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>er</w>
+                  <c> </c>
+                  <w xml:id="w_1338_2">arm</w>
+                  <c> </c>
+                  <w xml:id="w_1338_3"><choice><orig>h</orig><reg>H</reg></choice>ainreich</w>
+                  <c> </c>
+                  <w xml:id="w_1338_4"><choice><sic/><corr resp="editor">ez</corr></choice></w>
+                  <lb n="20"/>
+                  <w xml:id="w_1338_5">enphie</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1340" xml:id="l_1340" hei:altN="79">
+                  <w xml:id="w_1340_1"><hi rendition="hc:RedStroke"><choice><orig>T</orig><reg>t</reg></choice></hi>ugentleich</w>
+                  <c> </c>
+                  <w xml:id="w_1340_2"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1340_3">wol</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1339" xml:id="l_1339" hei:altN="80">
+                  <w xml:id="w_1339_1">alz</w>
+                  <c> </c>
+                  <w xml:id="w_1339_2">ein</w>
+                  <lb n="21"/>
+                  <w xml:id="w_1339_3">frumer</w>
+                  <c> </c>
+                  <w xml:id="w_1339_4">ritter</w>
+                  <c> </c>
+                  <w xml:id="w_1339_5">ſol</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1341" xml:id="l_1341" hei:altN="81">
+                  <w xml:id="w_1341_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>em</w>
+                  <c> </c>
+                  <w xml:id="w_1341_2">ſcho&combuml;ner</w>
+                  <c> </c>
+                  <w xml:id="w_1341_3">ſinn</w>
+                  <lb n="22"/>
+                  <w xml:id="w_1341_4">niht</w>
+                  <c> </c>
+                  <w xml:id="w_1341_5">zebraſt</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1342" xml:id="l_1342" hei:altN="82">
+                  <w xml:id="w_1342_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1342_2">d<choice><am>&er;</am><ex>er</ex></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1342_3">gnadloz</w>
+                  <c> </c>
+                  <w xml:id="w_1342_4">gaſt</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1343" xml:id="l_1343" hei:altN="83">
+                  <w xml:id="w_1343_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>i</w>
+                  <lb n="23"/>
+                  <w xml:id="w_1343_2">mait</w>
+                  <c> </c>
+                  <w xml:id="w_1343_3">wider</w>
+                  <c> </c>
+                  <w xml:id="w_1343_4">gechlait</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1344" xml:id="l_1344" hei:altN="84">
+                  <w xml:id="w_1344_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>n<choice><am>&bar;</am><ex>d</ex></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1344_3">den</w>
+                  <c> </c>
+                  <w xml:id="w_1344_4">arczt</w>
+                  <pb n="2v" facs="#D_2v"/>
+                  <cb n="a" facs="#D_2v-a"/>
+                  <lb n="1"/>
+                  <w xml:id="w_1344_5">berait</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1345" xml:id="l_1345" hei:altN="85">
+                  <w xml:id="w_1345_1">alz</w>
+                  <c> </c>
+                  <w xml:id="w_1345_2">er</w>
+                  <c> </c>
+                  <w xml:id="w_1345_3">gedinget</w>
+                  <c> </c>
+                  <w xml:id="w_1345_4">hat</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1346" xml:id="l_1346" hei:altN="86">
+                  <w xml:id="w_1346_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1346_2">cherat</w>
+                  <lb n="2"/>
+                  <w xml:id="w_1346_3">er</w>
+                  <c> </c>
+                  <w xml:id="w_1346_4"><choice><orig>u</orig><reg>v</reg></choice>il</w>
+                  <c> </c>
+                  <w xml:id="w_1346_5">drat</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1347" xml:id="l_1347" hei:altN="87">
+                  <w xml:id="w_1347_1"><hi rendition="hc:RedStroke"><choice><orig>W</orig><reg>w</reg></choice></hi>ider</w>
+                  <c> </c>
+                  <w xml:id="w_1347_2">haim</w>
+                  <c> </c>
+                  <w xml:id="w_1347_3">ze</w>
+                  <w xml:id="w_1347_4">lant</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1348" xml:id="l_1348" hei:altN="88">
+                  <w xml:id="w_1348_1"><hi rendition="hc:RedStroke"><choice><orig>W</orig><reg>w</reg></choice></hi>ie</w>
+                  <lb n="3"/>
+                  <w xml:id="w_1348_2">wol</w>
+                  <c> </c>
+                  <w xml:id="w_1348_3">er</w>
+                  <c> </c>
+                  <w xml:id="w_1348_4">daz</w>
+                  <c> </c>
+                  <w xml:id="w_1348_5">erchand</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1349" xml:id="l_1349" hei:altN="89">
+                  <w xml:id="w_1349_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>az</w>
+                  <c> </c>
+                  <w xml:id="w_1349_2">er</w>
+                  <c> </c>
+                  <w xml:id="w_1349_3">do</w>
+                  <c> </c>
+                  <w xml:id="w_1349_4">niht</w>
+                  <c> </c>
+                  <w xml:id="w_1349_5">en</w>
+                  <lb n="4"/>
+                  <w xml:id="w_1349_6">fu<add hei:placeRef="hc:AboveLine">e</add>nd</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1350" xml:id="l_1350" hei:altN="90">
+                  <w xml:id="w_1350_1"><hi rendition="hc:RedStroke"><choice><orig>W</orig><reg>w</reg></choice></hi>an</w>
+                  <c> </c>
+                  <w xml:id="w_1350_2">mit</w>
+                  <c> </c>
+                  <w xml:id="w_1350_3">gemainem</w>
+                  <c> </c>
+                  <w xml:id="w_1350_4">mund</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1351" xml:id="l_1351" hei:altN="91">
+                  <w xml:id="w_1351_1"><hi rendition="hc:RedStroke"><choice><orig>G</orig><reg>g</reg></choice></hi>r<lb n="5" break="no"/>ozz</w>
+                  <c> </c>
+                  <w xml:id="w_1351_2">lazz<add hei:placeRef="hc:AboveLine">t</add>er</w>
+                  <c> </c>
+                  <w xml:id="w_1351_3"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1351_4">spot</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1352" xml:id="l_1352" hei:altN="92">
+                  <w xml:id="w_1352_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>az</w>
+                  <c> </c>
+                  <w xml:id="w_1352_2">lie</w>
+                  <c> </c>
+                  <w xml:id="w_1352_3">er</w>
+                  <c> </c>
+                  <w xml:id="w_1352_4">allez</w>
+                  <lb n="6"/>
+                  <w xml:id="w_1352_5">an</w>
+                  <c> </c>
+                  <w xml:id="w_1352_6">got</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1353" xml:id="l_1353" hei:altN="93">
+                  <w xml:id="w_1353_1"><hi rendition="hc:RedStroke"><choice><orig>N</orig><reg>n</reg></choice></hi>u</w>
+                  <c> </c>
+                  <w xml:id="w_1353_2">het</w>
+                  <c> </c>
+                  <w xml:id="w_1353_3">auch</w>
+                  <c> </c>
+                  <w xml:id="w_1353_4">di</w>
+                  <c> </c>
+                  <w xml:id="w_1353_5">rain</w>
+                  <c> </c>
+                  <w xml:id="w_1353_6">maget</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1354" xml:id="l_1354" hei:altN="94">
+                  <lb n="7"/>
+                  <w xml:id="w_1354_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1354_2">gar</w>
+                  <c> </c>
+                  <w xml:id="w_1354_3">verwainet</w>
+                  <c> </c>
+                  <w xml:id="w_1354_4"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1354_5">v<choice><am>&er;</am><ex>er</ex></choice>chlaget</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1355" xml:id="l_1355" hei:altN="95">
+                  <lb n="8"/>
+                  <w xml:id="w_1355_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>v</reg></choice></hi>il</w>
+                  <c> </c>
+                  <w xml:id="w_1355_2">nahen</w>
+                  <c> </c>
+                  <w xml:id="w_1355_3"><choice><orig>v</orig><reg>u</reg></choice>ntz</w>
+                  <c> </c>
+                  <w xml:id="w_1355_4">an</w>
+                  <c> </c>
+                  <w xml:id="w_1355_5">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1355_6">tod</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+               <l n="1356" xml:id="l_1356" hei:altN="96">
+                  <w xml:id="w_1356_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1356_2">erchant</w>
+                  <lb n="9"/>
+                  <w xml:id="w_1356_3">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1356_4">t<choice><am>&er;</am><ex>re</ex></choice>w</w>
+                  <c> </c>
+                  <w xml:id="w_1356_5"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <choice>
+                     <sic><w xml:id="w_1356_6"><choice><orig>v</orig><reg>u</reg></choice>nd</w></sic>
+                     <corr resp="editor"/>
+                  </choice>
+                  <c> </c>
+                  <w xml:id="w_1356_7">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1356_8">no<choice><orig>&combuml;</orig><reg/></choice>t</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1357" xml:id="l_1357" hei:altN="97">
+                  <w xml:lang="lat" xml:id="w_1357_1"><hi rendition="hc:RedStroke"><choice><orig>C</orig><reg>c</reg></choice></hi>ordis</w>
+                  <c> </c>
+                  <w xml:lang="lat" xml:id="w_1357_2">ſpecu<lb n="10" break="no"/>lator</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1358" xml:id="l_1358" hei:altN="98">
+                  <w xml:id="w_1358_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>em</w>
+                  <c> </c>
+                  <w xml:id="w_1358_2">dehain</w>
+                  <c> </c>
+                  <w xml:id="w_1358_3">hertz</w>
+                  <c> </c>
+                  <w xml:id="w_1358_4">vor</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1359" xml:id="l_1359" hei:altN="99">
+                  <w xml:id="w_1359_1"><hi rendition="hc:RedStroke"><choice><orig>B</orig><reg>b</reg></choice></hi>enam</w>
+                  <lb n="11"/>
+                  <w xml:id="w_1359_2">verborgen</w>
+                  <c> </c>
+                  <w xml:id="w_1359_3">iſt</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1360" xml:id="l_1360" hei:altN="100">
+                  <w xml:id="w_1360_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>er</w>
+                  <c> </c>
+                  <w xml:id="w_1360_2">durch</w>
+                  <c> </c>
+                  <w xml:id="w_1360_3">ſein</w>
+                  <c> </c>
+                  <w xml:id="w_1360_4">ſu&combuml;zzen</w>
+                  <lb n="12"/>
+                  <w xml:id="w_1360_5">liſt</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1361" xml:id="l_1361" hei:altN="101">
+                  <w xml:id="w_1361_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>e<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1361_2">paide<choice><orig>v</orig><reg>u</reg></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1361_3">beru<choice><orig>&combuml;</orig><reg/></choice>cht</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1362" xml:id="l_1362" hei:altN="102">
+                  <w xml:id="w_1362_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1362_2">auch</w>
+                  <c> </c>
+                  <w xml:id="w_1362_3">ſeu</w>
+                  <lb n="13"/>
+                  <w xml:id="w_1362_4">verſu<choice><orig>&combuml;</orig><reg/></choice>cht</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1363" xml:id="l_1363" hei:altN="103">
+                  <w xml:id="w_1363_1">alſo</w>
+                  <c> </c>
+                  <w xml:id="w_1363_2">vollichleichen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1364" xml:id="l_1364" hei:altN="104">
+                  <w xml:id="w_1364_1"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>am</w>
+                  <c> </c>
+                  <w xml:id="w_1364_2"><choice><orig>i</orig><reg>I</reg></choice>ob</w>
+                  <lb n="14"/>
+                  <w xml:id="w_1364_3">den</w>
+                  <c> </c>
+                  <w xml:id="w_1364_4">reichen</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1364.1" xml:id="l_1364a" hei:altN="105">
+                  <w xml:id="w_1364a_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>o</w>
+                  <c> </c>
+                  <w xml:id="w_1364a_2">er</w>
+                  <c> </c>
+                  <w xml:id="w_1364a_3">in</w>
+                  <c> </c>
+                  <w xml:id="w_1364a_4">dez</w>
+                  <c> </c>
+                  <w xml:id="w_1364a_5">ſiechen</w>
+                  <c> </c>
+                  <w xml:id="w_1364a_6">ha<lb n="15" break="no"/>nt</w>
+
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1364.2" xml:id="l_1364b" hei:altN="106">
+                  <w xml:id="w_1364b_1"><hi rendition="hc:RedStroke"><choice><orig>B</orig><reg>b</reg></choice></hi>arme</w>
+                  <c> </c>
+                  <w xml:id="w_1364b_2"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1364b_3">trew</w>
+                  <c> </c>
+                  <w xml:id="w_1364b_4">vant</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1364.3" xml:id="l_1364c" hei:altN="107">
+                  <w xml:id="w_1364c_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1364c_2">auh</w>
+                  <lb n="16"/>
+                  <w xml:id="w_1364c_3">di</w>
+                  <c> </c>
+                  <w xml:id="w_1364c_4">vil</w>
+                  <c> </c>
+                  <w xml:id="w_1364c_5">rain</w>
+                  <c> </c>
+                  <w xml:id="w_1364c_6">maget</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1364.4" xml:id="l_1364d" hei:altN="108">
+                  <w xml:id="w_1364d_1"><hi rendition="hc:RedStroke"><choice><orig>A</orig><reg>a</reg></choice></hi>n</w>
+                  <c> </c>
+                  <w xml:id="w_1364d_2">t<choice><am>&er;</am><ex>re</ex></choice>wn</w>
+                  <c> </c>
+                  <w xml:id="w_1364d_3">vant</w>
+                  <c> </c>
+                  <w xml:id="w_1364d_4"><hi rendition="hc:RedStroke"><choice><orig>S</orig><reg>s</reg></choice></hi>o</w>
+                  <lb n="17"/>
+                  <w xml:id="w_1364d_5"><choice><orig>v</orig><reg>u</reg></choice>n<choice><orig>u</orig><reg>v</reg></choice><choice><am>&er;</am><ex>er</ex></choice>zaget</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1364.5" xml:id="l_1364e" hei:altN="109">
+                  <w xml:id="w_1364e_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>az</w>
+                  <c> </c>
+                  <w xml:id="w_1364e_2">si</w>
+                  <c> </c>
+                  <w xml:id="w_1364e_3">benam</w>
+                  <c> </c>
+                  <w xml:id="w_1364e_4">ir</w>
+                  <c> </c>
+                  <w xml:id="w_1364e_5">leben</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1364.6" xml:id="l_1364f" hei:altN="110">
+                  <lb n="18"/>
+                  <w xml:id="w_1364f_1"><hi rendition="hc:RedStroke"><choice><orig>J</orig><reg>i</reg></choice></hi>n</w>
+                  <choice><orig/><reg><c> </c></reg></choice>
+                  <w xml:id="w_1364f_2">gotez</w>
+                  <c> </c>
+                  <w xml:id="w_1364f_3">guet</w>
+                  <c> </c>
+                  <w xml:id="w_1364f_4">wolt</w>
+                  <c> </c>
+                  <w xml:id="w_1364f_5">geben</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1365" xml:id="l_1365" hei:altN="111">
+                  <w xml:id="w_1365_1"><hi rendition="hc:RedStroke">D</hi><choice><sic>u</sic><corr resp="editor">o</corr></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1365_3">erzai<lb n="19" break="no"/>get</w>
+                  <c> </c>
+                  <w xml:id="w_1365_4">der</w>
+                  <c> </c>
+                  <w xml:id="w_1365_5">genædich</w>
+                  <c> </c>
+                  <w xml:id="w_1365_6"><choice><orig>c</orig><reg>C</reg></choice>hriſt</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+               <l n="1366" xml:id="l_1366" hei:altN="112">
+                  <w xml:id="w_1366_1"><hi rendition="hc:RedStroke"><choice><orig>W</orig><reg>w</reg></choice></hi>ie</w>
+                  <c> </c>
+                  <w xml:id="w_1366_2">lieb</w>
+                  <c> </c>
+                  <w xml:id="w_1366_3">im</w>
+                  <lb n="20"/>
+                  <w xml:id="w_1366_4">trew</w>
+                  <c> </c>
+                  <w xml:id="w_1366_5"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1366_6">barmde</w>
+                  <c> </c>
+                  <w xml:id="w_1366_7">iſt</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1367" xml:id="l_1367" hei:altN="113">
+                  <w xml:id="w_1367_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1367_2">ſchied</w>
+                  <c> </c>
+                  <w xml:id="w_1367_3">ſi</w>
+                  <lb n="21"/>
+                  <w xml:id="w_1367_4">paid<add hei:placeRef="hc:AboveLine">e</add></w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1368" xml:id="l_1368" hei:altN="114">
+                  <w xml:id="w_1368_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>v</reg></choice></hi>or</w>
+                  <c> </c>
+                  <w xml:id="w_1368_2">allem</w>
+                  <c> </c>
+                  <w xml:id="w_1368_3">irm</w>
+                  <c> </c>
+                  <w xml:id="w_1368_4">laide</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet">
+               <l n="1369" xml:id="l_1369" hei:altN="115">
+                  <w xml:id="w_1369_1"><hi rendition="hc:RedStroke"><choice><orig>V</orig><reg>u</reg></choice></hi>n<choice><am>&bar;</am><ex>d</ex></choice></w>
+                  <c> </c>
+                  <w xml:id="w_1369_2">mach<lb n="22" break="no"/>et</w>
+                  <c> </c>
+                  <w xml:id="w_1369_3">ſeu</w>
+                  <c> </c>
+                  <w xml:id="w_1369_4">ſa</w>
+                  <choice><orig/><reg><c> </c></reg></choice>
+                  <w xml:id="w_1369_5">ze</w>
+                  <choice><orig/><reg><c> </c></reg></choice>
+                  <w xml:id="w_1369_6">ſtund</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+               </l>
+               <l n="1370" xml:id="l_1370" hei:altN="116">
+                  <w xml:id="w_1370_1"><hi rendition="hc:RedStroke"><choice><orig>R</orig><reg>r</reg></choice></hi>ain</w>
+                  <c> </c>
+                  <w xml:id="w_1370_2"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+                  <c> </c>
+                  <w xml:id="w_1370_3">wol</w>
+                  <c> </c>
+                  <w xml:id="w_1370_4">geſ<lb n="23" break="no"/>unt</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+               </l>
+            </lg>
+            <lg ana="hc:Couplet" xml:id="lg_1371">
+               <l n="1371" xml:id="l_1371" hei:altN="117">
+                  <w xml:id="w_1371_1">alſo</w>
+                  <c> </c>
+                  <w xml:id="w_1371_2">bezzert</w>
+                  <c> </c>
+                  <w xml:id="w_1371_3">do</w>
+                  <c> </c>
+                  <w xml:id="w_1371_4">ſih</w>
+                  <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/>
+                  </choice>
+               </l>
+               <l n="1372" xml:id="l_1372" hei:altN="118">
+                  <w xml:id="w_1372_1"><hi rendition="hc:RedStroke"><choice><orig>D</orig><reg>d</reg></choice></hi>er</w>
+                  <c> </c>
+                  <w xml:id="w_1372_2">guet</w>
+               </l>
+            </lg>
+            <gap rendition="hc:Lost" unit="leaf" extent="unknown"></gap>
+      </body>
+   </text>
+</TEI>

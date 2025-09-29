@@ -1,0 +1,214 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d0" for="edge" attr.name="scope" attr.type="string"/>
+<graph edgedefault="directed"><node id="a:p_1"/>
+<node id="a:l_1"/>
+<node id="a:l_2"/>
+<node id="a:l_3"/>
+<node id="a:l_4"/>
+<node id="a:l_5"/>
+<node id="a:l_10"/>
+<node id="b:p_1"/>
+<node id="b:l_1"/>
+<node id="b:l_2"/>
+<node id="b:l_4"/>
+<node id="b:l_5"/>
+<node id="b:l_10"/>
+<node id="b:l_11"/>
+<node id="c:l_1"/>
+<node id="c:l_2"/>
+<node id="c:l_4"/>
+<node id="c:l_5"/>
+<node id="c:l_6"/>
+<node id="c:l_7"/>
+<node id="c:l_10"/>
+<node id="b:gap-l_2"/>
+<node id="c:gap-l_2"/>
+<node id="a:gap-l_5"/>
+<node id="b:gap-l_5"/>
+<edge source="a:p_1" target="a:l_1">
+  <data key="d0">i</data>
+</edge>
+<edge source="a:p_1" target="b:p_1">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_1" target="a:l_2">
+  <data key="d0">i</data>
+</edge>
+<edge source="a:l_1" target="b:l_1">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_1" target="c:l_1">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_2" target="a:l_3">
+  <data key="d0">i</data>
+</edge>
+<edge source="a:l_2" target="b:l_2">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_2" target="c:l_2">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_3" target="a:l_4">
+  <data key="d0">i</data>
+</edge>
+<edge source="a:l_3" target="b:gap-l_2"/>
+<edge source="a:l_3" target="c:gap-l_2"/>
+<edge source="a:l_4" target="a:l_5">
+  <data key="d0">i</data>
+</edge>
+<edge source="a:l_4" target="b:l_4">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_4" target="c:l_4">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_5" target="a:l_10">
+  <data key="d0">i</data>
+</edge>
+<edge source="a:l_5" target="b:l_5">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_5" target="c:l_5">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_5" target="a:gap-l_5">
+  <data key="d0">g</data>
+</edge>
+<edge source="a:l_10" target="b:l_10">
+  <data key="d0">e</data>
+</edge>
+<edge source="a:l_10" target="c:l_10">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:p_1" target="b:l_1">
+  <data key="d0">i</data>
+</edge>
+<edge source="b:p_1" target="a:p_1">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_1" target="b:l_2">
+  <data key="d0">i</data>
+</edge>
+<edge source="b:l_1" target="a:l_1">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_1" target="c:l_1">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_2" target="b:l_4">
+  <data key="d0">i</data>
+</edge>
+<edge source="b:l_2" target="a:l_2">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_2" target="c:l_2">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_2" target="b:gap-l_2">
+  <data key="d0">g</data>
+</edge>
+<edge source="b:l_4" target="b:l_5">
+  <data key="d0">i</data>
+</edge>
+<edge source="b:l_4" target="a:l_4">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_4" target="c:l_4">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_5" target="b:l_10">
+  <data key="d0">i</data>
+</edge>
+<edge source="b:l_5" target="a:l_5">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_5" target="c:l_5">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_5" target="b:gap-l_5">
+  <data key="d0">g</data>
+</edge>
+<edge source="b:l_10" target="b:l_11">
+  <data key="d0">i</data>
+</edge>
+<edge source="b:l_10" target="a:l_10">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:l_10" target="c:l_10">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_1" target="c:l_2">
+  <data key="d0">i</data>
+</edge>
+<edge source="c:l_1" target="a:l_1">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_1" target="b:l_1">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_2" target="c:l_4">
+  <data key="d0">i</data>
+</edge>
+<edge source="c:l_2" target="a:l_2">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_2" target="b:l_2">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_2" target="c:gap-l_2">
+  <data key="d0">g</data>
+</edge>
+<edge source="c:l_4" target="c:l_5">
+  <data key="d0">i</data>
+</edge>
+<edge source="c:l_4" target="a:l_4">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_4" target="b:l_4">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_5" target="c:l_6">
+  <data key="d0">i</data>
+</edge>
+<edge source="c:l_5" target="a:l_5">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_5" target="b:l_5">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_6" target="c:l_7">
+  <data key="d0">i</data>
+</edge>
+<edge source="c:l_6" target="a:gap-l_5"/>
+<edge source="c:l_6" target="b:gap-l_5"/>
+<edge source="c:l_7" target="c:l_10">
+  <data key="d0">i</data>
+</edge>
+<edge source="c:l_7" target="a:gap-l_5"/>
+<edge source="c:l_7" target="b:gap-l_5"/>
+<edge source="c:l_10" target="a:l_10">
+  <data key="d0">e</data>
+</edge>
+<edge source="c:l_10" target="b:l_10">
+  <data key="d0">e</data>
+</edge>
+<edge source="b:gap-l_2" target="b:l_4">
+  <data key="d0">g</data>
+</edge>
+<edge source="b:gap-l_2" target="a:l_3"/>
+<edge source="c:gap-l_2" target="c:l_4">
+  <data key="d0">g</data>
+</edge>
+<edge source="c:gap-l_2" target="a:l_3"/>
+<edge source="a:gap-l_5" target="a:l_10">
+  <data key="d0">g</data>
+</edge>
+<edge source="a:gap-l_5" target="c:l_6"/>
+<edge source="a:gap-l_5" target="c:l_7"/>
+<edge source="b:gap-l_5" target="b:l_10">
+  <data key="d0">g</data>
+</edge>
+<edge source="b:gap-l_5" target="c:l_6"/>
+<edge source="b:gap-l_5" target="c:l_7"/>
+</graph></graphml>

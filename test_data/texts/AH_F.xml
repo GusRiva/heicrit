@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+  
+<!DOCTYPE TEI 
+[ 
+<!ENTITY % heiEDITIONS_entities SYSTEM "https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/heieditions-entities.txt">
+%heiEDITIONS_entities; ]>  
+
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS">
+   <teiHeader>
+      <fileDesc>
+         <titleStmt>
+            <title ana="hc:MainTitle">Der arme Heinrich</title>
+            <title ana="hc:Subtitle">Digitale Edition des Fragments F</title>
+            <author>
+               <persName>Hartmann von Aue</persName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/118546228</idno>
+            </author>
+            <editor>
+               <persName>Victor Millet</persName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/1053149832</idno>
+               <idno ana="hc:ORCIDURI">https://orcid.org/0000-0002-7683-8892</idno>
+               <affiliation>
+                  <orgName>Universidade de Santiago de Compostela</orgName>
+                  <idno ana="hc:GNDURI">https://d-nb.info/gnd/1016480-7</idno>
+               </affiliation>
+            </editor>
+            <editor>
+               <persName>Gustavo Fernández Riva</persName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/1162466510</idno>
+               <idno ana="hc:ORCIDURI">https://orcid.org/0000-0002-2202-6354</idno>
+               <affiliation>
+                  <orgName>Universität Heidelberg</orgName>
+                  <idno ana="hc:GNDURI">https://d-nb.info/gnd/2024349-2</idno>
+               </affiliation>
+            </editor>
+            <funder>
+               <orgName>Ministerio de Ciencia e Innovación</orgName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/16325456-4</idno>
+            </funder>
+         </titleStmt>
+         <editionStmt>
+            <edition>Transkription, Edition, Anmerkungen</edition>
+         </editionStmt>
+         <publicationStmt>
+            <publisher>
+               <orgName>Universitätsbibliothek Heidelberg</orgName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/2002498-8</idno>
+               <listRef>
+                  <ptr ana="hc:URLReference" target="https://www.ub.uni-heidelberg.de/"/>
+               </listRef>
+            </publisher>
+            <pubPlace>
+               <placeName>Heidelberg</placeName>
+               <idno ana="hc:GNDURI">https://d-nb.info/gnd/4023996-2</idno>
+            </pubPlace>
+            <date when="2025">2025</date>
+            <availability>
+               <licence target="https://creativecommons.org/licenses/by-sa/4.0">
+                  <p>Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</p>
+               </licence>
+            </availability>
+             <idno ana="hc:DOI hc:EditionWebsiteIdentifier">https://doi.org/10.11588/edition.ahd</idno>
+            <listBibl>
+                <bibl ana="hc:RecommendedBibliographicReferenceForEditionWebsite">Hartmann von Aue: <emph>Der arme Heinrich</emph>. Textgeschichtliche digitale Edition, hg. von Gustavo Fernández Riva und Victor Millet, unter Mitarbeit von Jakub Šimek, mit Übersetzungen von Dietmar Peschel. 2. Auflage, Heidelberg: Universitätsbibliothek, 2025 (1. Auflage 2016). DOI: <ref ana="hc:URLReference">https://doi.org/10.11588/edition.ahd</ref>.</bibl>
+                <bibl ana="hc:RecommendedBibliographicReferenceForExpression">Hartmann von Aue: <emph>Der arme Heinrich</emph>. Digitale Edition des Fragments F, hg. von Gustavo Fernández Riva und Victor Millet. In: Hartmann von Aue: <emph>Der arme Heinrich</emph>. Textgeschichtliche digitale Edition, hg. von Gustavo Fernández Riva und Victor Millet, unter Mitarbeit von Jakub Šimek, mit Übersetzungen von Dietmar Peschel. 2. Auflage, Heidelberg: Universitätsbibliothek, 2025 (1. Auflage 2016).</bibl>
+            </listBibl>
+         </publicationStmt>
+         <notesStmt>
+            <note xml:lang="en">This publication is part of the research project FFI2015-67537-R, funded jointly by the Ministerio de Economía y Competitividad, Spain, and by the European Fund of Regional Development (FEDER), financial frame 2014–2020</note>
+         </notesStmt>
+         <sourceDesc>
+            <msDesc>
+               <msIdentifier>
+                  <settlement>
+                     <placeName>Freiburg</placeName>
+                     <idno ana="hc:GNDURI">https://d-nb.info/gnd/4018272-1</idno>
+                  </settlement>
+                  <repository>
+                     <orgName>Universitätsbibliothek Freiburg</orgName>
+                     <idno ana="hc:GNDURI">https://d-nb.info/gnd/31816-4</idno>
+                  </repository>
+                  <idno ana="hc:Shelfmark">Hs. 381</idno>
+                  <idno ana="hc:EditorialSiglum">F</idno>
+               </msIdentifier>
+               <additional>
+                  <surrogates>
+                     <listBibl>
+                        <bibl ana="hc:BibliographicReferenceForOnlineFacsimile">Hartmann von Aue: Der arme Heinrich – Universitätsbibliothek Freiburg i. Br., Hs. 381, fol. 72r. Online-Ausgabe. Freiburg: Universitätsbibliothek 2016 (Permalink: <ptr ana="hc:URLReference" target="http://dl.ub.uni-freiburg.de/diglit/hs381/0145"/></bibl>
+                     </listBibl>
+                  </surrogates>
+               </additional>
+            </msDesc>
+         </sourceDesc>
+      </fileDesc>
+      <encodingDesc>
+         <listPrefixDef>
+            <prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"> </prefixDef>
+            <prefixDef ident="char" matchPattern="(.+)" replacementPattern="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/chars.xml#$1"> </prefixDef>
+         </listPrefixDef>
+         <hei:elementsWithTokenizedContent include="l head ab trailer"/>
+      </encodingDesc>
+   </teiHeader>
+
+   <facsimile>
+      <surface xml:id="F_72r" ana="hc:Page" n="72r">
+         <graphic url="https://digi.ub.uni-heidelberg.de/diglit/ubfr_hs381_fol72/0001" mimeType="image/*"/>
+         <zone ana="hc:TextZone hc:MarginalZone" hei:placeRef="hc:PageTop">
+            <desc xml:lang="de">Dieser Textbereich ist nicht Teil der vorliegenden Edition.</desc>
+         </zone>
+         <zone ana="hc:TextZone hc:MainColumn">
+            <desc xml:lang="de">Dieser Textbereich ist nicht Teil der vorliegenden Edition.</desc>
+         </zone>
+         <zone xml:id="F_72r-a" ana="hc:MarginalZone hc:TextZone" n="a"/>
+      </surface>
+   </facsimile>
+
+   <text ana="hc:FragmentaryExpression hc:ShortNarrativePoem hc:PenTrial">
+      <body>
+         <pb n="72r" facs="#F_72r"/>
+         <milestone ana="hc:ZoneBeginning" n="a" facs="#F_72r-a"/>
+         <lg ana="hc:Couplet" xml:id="lg_199">
+            <l n="199" xml:id="l_199" hei:altN="1">
+               <lb n="1"/>
+               <w xml:id="w_199_1">d<choice><am>&er;</am><ex>er</ex></choice></w>
+               <c> </c>
+               <w xml:id="w_199_2">weri<choice><am>&bar;</am><ex>n</ex></choice>t</w>
+               <c> </c>
+               <w xml:id="w_199_3">ir</w>
+               <c> </c>
+               <w xml:id="w_199_4">geniſelich</w>
+               <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+            </l>
+            <l n="200" xml:id="l_200" hei:altN="2">
+               <w xml:id="w_200_1">nu</w>
+               <c> </c>
+               <w xml:id="w_200_2">n</w>
+               <w xml:id="w_200_3">iſt</w>
+               <c> </c>
+               <w xml:id="w_200_4">ab<choice><am>&er;</am><ex>er</ex></choice></w>
+               <c> </c>
+               <w xml:id="w_200_5">do</w>
+               <c> </c>
+               <w xml:id="w_200_6">kei<choice><am>&bar;</am><ex>n</ex></choice></w>
+               <c> </c>
+               <w xml:id="w_200_7">kuni<choice><am>&bar;</am><ex>n</ex></choice>c</w>
+               <c> </c>
+               <w xml:id="w_200_8">ſo</w>
+               <c> </c>
+               <w xml:id="w_200_9">rich</w>
+               <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+            </l>
+         </lg>
+         <lg ana="hc:Couplet">
+            <l n="201" xml:id="l_201" hei:altN="3">
+               <lb n="2"/>
+               <w xml:id="w_201_1">noch</w>
+               <c> </c>
+               <w xml:id="w_201_2">von</w>
+               <c> </c>
+               <w xml:id="w_201_3">ſo</w>
+               <c> </c>
+               <w xml:id="w_201_4">ſtarken</w>
+               <c> </c>
+               <w xml:id="w_201_5">ſinne<choice><am>&bar;</am><ex>n</ex></choice></w>
+               <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+            </l>
+            <l n="202" xml:id="l_202" hei:altN="4">
+               <w xml:id="w_202_1">d<choice><am>&er;</am><ex>er</ex></choice></w>
+               <c> </c>
+               <w xml:id="w_202_2">ſi</w>
+               <c> </c>
+               <w xml:id="w_202_3">mit</w>
+               <c> </c>
+               <w xml:id="w_202_4">v<choice><orig>w</orig><reg>u</reg></choice>oci</w>
+               <c> </c>
+               <w xml:id="w_202_5">muge</w>
+               <c> </c>
+               <w xml:id="w_202_6">gewinne<choice><am>&bar;</am><ex>n</ex></choice></w>
+               <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>.</pc></reg></choice>
+            </l>
+         </lg>
+         <lg ana="hc:Couplet" xml:id="lg_203">
+            <l n="203" xml:id="l_203" hei:altN="5">
+               <lb n="3"/>
+               <w xml:id="w_203_1">deſ</w>
+               <c> </c>
+               <w xml:id="w_203_2">ſint</w>
+               <c> </c>
+               <w xml:id="w_203_3">ir</w>
+               <c> </c>
+               <w xml:id="w_203_4">ymm<choice><am>&er;</am><ex>er</ex></choice></w>
+               <c> </c>
+               <w xml:id="w_203_5">unge<add hei:placeRef="hc:AboveLine">ne</add>ſen</w>
+               <choice><orig><pc>·</pc></orig><reg ana="hc:PunctuationRegularization"><pc>,</pc></reg></choice>
+            </l>
+            <l n="204" xml:id="l_204" hei:altN="6">
+               <w xml:id="w_204_1">got</w>
+               <c> </c>
+               <w xml:id="w_204_2">en</w>
+               <w xml:id="w_204_3">welle</w>
+               <c> </c>
+               <w xml:id="w_204_4">ſelbe</w>
+               <c> </c>
+               <w xml:id="w_204_5">d<choice><am>&er;</am><ex>er</ex></choice></w>
+               <c> </c>
+               <w xml:id="w_204_6">ar<unclear>cza</unclear>t</w>
+               <lb n="4"/>
+               <w xml:id="w_204_7">weſen</w>
+               <choice><orig><pc>.</pc></orig><reg ana="hc:PunctuationRegularization"/></choice>
+            </l>
+         </lg>
+      </body>
+   </text>
+</TEI>
