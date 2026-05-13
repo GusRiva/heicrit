@@ -72,32 +72,5 @@ App for creating critical apparatus for scholarly editions. Works as both web ap
 - **Entry Creation**: Token-based selection system for creating new apparatus entries with visual feedback
 - **Smart Navigation**: Automatically selects meaningful (non-placeholder) entries when navigating
 
-## Recent Developments (2025-01-03)
-### Apparatus Entry Creation System
-- **Token Selection Interface**: Click tokens to build lemma and readings for new apparatus entries
-- **Creation Mode**: "New Reading" button toggles entry creation mode with visual toolbar
-- **Reading Groups**: Support for multiple reading groups (Reading 1, Reading 2, etc.) with different colors
-- **Session Management**: Fresh dropdown state for each creation session (lemma + Reading 1 + new group option)
-- **Real-time Building**: Entries are built incrementally as tokens are selected/deselected
 
-### Visual Feedback System  
-- **Token Highlighting**: Color-coded highlights for different reading groups (green lemma, orange/blue readings)
-- **Apparatus Background**: Gray background on tokens that have corresponding apparatus entries
-- **Event Delegation**: Robust token click handling that survives DOM updates during creation
 
-### Smart Entry Selection
-- **Intelligent Navigation**: Always selects first non-placeholder entry when opening new locations
-- **Placeholder Handling**: Gracefully handles locations with only placeholder entries (no highlighting)
-- **Consistent Behavior**: Same smart selection across all navigation methods (prev/next, goto, gap clicks)
-
-### UI Improvements
-- **Button Positioning**: "New Reading" button positioned next to "Location Details" heading
-- **Dropdown Reset**: Reading group dropdown resets to clean state for each new creation session
-- **Session Isolation**: Each entry creation session starts fresh without previous reading groups
-
-## Next Tasks
-Continue working on apparatus processing functions and display improvements:
-- Enhanced apparatus data extraction and processing
-- Improved display features and user interaction
-- Additional apparatus editing capabilities
-- Performance optimizations for large apparatus sets

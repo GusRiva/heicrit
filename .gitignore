@@ -38,4 +38,3 @@ Thumbs.db
 # Project specific
 *.xml.backup
 temp_files/
-/test_data/*

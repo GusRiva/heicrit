@@ -821,55 +821,65 @@ class HeiCritApp {
         });
     }
 
-    addHasApparatusClassForPrefix(prefix, tokenSpec) {
-        // Find the syn-line-wit element with matching prefix
-        const witElement = document.querySelector(`.syn-line-wit[data-line-id*="${prefix}:"]`);
-        
-        if (!witElement) return;
+    parseTokenSpec(tokenSpec) {
+        if (tokenSpec.startsWith('left(') && tokenSpec.endsWith(')'))
+            return { type: 'left', id: tokenSpec.slice(5, -1) };
+        if (tokenSpec.startsWith('right(') && tokenSpec.endsWith(')'))
+            return { type: 'right', id: tokenSpec.slice(6, -1) };
+        if (tokenSpec.startsWith('range(') && tokenSpec.endsWith(')')) {
+            const [start, end] = tokenSpec.slice(6, -1).split(',').map(s => s.trim());
+            return { type: 'range', start, end };
+        }
+        return { type: 'single', id: tokenSpec };
+    }
 
+    addHasApparatusClassForPrefix(prefix, tokenSpec) {
+        const witElement = document.querySelector(`.syn-line-wit[data-line-id^="${prefix}:"]`);
+        if (!witElement) return;
         const synLine = witElement.closest('.syn-line');
         if (!synLine) return;
-
         const synLineContent = synLine.querySelector('.syn-line-content');
         if (!synLineContent) return;
 
-        if (tokenSpec.startsWith('range(') && tokenSpec.endsWith(')')) {
-            // Handle range specification like "range(w_12_1, w_12_2)"
-            const rangeContent = tokenSpec.slice(6, -1); // Remove "range(" and ")"
-            const [startToken, endToken] = rangeContent.split(',').map(s => s.trim());
-            
-            this.addHasApparatusClassToTokenRange(synLineContent, startToken, endToken);
+        const spec = this.parseTokenSpec(tokenSpec);
+        if (spec.type === 'range') {
+            this.addHasApparatusClassToTokenRange(synLineContent, spec.start, spec.end);
+        } else if (spec.type === 'left') {
+            const token = synLineContent.querySelector(`.syn-token-pre[data-token-id="${spec.id}"]`);
+            if (token) token.classList.add('has-apparatus');
+        } else if (spec.type === 'right') {
+            const token = synLineContent.querySelector(`.syn-token-post[data-token-id="${spec.id}"]`);
+            if (token) token.classList.add('has-apparatus');
         } else {
-            // Handle single token like "w_12_1"
-            this.addHasApparatusClassToSingleToken(synLineContent, tokenSpec);
+            this.addHasApparatusClassToSingleToken(synLineContent, spec.id);
         }
     }
 
     addHasApparatusClassToSingleToken(container, tokenId) {
-        const token = container.querySelector(`.syn-token[data-token-id="${tokenId}"]`);
+        const token = container.querySelector(`.syn-token:not(.syn-token-pre):not(.syn-token-post)[data-token-id="${tokenId}"]`);
         if (token) {
             token.classList.add('has-apparatus');
         }
     }
 
     addHasApparatusClassToTokenRange(container, startTokenId, endTokenId) {
-        const allTokens = container.querySelectorAll('.syn-token[data-token-id]');
-        
+        const allTokens = container.querySelectorAll('.syn-token:not(.syn-token-pre):not(.syn-token-post)[data-token-id]');
+
         let inRange = false;
         let foundStart = false;
 
         for (const token of allTokens) {
             const tokenId = token.getAttribute('data-token-id');
-            
+
             if (tokenId === startTokenId) {
                 inRange = true;
                 foundStart = true;
             }
-            
+
             if (inRange) {
                 token.classList.add('has-apparatus');
             }
-            
+
             if (tokenId === endTokenId && foundStart) {
                 break;
             }
@@ -939,64 +949,53 @@ class HeiCritApp {
     }
 
     highlightTokensForPrefix(prefix, tokenSpec, type) {
-        // Find the syn-line-wit element with matching prefix
-        const witElement = document.querySelector(`.syn-line-wit[data-line-id*="${prefix}:"]`);
-        
+        const witElement = document.querySelector(`.syn-line-wit[data-line-id^="${prefix}:"]`);
         if (!witElement) return;
-
         const synLine = witElement.closest('.syn-line');
-        
         if (!synLine) return;
-
         const synLineContent = synLine.querySelector('.syn-line-content');
-        
         if (!synLineContent) return;
 
-        if (tokenSpec.startsWith('range(') && tokenSpec.endsWith(')')) {
-            // Handle range specification like "range(w_12_1, w_12_2)"
-            const rangeContent = tokenSpec.slice(6, -1); // Remove "range(" and ")"
-            const [startToken, endToken] = rangeContent.split(',').map(s => s.trim());
-            
-            this.highlightTokenRange(synLineContent, startToken, endToken, type);
+        const spec = this.parseTokenSpec(tokenSpec);
+        if (spec.type === 'range') {
+            this.highlightTokenRange(synLineContent, spec.start, spec.end, type);
+        } else if (spec.type === 'left') {
+            const token = synLineContent.querySelector(`.syn-token-pre[data-token-id="${spec.id}"]`);
+            if (token) token.classList.add(`highlight-${type}`);
+        } else if (spec.type === 'right') {
+            const token = synLineContent.querySelector(`.syn-token-post[data-token-id="${spec.id}"]`);
+            if (token) token.classList.add(`highlight-${type}`);
         } else {
-            // Handle single token like "w_12_1"
-            
-            this.highlightSingleToken(synLineContent, tokenSpec, type);
+            this.highlightSingleToken(synLineContent, spec.id, type);
         }
     }
 
     highlightSingleToken(container, tokenId, type) {
-        const token = container.querySelector(`.syn-token[data-token-id="${tokenId}"]`);
-        
+        const token = container.querySelector(`.syn-token:not(.syn-token-pre):not(.syn-token-post)[data-token-id="${tokenId}"]`);
         if (token) {
             token.classList.add(`highlight-${type}`);
-            
         }
     }
 
     highlightTokenRange(container, startTokenId, endTokenId, type) {
-        const allTokens = container.querySelectorAll('.syn-token[data-token-id]');
-        
+        const allTokens = container.querySelectorAll('.syn-token:not(.syn-token-pre):not(.syn-token-post)[data-token-id]');
+
         let inRange = false;
         let foundStart = false;
 
         for (const token of allTokens) {
             const tokenId = token.getAttribute('data-token-id');
-            
-            
+
             if (tokenId === startTokenId) {
                 inRange = true;
                 foundStart = true;
-                
             }
-            
+
             if (inRange) {
                 token.classList.add(`highlight-${type}`);
-                
             }
-            
+
             if (tokenId === endTokenId && foundStart) {
-                
                 break;
             }
         }
@@ -1016,8 +1015,9 @@ class HeiCritApp {
         
         // Add click handler for any element with data-container-id attribute
         document.addEventListener('click', (e) => {
-            if (e.target.hasAttribute('data-container-id')) {
-                const containerId = e.target.getAttribute('data-container-id');
+            const target = e.target.closest('[data-container-id]');
+            if (target) {
+                const containerId = target.getAttribute('data-container-id');
                 if (containerId) {
                     this.goToCorrespEntry(containerId);
                 }
@@ -1577,16 +1577,18 @@ class HeiCritApp {
             } else {
                 // Lemma content
                 if (entry.lemma && entry.lemma.text) {
-                    html += ` ${this.escapeHtml(entry.lemma.text)}`;
+                    const lemmaHtml = entry.lemma.html ?? this.escapeHtml(entry.lemma.text);
+                    html += ` ${lemmaHtml}`;
                     html += ' ]';
                 }
-                
+
                 // Readings with witnesses
                 if (entry.readings && entry.readings.length > 0) {
                     const readingParts = [];
-                    
+
                     entry.readings.forEach(reading => {
-                        let readingPart = ` ${this.escapeHtml(reading.text)}`;
+                        const readingHtml = reading.html ?? this.escapeHtml(reading.text);
+                        let readingPart = ` ${readingHtml}`;
                         
                         // Add witnesses in italics
                         const wit = reading.attributes?.wit || reading.wit; // Support both new and old format
@@ -2133,7 +2135,12 @@ class HeiCritApp {
         
         if (detailsContent) {
             detailsContent.innerHTML = message;
-            
+
+            // Re-apply clickable attribute to freshly rendered tokens if in creation/edit mode
+            if (this.creationMode || this.editMode) {
+                this.setupTokenClickHandlers(tabId);
+            }
+
             // Trigger token highlighting after synoptic content is loaded
             const tab = this.tabs.get(tabId);
             if (tab && tab.activeSubentryIndex >= 0) {
@@ -2149,8 +2156,6 @@ class HeiCritApp {
 
 
     goToCorrespEntry(containerId) {
-        console.log(containerId);
-        
         if (!containerId) {
             return;
         }
@@ -2164,11 +2169,15 @@ class HeiCritApp {
         }
         
         // Find the entry with the matching corresp (ignoring prefix)
-        // containerId is like "l_5", corresp is like "a:l_5"  
+        // containerId is like "l_5" (from xml:id) or "5" (from @n on a standalone gap)
+        // corresp in entryKeys is like "a:l_5"
         const targetIndex = activeTab.entryKeys.findIndex(corresp => {
-            // Extract the part after the colon (if present)
             const correspSuffix = corresp.includes(':') ? corresp.split(':')[1] : corresp;
-            return correspSuffix === containerId;
+            if (correspSuffix === containerId) return true;
+            // Also match against the loc value (for standalone gaps where data-container-id is @n)
+            const entries = activeTab.groupedEntries[corresp];
+            if (entries && entries.length > 0 && String(entries[0].loc) === containerId) return true;
+            return false;
         });
         
         if (targetIndex !== -1) {
@@ -2649,41 +2658,53 @@ class HeiCritApp {
         // Get witness information to distinguish tokens with same ID from different witnesses
         const witnessInfo = this.getWitnessInfoFromLine(synLine);
         const witnessId = witnessInfo ? witnessInfo.witnessId : null;
-        
-        // Find which group (if any) currently contains this specific token (same tokenId AND witnessId)
+        const isPreSpace = token.classList.contains('syn-token-pre');
+        const isPostSpace = token.classList.contains('syn-token-post');
+
+        // Find which group (if any) currently contains this specific token
+        // Match on tokenId, witnessId, AND pre/post space type (pre-space and word share the same tokenId)
         let currentGroup = null;
         for (const group of Object.keys(this.selectedTokens)) {
-            if (this.selectedTokens[group] && this.selectedTokens[group].some(t => 
-                t.tokenId === tokenId && t.witnessInfo && t.witnessInfo.witnessId === witnessId)) {
+            if (this.selectedTokens[group] && this.selectedTokens[group].some(t =>
+                t.tokenId === tokenId &&
+                t.witnessInfo && t.witnessInfo.witnessId === witnessId &&
+                !!t.isPreSpace === isPreSpace &&
+                !!t.isPostSpace === isPostSpace)) {
                 currentGroup = group;
                 break;
             }
         }
-        
+
+        const sameToken = t =>
+            t.tokenId === tokenId &&
+            t.witnessInfo && t.witnessInfo.witnessId === witnessId &&
+            !!t.isPreSpace === isPreSpace &&
+            !!t.isPostSpace === isPostSpace;
+
         if (currentGroup === readingGroup) {
             // Token is already in target group - remove it (toggle off)
-            this.selectedTokens[readingGroup] = this.selectedTokens[readingGroup].filter(t => 
-                !(t.tokenId === tokenId && t.witnessInfo && t.witnessInfo.witnessId === witnessId));
+            this.selectedTokens[readingGroup] = this.selectedTokens[readingGroup].filter(t => !sameToken(t));
             token.classList.remove(`selected-${readingGroup}`);
         } else {
             // Remove token from current group (if any)
             if (currentGroup && this.selectedTokens[currentGroup]) {
-                this.selectedTokens[currentGroup] = this.selectedTokens[currentGroup].filter(t => 
-                    !(t.tokenId === tokenId && t.witnessInfo && t.witnessInfo.witnessId === witnessId));
+                this.selectedTokens[currentGroup] = this.selectedTokens[currentGroup].filter(t => !sameToken(t));
                 token.classList.remove(`selected-${currentGroup}`);
             }
-            
+
             // Add token to target group
             if (!this.selectedTokens[readingGroup]) {
                 this.selectedTokens[readingGroup] = [];
             }
-            
+
             this.selectedTokens[readingGroup].push({
                 tokenId: tokenId,
                 text: token.textContent.trim(),
-                witnessInfo: witnessInfo
+                witnessInfo: witnessInfo,
+                isPreSpace: isPreSpace,
+                isPostSpace: isPostSpace
             });
-            
+
             token.classList.add(`selected-${readingGroup}`);
         }
         
@@ -2887,52 +2908,62 @@ class HeiCritApp {
     }
     
     parseTokensFromCorresp(corresp) {
-        // Parse corresp like "a:w_7_2 a:w_7_3" or "bb:w_2_4 bb:w_2_5"
         const tokens = [];
         const tokenRefs = corresp.split(' ');
-        
+
         tokenRefs.forEach(ref => {
-            if (ref.includes(':')) {
-                const [prefix, tokenId] = ref.split(':');
-                
-                // Find ALL token elements with this tokenId
-                const tokenElements = document.querySelectorAll(`[data-token-id="${tokenId}"]`);
-                
-                // Find the one that matches the expected prefix
-                let foundToken = false;
-                tokenElements.forEach(tokenElement => {
-                    const synLine = tokenElement.closest('.syn-line');
-                    const witnessInfo = this.getWitnessInfoFromLine(synLine);
-                    
-                    if (witnessInfo && witnessInfo.prefix === prefix) {
-                        const tokenData = {
-                            tokenId: tokenId,
-                            text: tokenElement.textContent.trim(),
-                            witnessInfo: witnessInfo
-                        };
-                        tokens.push(tokenData);
-                        foundToken = true;
-                    }
-                });
-                
-            }
+            if (!ref.includes(':')) return;
+            const colonIndex = ref.indexOf(':');
+            const prefix = ref.substring(0, colonIndex);
+            const tokenSpec = ref.substring(colonIndex + 1);
+
+            const spec = this.parseTokenSpec(tokenSpec);
+            if (spec.type === 'range') return; // ranges not pre-selected in edit mode
+
+            const tokenId = spec.id;
+            const isPreSpace = spec.type === 'left';
+            const isPostSpace = spec.type === 'right';
+
+            const tokenElements = document.querySelectorAll(`[data-token-id="${tokenId}"]`);
+
+            tokenElements.forEach(tokenElement => {
+                // Match the correct span type
+                const elIsPreSpace = tokenElement.classList.contains('syn-token-pre');
+                const elIsPostSpace = tokenElement.classList.contains('syn-token-post');
+                if (elIsPreSpace !== isPreSpace || elIsPostSpace !== isPostSpace) return;
+
+                const synLine = tokenElement.closest('.syn-line');
+                const witnessInfo = this.getWitnessInfoFromLine(synLine);
+
+                if (witnessInfo && witnessInfo.prefix === prefix) {
+                    tokens.push({
+                        tokenId: tokenId,
+                        text: tokenElement.textContent.trim(),
+                        witnessInfo: witnessInfo,
+                        isPreSpace: isPreSpace,
+                        isPostSpace: isPostSpace
+                    });
+                }
+            });
         });
-        
+
         return tokens;
     }
     
     applyTokenSelections(tabId) {
-        
-        // Apply visual selection classes based on selectedTokens
         Object.keys(this.selectedTokens).forEach(group => {
             this.selectedTokens[group].forEach(tokenData => {
-                // Find ALL elements with this tokenId and pick the right witness
                 const tokenElements = document.querySelectorAll(`[data-token-id="${tokenData.tokenId}"]`);
-                
+
                 tokenElements.forEach(tokenElement => {
+                    // Only apply to the matching span type (pre-space, post-space, or word)
+                    const elIsPreSpace = tokenElement.classList.contains('syn-token-pre');
+                    const elIsPostSpace = tokenElement.classList.contains('syn-token-post');
+                    if (!!elIsPreSpace !== !!tokenData.isPreSpace || !!elIsPostSpace !== !!tokenData.isPostSpace) return;
+
                     const synLine = tokenElement.closest('.syn-line');
                     const witnessInfo = this.getWitnessInfoFromLine(synLine);
-                    
+
                     if (witnessInfo && witnessInfo.witnessId === tokenData.witnessInfo.witnessId) {
                         tokenElement.classList.add(`selected-${group}`);
                     }
@@ -3228,6 +3259,57 @@ class HeiCritApp {
         return '1'; // Default location
     }
     
+    getAnchorWordText(tokenData) {
+        const witElement = document.querySelector(`.syn-line-wit[data-line-id^="${tokenData.witnessInfo.prefix}:"]`);
+        if (!witElement) return '';
+        const synLine = witElement.closest('.syn-line');
+        if (!synLine) return '';
+        const wordSpan = synLine.querySelector(`.syn-tei-w[data-token-id="${tokenData.tokenId}"]`);
+        return wordSpan ? wordSpan.textContent.trim() : '';
+    }
+
+    tokenSortKey(tokenId) {
+        const m = tokenId.match(/w_(\d+)_(\d+)/);
+        return m ? parseInt(m[1]) * 100000 + parseInt(m[2]) : 0;
+    }
+
+    buildCorrespForTokens(prefix, tokens) {
+        const wordTokens = tokens.filter(t => !t.isPreSpace && !t.isPostSpace);
+        const prePostParts = tokens
+            .filter(t => t.isPreSpace || t.isPostSpace)
+            .map(t => t.isPreSpace ? `${prefix}:left(${t.tokenId})` : `${prefix}:right(${t.tokenId})`);
+
+        let wordPart;
+        if (wordTokens.length >= 2) {
+            const sorted = [...wordTokens].sort((a, b) => this.tokenSortKey(a.tokenId) - this.tokenSortKey(b.tokenId));
+            wordPart = `${prefix}:range(${sorted[0].tokenId}, ${sorted[sorted.length - 1].tokenId})`;
+        } else if (wordTokens.length === 1) {
+            wordPart = `${prefix}:${wordTokens[0].tokenId}`;
+        }
+
+        return [...prePostParts, ...(wordPart ? [wordPart] : [])].join(' ');
+    }
+
+    buildLeftContent(tokenData) {
+        const anchorWord = this.getAnchorWordText(tokenData);
+        const tail = anchorWord ? ` ${anchorWord}` : '';
+        return {
+            text: `vor${tail}`,
+            html: `<em>vor</em>${this.escapeHtml(tail)}`,
+            children: [{ tag: 'emph', text: 'vor', tail: tail }]
+        };
+    }
+
+    buildRightContent(tokenData) {
+        const anchorWord = this.getAnchorWordText(tokenData);
+        const tail = anchorWord ? ` ${anchorWord}` : '';
+        return {
+            text: `nach${tail}`,
+            html: `<em>nach</em>${this.escapeHtml(tail)}`,
+            children: [{ tag: 'emph', text: 'nach', tail: tail }]
+        };
+    }
+
     createApparatusEntry(loc) {
         const entry = {
             loc: loc,
@@ -3239,12 +3321,33 @@ class HeiCritApp {
         // Process lemma
         if (this.selectedTokens.lemma && this.selectedTokens.lemma.length > 0) {
             const lemmaTokens = this.selectedTokens.lemma;
-            const lemmaText = lemmaTokens.map(t => t.text).join(' ');
-            const lemmaCorresp = lemmaTokens.map(t => `${lemmaTokens[0].witnessInfo.prefix}:${t.tokenId}`).join(' ');
+            const lemmaPrefix = lemmaTokens[0].witnessInfo.prefix;
+            const lemmaCorresp = this.buildCorrespForTokens(lemmaPrefix, lemmaTokens);
             const lemmaWit = `#${lemmaTokens[0].witnessInfo.witnessId}`;
-            
+
+            const preSpaceToken = lemmaTokens.find(t => t.isPreSpace);
+            const postSpaceToken = lemmaTokens.find(t => t.isPostSpace);
+            let lemmaText, lemmaHtml, lemmaChildren;
+            if (preSpaceToken) {
+                const content = this.buildLeftContent(preSpaceToken);
+                lemmaText = content.text;
+                lemmaHtml = content.html;
+                lemmaChildren = content.children;
+            } else if (postSpaceToken) {
+                const content = this.buildRightContent(postSpaceToken);
+                lemmaText = content.text;
+                lemmaHtml = content.html;
+                lemmaChildren = content.children;
+            } else {
+                lemmaText = lemmaTokens.map(t => t.text).join(' ');
+                lemmaHtml = null;
+                lemmaChildren = null;
+            }
+
             entry.lemma = {
                 text: lemmaText,
+                ...(lemmaHtml && { html: lemmaHtml }),
+                ...(lemmaChildren && { children: lemmaChildren }),
                 attributes: {
                     wit: lemmaWit,
                     corresp: lemmaCorresp
@@ -3270,19 +3373,37 @@ class HeiCritApp {
                 // Get reading text from the first witness only
                 const firstWitnessId = Object.keys(witGroups)[0];
                 const firstWitnessTokens = witGroups[firstWitnessId];
-                const readingText = firstWitnessTokens.map(t => t.text).join(' ');
-                
+                const firstPreSpace = firstWitnessTokens.find(t => t.isPreSpace);
+                const firstPostSpace = firstWitnessTokens.find(t => t.isPostSpace);
+
+                let readingText, readingHtml, readingChildren;
+                if (firstPreSpace) {
+                    const content = this.buildLeftContent(firstPreSpace);
+                    readingText = content.text;
+                    readingHtml = content.html;
+                    readingChildren = content.children;
+                } else if (firstPostSpace) {
+                    const content = this.buildRightContent(firstPostSpace);
+                    readingText = content.text;
+                    readingHtml = content.html;
+                    readingChildren = content.children;
+                } else {
+                    readingText = firstWitnessTokens.map(t => t.text).join(' ');
+                    readingHtml = null;
+                    readingChildren = null;
+                }
+
                 // Create corresp and wit attributes
                 const witIds = Object.keys(witGroups).map(id => `#${id}`).join(' ');
                 const correspParts = [];
                 Object.entries(witGroups).forEach(([witId, tokens]) => {
-                    const witnessInfo = tokens[0].witnessInfo;
-                    const tokenIds = tokens.map(t => `${witnessInfo.prefix}:${t.tokenId}`).join(' ');
-                    correspParts.push(tokenIds);
+                    correspParts.push(this.buildCorrespForTokens(tokens[0].witnessInfo.prefix, tokens));
                 });
-                
+
                 entry.readings.push({
                     text: readingText,
+                    ...(readingHtml && { html: readingHtml }),
+                    ...(readingChildren && { children: readingChildren }),
                     attributes: {
                         wit: witIds,
                         corresp: correspParts.join(' ')

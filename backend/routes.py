@@ -318,7 +318,7 @@ def parse_main_text_file_content(content):
                           parameters= {'witness_mapping': witness_mapping, 
                                        'synoptic_map': synoptic_map.get_loci()})
         
-        result = pipeline.execute(content, serial=True)
+        result = pipeline.execute(content, input_format="xml_string")
         return result
         
     except Exception as e:
@@ -701,31 +701,42 @@ def save_apparatus_entries():
         return jsonify({'error': f'Failed to save apparatus entries: {str(e)}'}), 500
 
 
+def _set_element_content(element, data):
+    """Set element text/children content from entry data dict."""
+    TEI = 'http://www.tei-c.org/ns/1.0'
+    children = data.get('children')
+    if children:
+        element.text = None
+        for child_data in children:
+            child = et.SubElement(element, f'{{{TEI}}}{child_data["tag"]}')
+            child.text = child_data.get('text', '')
+            child.tail = child_data.get('tail', '')
+    else:
+        element.text = data.get('text', '')
+
+
 def create_apparatus_element(entry_data):
     """
     Create an XML apparatus element from entry data
     """
-    app = et.Element('{http://www.tei-c.org/ns/1.0}app')
+    TEI = 'http://www.tei-c.org/ns/1.0'
+    app = et.Element(f'{{{TEI}}}app')
     app.set('loc', str(entry_data['loc']))
     app.set('corresp', entry_data['corresp'])
-    
-    # Add lemma if present
+
     if entry_data.get('lemma'):
         lemma_data = entry_data['lemma']
-        lemma = et.SubElement(app, '{http://www.tei-c.org/ns/1.0}lem')
-        lemma.text = lemma_data['text']
-        
+        lemma = et.SubElement(app, f'{{{TEI}}}lem')
+        _set_element_content(lemma, lemma_data)
         for attr_name, attr_value in lemma_data['attributes'].items():
             lemma.set(attr_name, attr_value)
-    
-    # Add readings
+
     for reading_data in entry_data.get('readings', []):
-        rdg = et.SubElement(app, '{http://www.tei-c.org/ns/1.0}rdg')
-        rdg.text = reading_data['text']
-        
+        rdg = et.SubElement(app, f'{{{TEI}}}rdg')
+        _set_element_content(rdg, reading_data)
         for attr_name, attr_value in reading_data['attributes'].items():
             rdg.set(attr_name, attr_value)
-    
+
     return app
 
 

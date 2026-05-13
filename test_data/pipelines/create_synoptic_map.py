@@ -8,7 +8,7 @@ import config
 sigla_mapping = config.mapping
 
 create_synopse_graphs(
-    [f"texts/{x}" for x in os.listdir('texts') if 'tr' not in x and 'AH' in x], 
+    [f"texts/{x}" for x in os.listdir('texts') if 'tr' not in x and 'Iwein' in x], 
     # ["texts/test.xml", "texts/test2.xml", "texts/test3.xml"],
                sigla_mapping,
                map_criterion= 'xml:id'

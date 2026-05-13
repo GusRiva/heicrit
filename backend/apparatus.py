@@ -8,10 +8,25 @@ maintain the codebase.
 
 from typing import Dict, List, Optional, Any
 from io import BytesIO
+from html import escape as html_escape
 from lxml import etree as et
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns, prefix_format
 from load_functions import resolve_relative_path, find_file_in_project
+
+
+def _inline_to_html(element) -> str:
+    """Convert inline TEI content to safe HTML, mapping <emph> to <em>."""
+    result = html_escape(element.text or '')
+    for child in element:
+        local = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+        inner = _inline_to_html(child)
+        if local == 'emph':
+            result += f'<em>{inner}</em>'
+        else:
+            result += inner
+        result += html_escape(child.tail or '')
+    return result
 
 
 class Apparatus:
@@ -129,14 +144,16 @@ class Apparatus:
                 if lem_element is not None:
                     entry['lemma'] = {
                         'text': ''.join(lem_element.itertext()).strip(),
+                        'html': _inline_to_html(lem_element).strip(),
                         'attributes': dict(lem_element.attrib)
                     }
-                
+
                 # Extract readings
                 rdg_elements = app.xpath('.//tei:rdg', namespaces=ns)
                 for rdg in rdg_elements:
                     reading = {
                         'text': ''.join(rdg.itertext()).strip(),
+                        'html': _inline_to_html(rdg).strip(),
                         'attributes': dict(rdg.attrib)
                     }
                     entry['readings'].append(reading)
@@ -399,7 +416,7 @@ def process_synoptic_token(el:et.Element) -> str:
     result = ''
     if tag_name in ['w', 'pc']:
         xml_id = el.get(prefix_format('xml','id'))
-        result += f"<span class='syn-token syn-token-pre' data-token-id={xml_id}> </span><span class='syn-token syn-tei-{tag_name}' data-token-id='{xml_id}'>"
+        result += f"<span class='syn-token syn-token-pre' data-token-id='{xml_id}'> </span><span class='syn-token syn-tei-{tag_name}' data-token-id='{xml_id}'>"
         if el.text is not None:
             result += el.text.strip()
         for child in el:
@@ -429,19 +446,33 @@ def process_synoptic_token(el:et.Element) -> str:
     return result
 
 
+def _last_token_id(element) -> str:
+    """Return the xml:id of the last w or pc element in the subtree (document order)."""
+    last_id = None
+    for el in element.iter():
+        if not isinstance(el.tag, str):  # skip comments and processing instructions
+            continue
+        tag = el.tag.split('}')[-1] if '}' in el.tag else el.tag
+        if tag in ['w', 'pc']:
+            xml_id = el.get(prefix_format('xml', 'id'))
+            if xml_id:
+                last_id = xml_id
+    return last_id
+
+
 def process_synoptic_unit_for_comparison(element:et.Element) -> str:
     """
     Process an XML synoptic unit and return a string representation for comparison.
-    
+
     Args:
         element: The lxml etree Element to process
-        
+
     Returns:
         String representation of the element content
     """
     if element is None:
         return '<div class="synoptic-content-no-data">Stelle nicht gefunden</div>'
-    
+
     try:
         # Get the text content of the element, stripping whitespace
         # line_content = ''.join(element.itertext()).strip()
@@ -449,7 +480,9 @@ def process_synoptic_unit_for_comparison(element:et.Element) -> str:
         for el in element:
             line_content += process_synoptic_token(el)
         if line_content:
-            line_content += "<span class='syn-token syn-token-post'> </span>"
+            last_id = _last_token_id(element)
+            post_attr = f" data-token-id='{last_id}'" if last_id else ''
+            line_content += f"<span class='syn-token syn-token-post'{post_attr}> </span>"
         else:
         # If no text content, try to get element info
             tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
