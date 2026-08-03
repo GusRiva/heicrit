@@ -1,16 +1,18 @@
+import os
 from lxml import etree as et
 
 from heipy.namespaces import prefix_format
 from heipy.heipipe.steps import Pipeline, DeleteStep, XsltStep
-from heipy.heipipe.step_library import container2milestone, whitespaces, move_layout_milestones, number_line_segment_beginnings, suppress_first_cb
+from heipy.heipipe.step_library import container2milestone, whitespaces, move_layout_milestones, number_line_segment_beginnings
 from heipy.heipipe.step_library.append_synoptic_links import parse_target
 from heipy.heipipe.pipeline_library.synoptic import milestone_element_map
 
+_xslt_dir = os.path.join(os.path.dirname(__file__), 'xslt')
 
-reduce_markup = XsltStep(files=['xslt/reduce_markup.xsl'],
+reduce_markup = XsltStep(files=[os.path.join(_xslt_dir, 'reduce_markup.xsl')],
                             name="reduce_markup",)
 
-create_html = XsltStep(files=['xslt/create_html.xsl'],
+create_html = XsltStep(files=[os.path.join(_xslt_dir, 'create_html.xsl')],
                             name="create_html",)
 
 
@@ -18,7 +20,7 @@ class HeiCritPipe(Pipeline):
     def __init__(self):
         # Add any steps that need specific parameters
         container2milestone_step = container2milestone.get_step()
-        container2milestone_step.set_parameter_by_name('element_map', milestone_element_map)
+        container2milestone_step.set_parameter('element_map', milestone_element_map)
         
         # SourceDoc Pipeline Standard
         pipe_steps = [

@@ -7,6 +7,7 @@ class HeiCritApp {
         this.highlightCode = null;
         this.apparatusData = null;
         this.synopticMapData = null;
+        this.synopticMapFile = null; // Absolute path to synoptic map XML file
         this.mainTextData = null; // Store main text data
         this.leithsInfo = null; // Store leiths-info with siglum
         this.witnessOrder = []; // Store witness order from apparatus listWit
@@ -194,8 +195,19 @@ class HeiCritApp {
                     <pre id="editor-highlight-${tabId}" class="editor-highlight"><code id="editor-code-${tabId}" class="language-xml"></code></pre>
                 </div>
             `;
+        } else if (tab.type === 'synoptic-editor') {
+            panel.innerHTML = `
+                <div class="synoptic-editor-container">
+                    <div class="synoptic-editor-toolbar">
+                        <button class="apparatus-btn" id="save-synoptic-btn-${tabId}">Save</button>
+                        <button class="apparatus-btn apparatus-btn-secondary" id="add-row-btn-${tabId}">+ Add Row</button>
+                        <span class="synoptic-editor-status" id="synoptic-editor-status-${tabId}"></span>
+                    </div>
+                    <div class="synoptic-table-wrapper" id="synoptic-table-wrapper-${tabId}"></div>
+                </div>
+            `;
         }
-        
+
         document.getElementById('tabContent').appendChild(panel);
         return panel;
     }
@@ -228,6 +240,11 @@ class HeiCritApp {
             if (tab.data) {
                 this.loadProjectDataIntoTab(tab.id, tab.data);
             }
+        } else if (tab.type === 'synoptic-editor') {
+            if (tab.data) {
+                this.renderSynopticTable(tab.id, tab.data);
+            }
+            this.setupSynopticEditorEvents(tab.id);
         }
     }
 
@@ -356,11 +373,11 @@ class HeiCritApp {
         const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
         const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
-        
+
         if (newVariantBtn) {
             newVariantBtn.addEventListener('click', () => this.toggleCreationMode(tabId));
         }
-        
+
         if (editVariantBtn) {
             editVariantBtn.addEventListener('click', () => this.toggleEditMode(tabId));
         }
@@ -1012,6 +1029,7 @@ class HeiCritApp {
         
         // Toolbar icon events
         document.getElementById('openProjectDirectoryIcon').addEventListener('click', () => this.openProjectDirectory());
+        document.getElementById('editSynopticMapIcon').addEventListener('click', () => this.openSynopticEditor());
         
         // Add click handler for any element with data-container-id attribute
         document.addEventListener('click', (e) => {
@@ -1212,24 +1230,56 @@ class HeiCritApp {
         const apparatusFiles = Array.from(this.projectFiles.entries())
             .filter(([path]) => path.includes('/apparatus/') && path.endsWith('.xml'))
             .map(([path, fileData]) => ({ path, ...fileData }));
-        
+
         // Look for synoptic map files in synopses/ directory
         const synopticFiles = Array.from(this.projectFiles.entries())
             .filter(([path]) => path.includes('/synopses/') && path.endsWith('.xml'))
             .map(([path, fileData]) => ({ path, ...fileData }));
-        
-        // Process apparatus file if found
-        if (apparatusFiles.length > 0) {
-            const apparatusFile = apparatusFiles[0]; // Use first apparatus file found
-            await this.processApparatusFileFromProject(apparatusFile.content, apparatusFile.path);
-        }
-        
+
+        // Stash discovered synoptic candidates so the synoptic-load fallback
+        // step (processApparatusInSteps) can offer them if the apparatus's
+        // declared synoptic map (corresp) fails to resolve.
+        this.candidateSynopticFiles = synopticFiles;
+
         if (apparatusFiles.length === 0 && synopticFiles.length === 0) {
             this.updateStatus('No apparatus or synoptic map files found in project directory');
             this.showErrorPopup('No Files Found', 'No apparatus files found in apparatus/ directory or synoptic map files found in synopses/ directory.');
             return;
         }
-        
+
+        // Process apparatus file if found
+        if (apparatusFiles.length === 1) {
+            await this.processApparatusFileFromProject(apparatusFiles[0].content, apparatusFiles[0].path);
+        } else if (apparatusFiles.length > 1) {
+            // Hide the loading overlay while the user makes a choice
+            this.hideLoadingPopup();
+
+            const chosen = await new Promise(resolve => {
+                this.showFilePickerPopup({
+                    title: 'Multiple Apparatus Files Found',
+                    description: 'This project contains more than one apparatus file. Choose which one to open.',
+                    candidates: apparatusFiles.map(f => ({
+                        path: f.path,
+                        label: this.extractApparatusTitle(f.content) || f.path.split('/').pop(),
+                        sublabel: f.path,
+                        content: f.content
+                    })),
+                    onSelect: (candidate) => resolve(candidate),
+                    onCancel: () => resolve(null)
+                });
+            });
+
+            if (!chosen) {
+                this.projectFiles.clear();
+                this.currentProjectDirectory = null;
+                this.updateStatus('Project open cancelled');
+                return;
+            }
+
+            this.showLoadingPopup();
+            await this.processApparatusFileFromProject(chosen.content, chosen.path);
+        }
+
         // Small delay to show the final step
         setTimeout(() => {
             this.updateLoadingStep('step-display', 'completed');
@@ -1285,6 +1335,77 @@ class HeiCritApp {
         }
     }
 
+    // Loads the synoptic map for the current apparatus, following the
+    // apparatus's declared corresp first. If that can't be resolved, falls
+    // back to the project's discovered synoptic candidates: auto-selects
+    // when there's exactly one, prompts the user when there are several,
+    // and otherwise proceeds with an empty synoptic map (visible via status).
+    async resolveSynopticMap(projectFiles, filepath, leithsPrefix) {
+        const synopticResponse = await this.apiRequest('/synoptic/load', {
+            method: 'POST',
+            body: JSON.stringify({
+                project_files: projectFiles,
+                apparatus_filepath: filepath,
+                leiths_prefix: leithsPrefix
+            })
+        });
+
+        if (!synopticResponse.success || synopticResponse.synoptic_loaded) {
+            return synopticResponse;
+        }
+
+        const candidates = this.candidateSynopticFiles || [];
+
+        if (candidates.length === 0) {
+            this.updateStatus('Warning: No synoptic map file found or resolved — proceeding without synoptic data.');
+            return synopticResponse;
+        }
+
+        let chosenPath = null;
+        if (candidates.length === 1) {
+            chosenPath = candidates[0].path;
+        } else {
+            this.hideLoadingPopup();
+            const chosen = await new Promise(resolve => {
+                this.showFilePickerPopup({
+                    title: 'Choose Synoptic Map File',
+                    description: 'The apparatus file does not declare a synoptic map that could be resolved. Choose which synoptic map to use.',
+                    candidates: candidates.map(f => ({
+                        path: f.path,
+                        label: this.extractApparatusTitle(f.content) || f.path.split('/').pop(),
+                        sublabel: f.path
+                    })),
+                    onSelect: (candidate) => resolve(candidate),
+                    onCancel: () => resolve(null)
+                });
+            });
+            this.showLoadingPopup();
+            this.updateLoadingStep('step-witnesses', 'completed');
+            this.updateLoadingStep('step-synoptic', 'active');
+            if (!chosen) {
+                this.updateStatus('Warning: No synoptic map selected — proceeding without synoptic data.');
+                return synopticResponse;
+            }
+            chosenPath = chosen.path;
+        }
+
+        const retryResponse = await this.apiRequest('/synoptic/load', {
+            method: 'POST',
+            body: JSON.stringify({
+                project_files: projectFiles,
+                apparatus_filepath: filepath,
+                leiths_prefix: leithsPrefix,
+                synoptic_filepath: chosenPath
+            })
+        });
+
+        if (retryResponse.success && !retryResponse.synoptic_loaded) {
+            this.updateStatus('Warning: Could not load the selected synoptic map file — proceeding without synoptic data.');
+        }
+
+        return retryResponse;
+    }
+
     async processApparatusInSteps(content, filepath) {
         try {
             const projectFiles = this.getProjectFileList();
@@ -1332,15 +1453,8 @@ class HeiCritApp {
             this.updateLoadingStep('step-synoptic', 'active');
             this.updateStatus('Processing synoptic map...');
             
-            const synopticResponse = await this.apiRequest('/synoptic/load', {
-                method: 'POST',
-                body: JSON.stringify({
-                    project_files: projectFiles,
-                    apparatus_filepath: filepath,
-                    leiths_prefix: witnessResponse.leiths_prefix
-                })
-            });
-            
+            const synopticResponse = await this.resolveSynopticMap(projectFiles, filepath, witnessResponse.leiths_prefix);
+
             if (!synopticResponse.success) {
                 this.showErrorPopup('Processing Error', synopticResponse.error || 'Failed to process synoptic map');
                 return;
@@ -1442,6 +1556,11 @@ class HeiCritApp {
                 count: result.synoptic_map_count || 0
             };
         }
+
+        // Store synoptic map file path for the spreadsheet editor
+        if (result.synoptic_file) {
+            this.synopticMapFile = result.synoptic_file;
+        }
         
         // Store main text data if available
         if (result.main_text) {
@@ -1494,7 +1613,8 @@ class HeiCritApp {
                 filename: projectName,
                 // Add project paths for save functionality
                 projectDirectory: this.currentProjectDirectory,
-                apparatusFile: this.currentApparatusFile
+                apparatusFile: this.currentApparatusFile,
+                synopticMapFile: this.synopticMapFile
             });
             
             const apparatusCount = this.apparatusData ? this.apparatusData.count : 0;
@@ -1916,6 +2036,99 @@ class HeiCritApp {
         }
     }
 
+    // Extract a human-readable title from an apparatus/synoptic XML document,
+    // for use as a picker label. Returns null if no title is present.
+    extractApparatusTitle(xmlContent) {
+        try {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
+            if (xmlDoc.querySelector('parsererror')) {
+                return null;
+            }
+            const titleEl = xmlDoc.querySelector('title[ana="hc:MainTitle"]') || xmlDoc.querySelector('title');
+            const text = titleEl ? titleEl.textContent.trim() : '';
+            return text || null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    // Generic "choose one of several files" modal. candidates is an array of
+    // { path, label, sublabel }. Exactly one of onSelect/onCancel is called.
+    showFilePickerPopup({ title, description, candidates, onSelect, onCancel }) {
+        this.hideFilePickerPopup();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'picker-overlay';
+
+        const popup = document.createElement('div');
+        popup.className = 'picker-popup';
+
+        const heading = document.createElement('h3');
+        heading.textContent = title;
+        popup.appendChild(heading);
+
+        if (description) {
+            const desc = document.createElement('p');
+            desc.textContent = description;
+            popup.appendChild(desc);
+        }
+
+        const list = document.createElement('div');
+        list.className = 'picker-list';
+        candidates.forEach(candidate => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'picker-item';
+
+            const label = document.createElement('div');
+            label.className = 'picker-item-label';
+            label.textContent = candidate.label;
+            item.appendChild(label);
+
+            const sublabel = document.createElement('div');
+            sublabel.className = 'picker-item-sublabel';
+            sublabel.textContent = candidate.sublabel;
+            item.appendChild(sublabel);
+
+            item.addEventListener('click', () => {
+                overlay.remove();
+                if (onSelect) onSelect(candidate);
+            });
+
+            list.appendChild(item);
+        });
+        popup.appendChild(list);
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'apparatus-btn apparatus-btn-secondary picker-cancel-btn';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.addEventListener('click', () => {
+            overlay.remove();
+            if (onCancel) onCancel();
+        });
+        popup.appendChild(cancelBtn);
+
+        overlay.appendChild(popup);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                if (onCancel) onCancel();
+            }
+        });
+
+        document.body.appendChild(overlay);
+    }
+
+    hideFilePickerPopup() {
+        const overlay = document.querySelector('.picker-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
     showFileLoadingPopup() {
         // Remove existing loading popup if present
         const existingPopup = document.querySelector('.file-loading-overlay');
@@ -2224,6 +2437,213 @@ class HeiCritApp {
                 synopticUnit.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
+    }
+
+    // Synoptic map editor methods
+    async openSynopticEditor() {
+        if (!this.synopticMapFile) {
+            alert('No synoptic map available. Please open a project first.');
+            return;
+        }
+        try {
+            const response = await this.apiRequest('/synoptic/table', {
+                method: 'POST',
+                body: JSON.stringify({ file_path: this.synopticMapFile })
+            });
+            if (response.witnesses && response.rows) {
+                this.createTab('synoptic-editor', 'Synoptic Map', null, response);
+            } else {
+                alert('Could not load synoptic map data.');
+            }
+        } catch (err) {
+            alert('Error loading synoptic map: ' + err.message);
+        }
+    }
+
+    renderSynopticTable(tabId, data) {
+        const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
+        if (!wrapper) return;
+
+        const { witnesses, rows } = data;
+
+        let html = '<table class="synoptic-table">';
+        // Header
+        html += '<thead><tr>';
+        html += '<th title="Row ID">n</th>';
+        for (const w of witnesses) {
+            const label = w.siglum || w.prefix;
+            html += `<th title="${w.prefix}">${label}</th>`;
+        }
+        html += '</tr></thead>';
+
+        // Body
+        html += '<tbody>';
+        rows.forEach((row, rowIdx) => {
+            html += `<tr data-row-index="${rowIdx}">`;
+            html += `<td><input class="syn-cell syn-n-cell" data-row-index="${rowIdx}" data-col-index="0" value="${row.n || ''}"></td>`;
+            witnesses.forEach((w, colIdx) => {
+                const val = (row.cells && row.cells[w.prefix]) ? row.cells[w.prefix] : '';
+                html += `<td><input class="syn-cell" data-prefix="${w.prefix}" data-row-index="${rowIdx}" data-col-index="${colIdx + 1}" value="${val}"></td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody>';
+        html += '</table>';
+
+        wrapper.innerHTML = html;
+        // Store witnesses for later use (adding rows)
+        wrapper.dataset.witnesses = JSON.stringify(witnesses);
+    }
+
+    setupSynopticEditorEvents(tabId) {
+        const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
+        const saveBtn = document.getElementById(`save-synoptic-btn-${tabId}`);
+        const addRowBtn = document.getElementById(`add-row-btn-${tabId}`);
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveSynopticTable(tabId));
+        }
+        if (addRowBtn) {
+            addRowBtn.addEventListener('click', () => this.addSynopticRow(tabId));
+        }
+
+        if (!wrapper) return;
+
+        wrapper.addEventListener('keydown', (e) => {
+            const input = e.target;
+            if (!input.classList.contains('syn-cell')) return;
+
+            const rowIdx = parseInt(input.dataset.rowIndex, 10);
+            const colIdx = parseInt(input.dataset.colIndex, 10);
+            const table = wrapper.querySelector('.synoptic-table');
+            const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
+            const totalCols = rows[0] ? rows[0].querySelectorAll('.syn-cell').length : 0;
+
+            const getCell = (r, c) => {
+                if (r < 0 || r >= rows.length) return null;
+                const cells = rows[r].querySelectorAll('.syn-cell');
+                if (c < 0 || c >= cells.length) return null;
+                return cells[c];
+            };
+
+            if (e.key === 'Tab' && !e.shiftKey) {
+                e.preventDefault();
+                const next = getCell(rowIdx, colIdx + 1) || getCell(rowIdx + 1, 0);
+                if (next) next.focus();
+                else this.addSynopticRow(tabId);
+            } else if (e.key === 'Tab' && e.shiftKey) {
+                e.preventDefault();
+                const prev = getCell(rowIdx, colIdx - 1) || getCell(rowIdx - 1, totalCols - 1);
+                if (prev) prev.focus();
+            } else if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const below = getCell(rowIdx + 1, colIdx);
+                if (below) below.focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const above = getCell(rowIdx - 1, colIdx);
+                if (above) above.focus();
+            } else if (e.key === 'd' && e.ctrlKey) {
+                e.preventDefault();
+                const above = getCell(rowIdx - 1, colIdx);
+                if (above) input.value = above.value;
+            } else if (e.key === 's' && e.ctrlKey) {
+                e.preventDefault();
+                this.saveSynopticTable(tabId);
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                const first = getCell(rowIdx, 0);
+                if (first) first.focus();
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                const last = getCell(rowIdx, totalCols - 1);
+                if (last) last.focus();
+            }
+        });
+    }
+
+    async saveSynopticTable(tabId) {
+        const tab = this.tabs.get(tabId);
+        const statusEl = document.getElementById(`synoptic-editor-status-${tabId}`);
+        const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
+        if (!wrapper) return;
+
+        const table = wrapper.querySelector('.synoptic-table');
+        if (!table) return;
+
+        const rows = [];
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            const nInput = tr.querySelector('.syn-n-cell');
+            const n = nInput ? nInput.value.trim() : '';
+            if (!n) return;
+            const cells = {};
+            tr.querySelectorAll('.syn-cell[data-prefix]').forEach(input => {
+                const v = input.value.trim();
+                if (v) cells[input.dataset.prefix] = v;
+            });
+            rows.push({ n, cells });
+        });
+
+        const filePath = tab.data && tab.data.file_path;
+        if (!filePath) {
+            if (statusEl) statusEl.textContent = 'Error: no file path.';
+            return;
+        }
+
+        if (statusEl) statusEl.textContent = 'Saving…';
+        try {
+            const result = await this.apiRequest('/synoptic/save-table', {
+                method: 'POST',
+                body: JSON.stringify({ file_path: filePath, rows })
+            });
+            if (statusEl) statusEl.textContent = result.message || 'Saved.';
+            if (!result.disk_written && result.xml_content) {
+                this.downloadFile(result.xml_content, result.filename || 'synoptic_map.xml');
+            }
+        } catch (err) {
+            if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+        }
+    }
+
+    addSynopticRow(tabId) {
+        const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
+        if (!wrapper) return;
+        const table = wrapper.querySelector('.synoptic-table');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        const witnesses = JSON.parse(wrapper.dataset.witnesses || '[]');
+        const existingRows = tbody.querySelectorAll('tr');
+        const rowIdx = existingRows.length;
+
+        const tr = document.createElement('tr');
+        tr.dataset.rowIndex = rowIdx;
+
+        // Update data-row-index on all cells in new row as we build
+        const nTd = document.createElement('td');
+        const nInput = document.createElement('input');
+        nInput.className = 'syn-cell syn-n-cell';
+        nInput.dataset.rowIndex = rowIdx;
+        nInput.dataset.colIndex = 0;
+        nInput.value = '';
+        nTd.appendChild(nInput);
+        tr.appendChild(nTd);
+
+        witnesses.forEach((w, colIdx) => {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.className = 'syn-cell';
+            input.dataset.prefix = w.prefix;
+            input.dataset.rowIndex = rowIdx;
+            input.dataset.colIndex = colIdx + 1;
+            input.value = '';
+            td.appendChild(input);
+            tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+        nInput.focus();
     }
 
     // Entry creation mode methods
@@ -3321,12 +3741,25 @@ class HeiCritApp {
         // Process lemma
         if (this.selectedTokens.lemma && this.selectedTokens.lemma.length > 0) {
             const lemmaTokens = this.selectedTokens.lemma;
-            const lemmaPrefix = lemmaTokens[0].witnessInfo.prefix;
-            const lemmaCorresp = this.buildCorrespForTokens(lemmaPrefix, lemmaTokens);
-            const lemmaWit = `#${lemmaTokens[0].witnessInfo.witnessId}`;
 
-            const preSpaceToken = lemmaTokens.find(t => t.isPreSpace);
-            const postSpaceToken = lemmaTokens.find(t => t.isPostSpace);
+            // Group tokens by witness (same logic as readings)
+            const witGroups = {};
+            lemmaTokens.forEach(token => {
+                const witId = token.witnessInfo.witnessId;
+                if (!witGroups[witId]) witGroups[witId] = [];
+                witGroups[witId].push(token);
+            });
+
+            const witIds = Object.keys(witGroups).map(id => `#${id}`).join(' ');
+            const correspParts = [];
+            Object.entries(witGroups).forEach(([witId, tokens]) => {
+                correspParts.push(this.buildCorrespForTokens(tokens[0].witnessInfo.prefix, tokens));
+            });
+
+            // Use first witness tokens for text content
+            const firstWitnessTokens = witGroups[Object.keys(witGroups)[0]];
+            const preSpaceToken = firstWitnessTokens.find(t => t.isPreSpace);
+            const postSpaceToken = firstWitnessTokens.find(t => t.isPostSpace);
             let lemmaText, lemmaHtml, lemmaChildren;
             if (preSpaceToken) {
                 const content = this.buildLeftContent(preSpaceToken);
@@ -3339,7 +3772,7 @@ class HeiCritApp {
                 lemmaHtml = content.html;
                 lemmaChildren = content.children;
             } else {
-                lemmaText = lemmaTokens.map(t => t.text).join(' ');
+                lemmaText = firstWitnessTokens.map(t => t.text).join(' ');
                 lemmaHtml = null;
                 lemmaChildren = null;
             }
@@ -3349,8 +3782,8 @@ class HeiCritApp {
                 ...(lemmaHtml && { html: lemmaHtml }),
                 ...(lemmaChildren && { children: lemmaChildren }),
                 attributes: {
-                    wit: lemmaWit,
-                    corresp: lemmaCorresp
+                    wit: witIds,
+                    corresp: correspParts.join(' ')
                 }
             };
         }

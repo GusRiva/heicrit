@@ -16,7 +16,8 @@ api = Blueprint('api', __name__)
 
 # Global variables
 synoptic_map = SynopticMap()
-apparatus = None  # Global apparatus object for frontend modifications 
+apparatus = None  # Global apparatus object for frontend modifications
+project_files_cache = {}  # Cached project files from last finalize_project call
 
 @api.route('/sigla-mapping', methods=['GET'])
 def get_sigla_mapping():
@@ -156,7 +157,7 @@ def get_file(filename):
         if not os.path.exists(filename):
             return jsonify({'error': 'File not found'}), 404
         
-        with open(filename, 'r', encoding='utf-8') as f:
+        with open(filename, encoding='utf-8') as f:
             content = f.read()
         
         return jsonify({
@@ -196,16 +197,16 @@ def open_project():
         'project_files': {path: {content: str, size: int}, ...}
     }
     """
-    global synoptic_map, apparatus
-    try:    
+    global synoptic_map, apparatus, project_files_cache
+    try:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-            
+
         apparatus_filepath = data.get('apparatus_filepath')
         project_files = data.get('project_files', {})
-        
-        
+        project_files_cache = project_files
+
         if not apparatus_filepath:
             return jsonify({'error': 'No apparatus filepath provided'}), 400
         
@@ -227,7 +228,7 @@ def open_project():
             leiths_prefix = None
             if leiths_path:
                 leiths_filename = leiths_path.split('/')[-1]
-                for witness_id, mapping_info in witness_mapping.items():
+                for _witness_id, mapping_info in witness_mapping.items():
                     if mapping_info['target_file'].endswith(leiths_filename):
                         leiths_info = {
                             'siglum': mapping_info['siglum'],
@@ -300,7 +301,7 @@ def resolve_text_file_from_project(target_path, apparatus_filepath, project_file
         
         return None
         
-    except Exception as e:
+    except Exception:
         return None
 
 def parse_main_text_file_content(content):
@@ -321,7 +322,7 @@ def parse_main_text_file_content(content):
         result = pipeline.execute(content, input_format="xml_string")
         return result
         
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
         return None
@@ -417,7 +418,7 @@ def load_witness_mappings():
         leiths_prefix = None
         if leiths_path:
             leiths_filename = leiths_path.split('/')[-1]
-            for witness_id, mapping_info in witness_mapping.items():
+            for _witness_id, mapping_info in witness_mapping.items():
                 if mapping_info['target_file'].endswith(leiths_filename):
                     leiths_info = {
                         'siglum': mapping_info['siglum'],
@@ -445,34 +446,45 @@ def load_synoptic_map():
     """
     Step 3: Process synoptic map with witness data
     """
-    global synoptic_map, apparatus
+    global synoptic_map, apparatus, project_files_cache
     try:
         if apparatus is None:
             return jsonify({'error': 'No apparatus loaded. Call /apparatus/parse first.'}), 400
-        
+
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         project_files = data.get('project_files', {})
+        project_files_cache = project_files
         apparatus_filepath = data.get('apparatus_filepath')
         leiths_prefix = data.get('leiths_prefix')
-        
-        # Get corresp attribute for synoptic map loading
+        synoptic_filepath = data.get('synoptic_filepath')
+
+        # Get corresp attribute for synoptic map loading (declared by the apparatus file)
         corresp = apparatus.get_corresp_attribute()
-        if corresp:
+
+        # An explicit synoptic_filepath (chosen by the user when corresp was
+        # missing/ambiguous) takes precedence over the apparatus's own corresp.
+        synoptic_path_to_load = synoptic_filepath or corresp
+
+        synoptic_loaded = False
+        if synoptic_path_to_load:
             witness_mapping = apparatus.get_witness_to_prefix_mapping()
-            synoptic_map.load_from_project(corresp, apparatus_filepath, project_files,
-                                         leiths_prefix=leiths_prefix,
-                                         apparatus_witness_mapping=witness_mapping)
-        
+            synoptic_loaded = synoptic_map.load_from_project(
+                synoptic_path_to_load, apparatus_filepath, project_files,
+                leiths_prefix=leiths_prefix,
+                apparatus_witness_mapping=witness_mapping)
+
         return jsonify({
             'success': True,
             'message': f'Loaded synoptic map with {synoptic_map.get_loci_count()} locations',
             'synoptic_map_count': synoptic_map.get_loci_count(),
             'synoptic_wits_count': synoptic_map.get_wits_count(),
             'synoptic_map': synoptic_map.get_loci(),
-            'synoptic_wits': synoptic_map.get_wits()
+            'synoptic_wits': synoptic_map.get_wits(),
+            'synoptic_loaded': synoptic_loaded,
+            'corresp': corresp
         })
         
     except Exception as e:
@@ -515,7 +527,7 @@ def finalize_project():
     """
     Step 5: Return final combined project data
     """
-    global apparatus, synoptic_map
+    global apparatus, synoptic_map, project_files_cache
     try:
         if apparatus is None:
             return jsonify({'error': 'No apparatus loaded. Call /apparatus/parse first.'}), 400
@@ -530,7 +542,7 @@ def finalize_project():
         leiths_info = None
         if leiths_path:
             leiths_filename = leiths_path.split('/')[-1]
-            for witness_id, mapping_info in witness_mapping.items():
+            for _witness_id, mapping_info in witness_mapping.items():
                 if mapping_info['target_file'].endswith(leiths_filename):
                     leiths_info = {
                         'siglum': mapping_info['siglum'],
@@ -549,7 +561,8 @@ def finalize_project():
             'synoptic_map': synoptic_map.get_loci(),
             'synoptic_map_count': synoptic_map.get_loci_count(),
             'synoptic_wits': synoptic_map.get_wits(),
-            'synoptic_wits_count': synoptic_map.get_wits_count()
+            'synoptic_wits_count': synoptic_map.get_wits_count(),
+            'synoptic_file': synoptic_map.get_file_path()
         })
         
     except Exception as e:
@@ -662,7 +675,7 @@ def save_apparatus_entries():
             print(f"ERROR: File not found at {apparatus_file}")
             return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
         
-        with open(apparatus_file, 'r', encoding='utf-8') as f:
+        with open(apparatus_file, encoding='utf-8') as f:
             content = f.read()
         
         root = et.fromstring(content.encode('utf-8'))
@@ -745,21 +758,21 @@ def insert_apparatus_entry_in_order(body, new_app, loc):
     Insert the new apparatus entry in the correct location order
     """
     loc_num = int(loc) if loc.isdigit() else 0
-    
+
     # Find all existing app elements
     apps = body.findall('.//{http://www.tei-c.org/ns/1.0}app')
-    
+
     # Find the correct insertion point
     insert_index = len(apps)  # Default to end
-    
+
     for i, app in enumerate(apps):
         app_loc = app.get('loc', '0')
         app_loc_num = int(app_loc) if app_loc.isdigit() else 0
-        
+
         if loc_num < app_loc_num:
             insert_index = i
             break
-    
+
     # Insert the new element
     if insert_index < len(apps):
         # Insert before the found element
@@ -773,5 +786,212 @@ def insert_apparatus_entry_in_order(body, new_app, loc):
         else:
             # No existing apps, add to body
             body.append(new_app)
+
+
+@api.route('/synoptic/table', methods=['POST'])
+def get_synoptic_table():
+    """
+    Return the synoptic map as a table suitable for spreadsheet editing.
+    Expected JSON: { "file_path": "project-relative path to synoptic map" }
+    Returns: { "witnesses": [{prefix, siglum},...], "rows": [{n, cells},...], "file_path": "..." }
+    """
+    global project_files_cache
+    try:
+        from heipy.parsers import HeiEditionsParser
+        from io import BytesIO
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        file_path = data.get('file_path')
+        if not file_path:
+            return jsonify({'error': 'No file_path provided'}), 400
+
+        # Look up file content from the cached project files
+        file_data = find_file_in_project(file_path, project_files_cache)
+        if not file_data:
+            return jsonify({'error': f'File not found in project: {file_path}'}), 404
+
+        content = file_data['content']
+
+        parser = HeiEditionsParser()
+        doc = et.parse(BytesIO(content.encode('utf-8')), parser)
+        root = doc.getroot()
+        TEI = 'http://www.tei-c.org/ns/1.0'
+        ns_map = {'tei': TEI}
+
+        # Collect ordered witnesses from all prefixDef elements
+        synoptic_prefix_defs = root.xpath(
+            './/tei:prefixDef[@ana="hc:SynopticTextPrefixDefinition"]',
+            namespaces=ns_map
+        )
+        witnesses = []
+        for pd in synoptic_prefix_defs:
+            ident = pd.get('ident')
+            replacement = pd.get('replacementPattern', '')
+            # Strip trailing "/$1" to get the relative witness file path
+            replacement_clean = replacement[:-3] if replacement.endswith('/$1') else replacement
+
+            # Resolve the witness file path relative to the synoptic map's location
+            witness_rel_path = resolve_relative_path(replacement_clean, file_path)
+
+            # Strip leading path components to get a project-relative key
+            file_name = replacement_clean.lstrip('.').lstrip('/')
+
+            # Try to load siglum from the cached project files
+            siglum = None
+            try:
+                witness_data = find_file_in_project(witness_rel_path, project_files_cache)
+                if witness_data:
+                    witness_doc = et.parse(BytesIO(witness_data['content'].encode('utf-8')), parser)
+                    siglum_el = witness_doc.getroot().find(
+                        './/tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns_map
+                    )
+                    if siglum_el is not None and siglum_el.text:
+                        siglum = siglum_el.text.strip()
+            except Exception:
+                pass
+
+            witnesses.append({
+                'prefix': ident,
+                'siglum': siglum or ident,
+                'file_name': file_name
+            })
+
+        prefixes = [w['prefix'] for w in witnesses]
+
+        # Parse link elements in document order
+        link_elements = root.xpath('.//tei:link', namespaces=ns_map)
+        rows = []
+        for link in link_elements:
+            n = link.get('n', '')
+            target_str = link.get('target', '')
+            target_tokens = [t.strip() for t in target_str.split() if t.strip()]
+            cells = {}
+            for token in target_tokens:
+                if ':' in token:
+                    prefix, value = token.split(':', 1)
+                    if prefix in prefixes:
+                        cells[prefix] = value
+            rows.append({'n': n, 'cells': cells})
+
+        return jsonify({
+            'success': True,
+            'witnesses': witnesses,
+            'rows': rows,
+            'file_path': file_path
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to load synoptic table: {str(e)}'}), 500
+
+
+@api.route('/synoptic/save-table', methods=['POST'])
+def save_synoptic_table():
+    """
+    Save an edited synoptic map table back to the XML file.
+    Expected JSON: { "file_path": "...", "rows": [{n, cells: {prefix: value}},...] }
+    Reads source from project_files_cache, writes to disk, returns xml_content for download fallback.
+    """
+    global project_files_cache
+    try:
+        from heipy.parsers import HeiEditionsParser
+        from io import BytesIO
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        file_path = data.get('file_path')
+        rows = data.get('rows', [])
+        if not file_path:
+            return jsonify({'error': 'No file_path provided'}), 400
+
+        # Read source from cached project files
+        file_data = find_file_in_project(file_path, project_files_cache)
+        if not file_data:
+            return jsonify({'error': f'File not found in project cache: {file_path}'}), 404
+
+        content = file_data['content']
+
+        parser = HeiEditionsParser()
+        doc = et.parse(BytesIO(content.encode('utf-8')), parser)
+        root = doc.getroot()
+        TEI = 'http://www.tei-c.org/ns/1.0'
+        ns_map = {'tei': TEI}
+
+        # Get witness order from prefixDef (preserves column ordering)
+        synoptic_prefix_defs = root.xpath(
+            './/tei:prefixDef[@ana="hc:SynopticTextPrefixDefinition"]',
+            namespaces=ns_map
+        )
+        witness_order = [pd.get('ident') for pd in synoptic_prefix_defs if pd.get('ident')]
+
+        # Find the standOff element (or body if standOff absent) that holds <link> elements
+        standoff = root.find(f'{{{TEI}}}standOff')
+        if standoff is None:
+            link_els = root.xpath('.//tei:link', namespaces=ns_map)
+            if link_els:
+                standoff = link_els[0].getparent()
+            else:
+                standoff = root
+
+        # Remove all existing link elements
+        for link_el in standoff.findall(f'{{{TEI}}}link'):
+            standoff.remove(link_el)
+
+        # Rebuild link elements from rows
+        for row in rows:
+            n = str(row.get('n', '')).strip()
+            if not n:
+                continue
+            cells = row.get('cells', {})
+            target_parts = []
+            for prefix in witness_order:
+                value = cells.get(prefix, '').strip()
+                if value:
+                    target_parts.append(f'{prefix}:{value}')
+            for prefix, value in cells.items():
+                if prefix not in witness_order and value.strip():
+                    target_parts.append(f'{prefix}:{value.strip()}')
+
+            link_el = et.SubElement(standoff, f'{{{TEI}}}link')
+            link_el.set('n', n)
+            link_el.set('target', ' '.join(target_parts))
+            link_el.tail = '\n      '
+
+        output = '<?xml version="1.0" encoding="UTF-8"?>\n' + et.tostring(root, encoding='unicode', pretty_print=True)
+
+        # Update cache so subsequent loads within the session reflect the changes
+        for project_path, pf_data in project_files_cache.items():
+            if project_path.endswith(file_path) or project_path == file_path:
+                pf_data['content'] = output
+                break
+
+        # Try to write to disk (backend runs from backend/ dir, project is at ../<file_path>)
+        disk_written = False
+        for candidate in [file_path, os.path.join('..', file_path)]:
+            if os.path.exists(candidate):
+                with open(candidate, 'w', encoding='utf-8') as f:
+                    f.write(output)
+                disk_written = True
+                break
+
+        return jsonify({
+            'success': True,
+            'message': f'Saved {len(rows)} rows' + ('' if disk_written else ' (download to persist)'),
+            'rows_saved': len(rows),
+            'disk_written': disk_written,
+            'xml_content': output,
+            'filename': file_path.split('/')[-1]
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to save synoptic table: {str(e)}'}), 500
 
 

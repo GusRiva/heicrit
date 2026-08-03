@@ -1,0 +1,73 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: windows-latest
+            platform: win
+            arch: x64
+          - os: macos-latest
+            platform: mac
+            arch: x64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Create Python virtual environment
+        run: |
+          python -m venv venv
+          
+      - name: Activate venv and install Python dependencies (Linux/macOS)
+        if: matrix.platform != 'win'
+        run: |
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Activate venv and install Python dependencies (Windows)
+        if: matrix.platform == 'win'
+        run: |
+          venv\Scripts\activate
+          pip install -r requirements.txt
+
+      - name: Build Electron app
+        run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.tar.xz
+            dist/*.deb

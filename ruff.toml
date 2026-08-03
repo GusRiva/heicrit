@@ -1,0 +1,7 @@
+target-version = "py312"
+
+[lint]
+# Ruff's own curated defaults (E4/E7/E9, not the full E family which
+# includes noisy style-only checks like E501 line-length) plus pyupgrade
+# (UP, e.g. deprecated typing.Dict/List) and bugbear (B).
+select = ["E4", "E7", "E9", "F", "UP", "B"]

@@ -6,7 +6,9 @@ instead of using raw processing functions, making it easier to extend functional
 maintain the codebase.
 """
 
-from typing import Dict, List, Optional, Any
+from __future__ import annotations
+
+from typing import Any
 from io import BytesIO
 from html import escape as html_escape
 from lxml import etree as et
@@ -36,7 +38,7 @@ class Apparatus:
     The apparatus contains apparatus entries extracted from TEI apparatus files.
     """
     
-    def __init__(self, apparatus_filepath: str, project_files: Optional[Dict[str, Dict[str, Any]]] = None):
+    def __init__(self, apparatus_filepath: str, project_files: dict[str, dict[str, Any]] | None = None):
         """
         Initialize the Apparatus by parsing the apparatus file.
         
@@ -46,9 +48,9 @@ class Apparatus:
         """
         self._apparatus_filepath = apparatus_filepath
         self._project_files = project_files
-        self._entries: List[Dict[str, Any]] = []
-        self._leiths_path: Optional[str] = None
-        self._root: Optional[et.Element] = None
+        self._entries: list[dict[str, Any]] = []
+        self._leiths_path: str | None = None
+        self._root: et.Element | None = None
         
         # Parse the apparatus file
         self._parse_apparatus_file()
@@ -67,7 +69,7 @@ class Apparatus:
                 content = file_data['content']
             else:
                 # Load from filesystem
-                with open(self._apparatus_filepath, 'r', encoding='utf-8') as f:
+                with open(self._apparatus_filepath, encoding='utf-8') as f:
                     content = f.read()
             
             # Parse XML content
@@ -86,7 +88,7 @@ class Apparatus:
             print(f"ERROR: Could not parse apparatus file {self._apparatus_filepath}: {str(e)}")
             raise
     
-    def _extract_leithandschrift_path(self) -> Optional[str]:
+    def _extract_leithandschrift_path(self) -> str | None:
         """
         Extract the siglum info for the leithandschrift.
         
@@ -164,7 +166,7 @@ class Apparatus:
             print(f"ERROR: Could not extract apparatus entries: {str(e)}")
             raise
     
-    def get_entries(self) -> List[Dict[str, Any]]:
+    def get_entries(self) -> list[dict[str, Any]]:
         """
         Get the apparatus entries.
         
@@ -173,7 +175,7 @@ class Apparatus:
         """
         return self._entries.copy()
     
-    def set_entries(self, entries: List[Dict[str, Any]]) -> None:
+    def set_entries(self, entries: list[dict[str, Any]]) -> None:
         """
         Set/update the apparatus entries.
         
@@ -184,7 +186,7 @@ class Apparatus:
             raise ValueError("entries must be a list")
         self._entries = entries.copy()
     
-    def update_entry(self, entry_id: int, updated_entry: Dict[str, Any]) -> bool:
+    def update_entry(self, entry_id: int, updated_entry: dict[str, Any]) -> bool:
         """
         Update a specific apparatus entry.
         
@@ -210,7 +212,7 @@ class Apparatus:
         """
         return len(self._entries)
     
-    def get_leiths_path(self) -> Optional[str]:
+    def get_leiths_path(self) -> str | None:
         """
         Get the leithandschrift file path.
         
@@ -228,7 +230,7 @@ class Apparatus:
         """
         return self._apparatus_filepath
     
-    def get_root(self) -> Optional[et.Element]:
+    def get_root(self) -> et.Element | None:
         """
         Get the parsed XML root element (for internal use).
         
@@ -237,7 +239,7 @@ class Apparatus:
         """
         return self._root
     
-    def get_witness_order(self) -> List[str]:
+    def get_witness_order(self) -> list[str]:
         """
         Extract the ordered list of witness IDs from the listWit section.
         
@@ -263,7 +265,7 @@ class Apparatus:
             print(f"ERROR: Could not extract witness order: {str(e)}")
             return []
     
-    def get_witness_to_prefix_mapping(self) -> Dict[str, Dict[str, str]]:
+    def get_witness_to_prefix_mapping(self) -> dict[str, dict[str, str]]:
         """
         Parse the witness-to-prefix mapping by comparing ptr targets with prefixDef replacementPatterns.
         Extract siglums from witness files if project_files are available.
@@ -366,7 +368,7 @@ class Apparatus:
             print(f"WARNING: Could not extract siglum from {target_file}: {str(e)}")
             return target_file.split('/')[-1].replace('.xml', '') if target_file else ''
     
-    def get_corresp_attribute(self) -> Optional[str]:
+    def get_corresp_attribute(self) -> str | None:
         """
         Get the corresp attribute from the listApp element.
         
@@ -387,7 +389,7 @@ class Apparatus:
             print(f"ERROR: Could not get corresp attribute: {str(e)}")
             return None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the Apparatus to a dictionary for serialization.
         

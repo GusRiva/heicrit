@@ -1,0 +1,93 @@
+stages:
+  - build
+
+variables:
+  NODE_VERSION: "18"
+  PYTHON_VERSION: "3.9"
+
+# Linux build
+build:linux:
+  stage: build
+  image: node:18
+  services:
+    - name: python:3.9
+  before_script:
+    - apt-get update -qq && apt-get install -y python3 python3-pip python3-venv
+    - npm ci
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+  script:
+    - npm run dist
+  artifacts:
+    paths:
+      - dist/*.tar.xz
+      - dist/*.AppImage
+      - dist/*.deb
+    expire_in: 1 week
+  only:
+    - tags
+    - main
+  tags:
+    - linux
+
+# Windows build
+build:windows:
+  stage: build
+  image: electronuserland/builder:wine
+  before_script:
+    - npm ci
+    - python -m venv venv
+    - venv/Scripts/activate.bat
+    - pip install -r requirements.txt
+  script:
+    - npm run dist -- --win
+  artifacts:
+    paths:
+      - dist/*.exe
+    expire_in: 1 week
+  only:
+    - tags
+    - main
+  tags:
+    - windows
+
+# macOS build  
+build:macos:
+  stage: build
+  before_script:
+    - npm ci
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+  script:
+    - npm run dist -- --mac
+  artifacts:
+    paths:
+      - dist/*.dmg
+    expire_in: 1 week
+  only:
+    - tags
+    - main
+  tags:
+    - macos
+    
+# Manual build trigger
+build:manual:
+  stage: build
+  image: node:18
+  before_script:
+    - apt-get update -qq && apt-get install -y python3 python3-pip python3-venv
+    - npm ci
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+  script:
+    - npm run dist
+  artifacts:
+    paths:
+      - dist/*
+    expire_in: 1 week
+  when: manual
+  tags:
+    - linux

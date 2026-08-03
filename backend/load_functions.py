@@ -33,10 +33,15 @@ def find_file_in_project(resolved_path, project_files):
         if project_path.endswith(resolved_path) or project_path == resolved_path:
             return file_data
     
-    # If exact match not found, try fuzzy matching
-    for project_path, file_data in project_files.items():
-        if resolved_path in project_path or project_path.endswith(resolved_path.split('/')[-1]):
-            return file_data
-    
+    # If exact match not found, try fuzzy matching, but only trust it when
+    # it is unambiguous (exactly one candidate) - otherwise report not found
+    # rather than silently guessing among several same-named files.
+    fuzzy_matches = [
+        file_data for project_path, file_data in project_files.items()
+        if resolved_path in project_path or project_path.endswith(resolved_path.split('/')[-1])
+    ]
+    if len(fuzzy_matches) == 1:
+        return fuzzy_matches[0]
+
     return None
 

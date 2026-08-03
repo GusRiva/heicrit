@@ -6,7 +6,7 @@ instead of using raw dictionaries, making it easier to extend functionality and
 maintain the codebase.
 """
 
-from typing import Dict, List, Optional, Any
+from typing import Any
 from io import BytesIO
 from lxml import etree as et
 from heipy.parsers import HeiEditionsParser
@@ -22,18 +22,18 @@ class SynopticMap:
     stored in the format: 'a:l_1': {'n': '1', 'target': ['a:l_1', 'b:l_1', ...]}
     """
     
-    def __init__(self, file_path: Optional[str] = None):
+    def __init__(self, file_path: str | None = None):
         """
         Initialize the SynopticMap.
         
         Args:
             file_path: Optional path to the synoptic map file
         """
-        self._loci: Dict[str, Dict[str, Any]] = {}
-        self._file_path: Optional[str] = file_path
-        self._wits: Dict[str, Dict[str, str]] = {}  # Store witness information
+        self._loci: dict[str, dict[str, Any]] = {}
+        self._file_path: str | None = file_path
+        self._wits: dict[str, dict[str, str]] = {}  # Store witness information
         
-    def get_loci(self) -> Dict[str, Dict[str, Any]]:
+    def get_loci(self) -> dict[str, dict[str, Any]]:
         """
         Get the complete loci dictionary.
         
@@ -42,7 +42,7 @@ class SynopticMap:
         """
         return self._loci.copy()  # Return a copy to prevent external modification
     
-    def get_wits(self) -> Dict[str, Dict[str, Any]]:
+    def get_wits(self) -> dict[str, dict[str, Any]]:
         """
         Get witness information dictionary for JSON serialization (excludes XML elements).
         
@@ -58,7 +58,7 @@ class SynopticMap:
             }
         return wits_copy
     
-    def set_wits(self, wits_dict: Dict[str, Dict[str, str]]) -> None:
+    def set_wits(self, wits_dict: dict[str, dict[str, str]]) -> None:
         """
         Set/update the witness information dictionary.
         
@@ -69,7 +69,7 @@ class SynopticMap:
             raise ValueError("wits_dict must be a dictionary")
         self._wits = wits_dict.copy()
     
-    def get_file_path(self) -> Optional[str]:
+    def get_file_path(self) -> str | None:
         """
         Get the file path where this synoptic map was loaded from.
         
@@ -108,7 +108,7 @@ class SynopticMap:
         """
         return locus_id in self._loci
     
-    def get_locus_info(self, locus_id: str) -> Optional[Dict[str, Any]]:
+    def get_locus_info(self, locus_id: str) -> dict[str, Any] | None:
         """
         Get information for a specific locus.
         
@@ -120,7 +120,7 @@ class SynopticMap:
         """
         return self._loci.get(locus_id)
     
-    def get_all_locus_ids(self) -> List[str]:
+    def get_all_locus_ids(self) -> list[str]:
         """
         Get a list of all locus identifiers.
         
@@ -129,7 +129,7 @@ class SynopticMap:
         """
         return list(self._loci.keys())
     
-    def get_loci_by_n_value(self, n_value: str) -> List[str]:
+    def get_loci_by_n_value(self, n_value: str) -> list[str]:
         """
         Get all locus IDs that have a specific 'n' value.
         
@@ -145,7 +145,7 @@ class SynopticMap:
                 matching_loci.append(locus_id)
         return matching_loci
     
-    def get_targets_for_locus(self, locus_id: str) -> List[str]:
+    def get_targets_for_locus(self, locus_id: str) -> list[str]:
         """
         Get the target list for a specific locus.
         
@@ -161,7 +161,7 @@ class SynopticMap:
             return locus_info['target'].copy()
         return []
     
-    def get_wit_info(self, wit_ident: str) -> Optional[Dict[str, Any]]:
+    def get_wit_info(self, wit_ident: str) -> dict[str, Any] | None:
         """
         Get information for a specific witness (JSON-serializable, excludes XML elements).
         
@@ -179,7 +179,7 @@ class SynopticMap:
             }
         return None
     
-    def get_wit_elements(self, wit_ident: str) -> Optional[Dict[str, Any]]:
+    def get_wit_elements(self, wit_ident: str) -> dict[str, Any] | None:
         """
         Get XML elements for a specific witness (for internal use).
         
@@ -194,7 +194,7 @@ class SynopticMap:
             return wit_info.get('elements', {})
         return None
     
-    def get_all_wit_idents(self) -> List[str]:
+    def get_all_wit_idents(self) -> list[str]:
         """
         Get a list of all witness identifiers.
         
@@ -228,10 +228,10 @@ class SynopticMap:
         """
         return len(self._loci) == 0
     
-    def parse_content(self, content: str, leiths_prefix: Optional[str] = None,
-                     apparatus_filepath: Optional[str] = None,
-                     project_files: Optional[Dict[str, Dict[str, Any]]] = None,
-                     apparatus_witness_mapping: Optional[Dict[str, Dict[str, str]]] = None) -> bool:
+    def parse_content(self, content: str, leiths_prefix: str | None = None,
+                     apparatus_filepath: str | None = None,
+                     project_files: dict[str, dict[str, Any]] | None = None,
+                     apparatus_witness_mapping: dict[str, dict[str, str]] | None = None) -> bool:
         """
         Parse synoptic map content from XML string and populate the loci.
         
@@ -328,7 +328,7 @@ class SynopticMap:
             return False
     
     def _parse_witness_file(self, file_name: str, apparatus_filepath: str, 
-                           project_files: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+                           project_files: dict[str, dict[str, Any]]) -> dict[str, Any]:
         """
         Parse a witness file and extract all elements with xml:id attributes.
         
@@ -371,9 +371,9 @@ class SynopticMap:
             return {'elements': {}, 'siglum': None}
 
     def load_from_project(self, corresp_path: str, apparatus_filepath: str, 
-                         project_files: Dict[str, Dict[str, Any]], 
-                         leiths_prefix: Optional[str] = None,
-                         apparatus_witness_mapping: Optional[Dict[str, Dict[str, str]]] = None) -> bool:
+                         project_files: dict[str, dict[str, Any]], 
+                         leiths_prefix: str | None = None,
+                         apparatus_witness_mapping: dict[str, dict[str, str]] | None = None) -> bool:
         """
         Load synoptic map from project files using relative path resolution.
         
@@ -401,7 +401,7 @@ class SynopticMap:
             print(f"ERROR: Could not load synoptic map from project: {str(e)}")
             return False
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the SynopticMap to a dictionary for serialization.
         
