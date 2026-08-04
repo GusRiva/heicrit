@@ -4,11 +4,12 @@ from lxml import etree as et
 
 from heipy.heipipe.steps import PythonStep
 # from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
+from heipy.namespaces import ns
 
 from load_functions import resolve_relative_path, find_file_in_project
 from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
 from synoptic_map import SynopticMap
-from apparatus import Apparatus, process_synoptic_unit_for_comparison
+from apparatus import Apparatus, process_synoptic_unit_for_comparison, html_note_to_tei
 
 
 
@@ -628,6 +629,29 @@ def process_synoptic_map_file():
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
 
 
+def resolve_apparatus_file_on_disk(apparatus_file, project_directory):
+    """
+    Resolve an apparatus file path (as sent by the frontend, relative to the
+    project directory) to an actual path on disk, trying the project-root
+    fallback the same way both /apparatus/save and /apparatus/note/save need to.
+    Returns None if no such file can be found.
+    """
+    if not os.path.isabs(apparatus_file):
+        if apparatus_file.startswith(project_directory + '/'):
+            # apparatus_file already contains project_directory, use as-is
+            pass
+        else:
+            apparatus_file = os.path.join(project_directory, apparatus_file)
+
+    if not os.path.exists(apparatus_file):
+        # Try resolving from project root instead of backend directory
+        project_root_path = os.path.join('..', apparatus_file)
+        if os.path.exists(project_root_path):
+            apparatus_file = project_root_path
+
+    return apparatus_file if os.path.exists(apparatus_file) else None
+
+
 @api.route('/apparatus/save', methods=['POST'])
 def save_apparatus_entries():
     """
@@ -637,49 +661,27 @@ def save_apparatus_entries():
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         apparatus_file = data.get('apparatus_file')
         new_entries = data.get('new_entries', [])
         project_directory = data.get('project_directory', '')
-        
+
         if not apparatus_file:
             return jsonify({'error': 'No apparatus file specified'}), 400
-        
+
         if not new_entries:
             return jsonify({'error': 'No new entries to save'}), 400
-        
-        # Resolve apparatus file path
-        # Check if apparatus_file already starts with project_directory
-        print(apparatus_file, project_directory)
-        if not os.path.isabs(apparatus_file):
-            if apparatus_file.startswith(project_directory + '/'):
-                # apparatus_file already contains project_directory, use as-is
-                pass
-            else:
-                # apparatus_file is relative, join with project_directory
-                apparatus_file = os.path.join(project_directory, apparatus_file)
-        
-        print(f"Resolved apparatus file path: {apparatus_file}")
-        print(f"Current working directory: {os.getcwd()}")
-        print(f"File exists: {os.path.exists(apparatus_file)}")
-        
-        # Try resolving from project root instead of backend directory
-        if not os.path.exists(apparatus_file):
-            project_root_path = os.path.join('..', apparatus_file)
-            print(f"Trying from project root: {project_root_path}")
-            print(f"Project root path exists: {os.path.exists(project_root_path)}")
-            if os.path.exists(project_root_path):
-                apparatus_file = project_root_path
-        
-        if not os.path.exists(apparatus_file):
-            print(f"ERROR: File not found at {apparatus_file}")
+
+        resolved_file = resolve_apparatus_file_on_disk(apparatus_file, project_directory)
+        if not resolved_file:
             return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
-        
+        apparatus_file = resolved_file
+
         with open(apparatus_file, encoding='utf-8') as f:
             content = f.read()
-        
+
         root = et.fromstring(content.encode('utf-8'))
-        
+
         # Find the text body where apparatus entries are stored
         body = root.find('.//{http://www.tei-c.org/ns/1.0}body')
         if body is None:
@@ -712,6 +714,82 @@ def save_apparatus_entries():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to save apparatus entries: {str(e)}'}), 500
+
+
+@api.route('/apparatus/note/save', methods=['POST'])
+def save_apparatus_note():
+    """
+    Save an edited note (new-format entries only) back into the apparatus file,
+    attaching it to a specific entry's <lem> or <rdg> child as a <note> element
+    (with <mentioned> for italicized spans, converted from the frontend's
+    contenteditable HTML).
+    Expected JSON: {
+        apparatus_file, project_directory,
+        entry_index (0-based position among <app> elements in document order),
+        target: 'lemma' | 'reading',
+        reading_index (required when target == 'reading'),
+        note_html: str (may be empty/whitespace-only to remove the note)
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        apparatus_file = data.get('apparatus_file')
+        project_directory = data.get('project_directory', '')
+        entry_index = data.get('entry_index')
+        target = data.get('target')
+        reading_index = data.get('reading_index')
+        note_html = data.get('note_html', '')
+
+        if not apparatus_file:
+            return jsonify({'error': 'No apparatus file specified'}), 400
+        if entry_index is None or target not in ('lemma', 'reading'):
+            return jsonify({'error': 'entry_index and a valid target (lemma/reading) are required'}), 400
+
+        resolved_file = resolve_apparatus_file_on_disk(apparatus_file, project_directory)
+        if not resolved_file:
+            return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
+
+        with open(resolved_file, encoding='utf-8') as f:
+            content = f.read()
+
+        root = et.fromstring(content.encode('utf-8'))
+        app_elements = root.xpath('.//tei:app', namespaces=ns)
+        if entry_index < 0 or entry_index >= len(app_elements):
+            return jsonify({'error': f'No apparatus entry at index {entry_index}'}), 404
+        app_element = app_elements[entry_index]
+
+        if target == 'lemma':
+            host_element = app_element.find('tei:lem', namespaces=ns)
+            if host_element is None:
+                return jsonify({'error': 'This entry has no <lem> element to attach a note to'}), 400
+        else:
+            rdg_elements = app_element.findall('tei:rdg', namespaces=ns)
+            if reading_index is None or reading_index < 0 or reading_index >= len(rdg_elements):
+                return jsonify({'error': f'No reading at index {reading_index}'}), 400
+            host_element = rdg_elements[reading_index]
+
+        existing_note = host_element.find('tei:note', namespaces=ns)
+        if existing_note is not None:
+            host_element.remove(existing_note)
+
+        if note_html and note_html.strip():
+            host_element.append(html_note_to_tei(note_html))
+
+        output_content = et.tostring(root, encoding='unicode', pretty_print=True)
+        with open(resolved_file, 'w', encoding='utf-8') as f:
+            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            f.write(output_content)
+
+        return jsonify({'success': True})
+
+    except Exception as e:
+        print(f"ERROR: Could not save apparatus note: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to save note: {str(e)}'}), 500
 
 
 def _set_element_content(element, data):

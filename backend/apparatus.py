@@ -12,26 +12,79 @@ from typing import Any
 from io import BytesIO
 from html import escape as html_escape
 from lxml import etree as et
+from lxml import html as lxml_html
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns, prefix_format
 from load_functions import resolve_relative_path, find_file_in_project, parse_location_token
 from location_resolver import WitnessFragmentResolver
 
 XML_ID = '{http://www.w3.org/XML/1998/namespace}id'
+TEI_NS = 'http://www.tei-c.org/ns/1.0'
 
 
 def _inline_to_html(element) -> str:
-    """Convert inline TEI content to safe HTML, mapping <emph> to <em>."""
+    """Convert inline TEI content to safe HTML, mapping <emph> to <em> and <mentioned> to <i>."""
     result = html_escape(element.text or '')
     for child in element:
+        if not isinstance(child.tag, str):  # skip comments and processing instructions
+            continue
         local = child.tag.split('}')[-1] if '}' in child.tag else child.tag
         inner = _inline_to_html(child)
         if local == 'emph':
             result += f'<em>{inner}</em>'
+        elif local == 'mentioned':
+            result += f'<i>{inner}</i>'
         else:
             result += inner
         result += html_escape(child.tail or '')
     return result
+
+
+def _append_text(target_element, text: str) -> None:
+    """Append text to target_element's mixed content (as tail of its last child, or as its own .text if it has none yet)."""
+    if not text:
+        return
+    if len(target_element) > 0:
+        last_child = target_element[-1]
+        last_child.tail = (last_child.tail or '') + text
+    else:
+        target_element.text = (target_element.text or '') + text
+
+
+def _copy_html_into_note(html_element, note_element) -> None:
+    """
+    Recursively copy a contenteditable HTML fragment's content into note_element,
+    converting italics (<i>/<em>, or a "font-style: italic" span - browsers vary
+    in what execCommand('italic') produces) into <mentioned>, treating <br> as a
+    space, and flattening any other wrapper element (div/span/b/... that a
+    contenteditable region may introduce) down to its text content.
+    """
+    _append_text(note_element, html_element.text)
+    for child in html_element:
+        tag = child.tag.lower() if isinstance(child.tag, str) else ''
+        style = (child.get('style') or '').lower()
+        is_italic = tag in ('i', 'em') or 'italic' in style
+
+        if is_italic:
+            mentioned_element = et.SubElement(note_element, f'{{{TEI_NS}}}mentioned')
+            _copy_html_into_note(child, mentioned_element)
+        elif tag == 'br':
+            _append_text(note_element, ' ')
+        else:
+            _copy_html_into_note(child, note_element)
+        _append_text(note_element, child.tail)
+
+
+def html_note_to_tei(note_html: str) -> et.Element:
+    """
+    Convert an edited note's HTML (from the frontend's contenteditable note
+    field) into a TEI <note> element, the inverse of _inline_to_html's
+    <mentioned> -> <i> mapping used to display it.
+    """
+    wrapper = lxml_html.fragment_fromstring(f'<div>{note_html}</div>', create_parent=False)
+    note_element = et.Element(f'{{{TEI_NS}}}note')
+    _copy_html_into_note(wrapper, note_element)
+    return note_element
 
 
 class Apparatus:
@@ -239,12 +292,19 @@ class Apparatus:
         of inline text. Produces the SAME top-level shape as the old format
         ('id', 'loc', 'corresp', 'lemma', 'readings') plus an additive 'target'
         field, so downstream consumers don't need format-specific handling.
+
+        @target itself now plays the role the old format's <lem> element played:
+        it addresses the base text's own reading at this location, and is resolved
+        into the entry's lemma. An explicit <lem> child (rare - used when the
+        editor adopts a majority reading that differs from the base text's own,
+        e.g. the base text omits a word most other witnesses have) overrides it.
         """
+        target = app.get('target')
         entry = {
             'id': index + 1,
             'loc': None,
             'corresp': None,
-            'target': app.get('target'),
+            'target': target,
             'lemma': None,
             'readings': []
         }
@@ -252,13 +312,105 @@ class Apparatus:
         lem_element = app.find('tei:lem', namespaces=ns)
         if lem_element is not None:
             entry['lemma'] = self._extract_lem_or_rdg(lem_element, resolver)
+        elif target:
+            entry['lemma'] = self._resolve_target_lemma(target, resolver)
+        else:
+            entry['lemma'] = self._resolve_transposition_lemma(app, resolver)
 
         for rdg in app.findall('tei:rdg', namespaces=ns):
             entry['readings'].append(self._extract_lem_or_rdg(rdg, resolver))
 
         entry['loc'], entry['corresp'] = self._derive_loc_and_corresp(app, resolver)
+        entry['note'] = self._extract_entry_note(app)
 
         return entry
+
+    def _extract_entry_note(self, app) -> dict[str, Any] | None:
+        """
+        Find this entry's editorial <note> (at most one is expected in practice,
+        living on the <lem> or one of the <rdg> children) and expose it as a
+        single entry-level field, editable and re-attachable to its source
+        element by 'target'/'reading_index'.
+
+        When no <note> exists yet, still returns an (empty) descriptor pointing
+        at a sensible default attachment point (the <lem> if present, otherwise
+        the first <rdg>), so the frontend can offer an empty, editable note area
+        that saves to a sensible place - only returns None when the entry has
+        neither a <lem> nor any <rdg> to attach a new note to.
+        """
+        lem_element = app.find('tei:lem', namespaces=ns)
+        rdg_elements = app.findall('tei:rdg', namespaces=ns)
+
+        if lem_element is not None:
+            note_element = lem_element.find('tei:note', namespaces=ns)
+            if note_element is not None:
+                return self._build_note_dict(note_element, 'lemma', None)
+
+        for index, rdg in enumerate(rdg_elements):
+            note_element = rdg.find('tei:note', namespaces=ns)
+            if note_element is not None:
+                return self._build_note_dict(note_element, 'reading', index)
+
+        if lem_element is not None:
+            return {'text': '', 'html': '', 'target': 'lemma', 'reading_index': None}
+        if rdg_elements:
+            return {'text': '', 'html': '', 'target': 'reading', 'reading_index': 0}
+        return None
+
+    def _build_note_dict(self, note_element, target: str, reading_index: int | None) -> dict[str, Any]:
+        return {
+            'text': ''.join(note_element.itertext()).strip(),
+            'html': _inline_to_html(note_element).strip(),
+            'target': target,
+            'reading_index': reading_index
+        }
+
+    def _resolve_transposition_lemma(self, app, resolver: WitnessFragmentResolver) -> dict[str, Any] | None:
+        """
+        Reconstruct the lemma for a transposition entry (no @target) from the
+        base-side token of every <link target="base_id witness_id"/> pair - the
+        base text's own word order at these positions, analogous to @target's
+        role elsewhere.
+        """
+        link_holder = app.find('tei:rdg', namespaces=ns)
+        if link_holder is None:
+            link_holder = app.find('tei:lem', namespaces=ns)
+        if link_holder is None:
+            return None
+
+        base_tokens = []
+        for link_el in link_holder.findall('tei:link', namespaces=ns):
+            parts = (link_el.get('target') or '').split()
+            if parts:
+                base_tokens.append(parts[0])
+        if not base_tokens:
+            return None
+
+        text, html = resolver.resolve_ordered_text_html(base_tokens)
+        if not text:
+            return None
+        return {
+            'text': text,
+            'html': html,
+            'attributes': {'corresp': ' '.join(resolver.normalize_corresp_token(t) for t in base_tokens)}
+        }
+
+    def _resolve_target_lemma(self, target: str, resolver: WitnessFragmentResolver) -> dict[str, Any]:
+        """
+        Resolve @target - the base text's own reading at this location - into a
+        lemma dict, the new-format equivalent of the old format's inline <lem>.
+        A target that resolves to no text (e.g. a left()/right() gap position with
+        no base-text content at all) renders as an omission, matching the
+        classical apparatus convention used elsewhere for omission variants.
+        """
+        text, html = resolver.resolve_text_html([target])
+        if not text:
+            text, html = 'om.', '<i>om.</i>'
+        return {
+            'text': text,
+            'html': html,
+            'attributes': {'corresp': resolver.normalize_corresp_token(target)}
+        }
 
     def _extract_lem_or_rdg(self, element, resolver: WitnessFragmentResolver) -> dict[str, Any]:
         """
@@ -266,28 +418,37 @@ class Apparatus:
         <link> pairs, for transpositions) into text/html, and synthesize an
         'attributes.corresp' string from the resolved target(s) so downstream
         consumers (frontend highlighting) can keep using the existing
-        prefix:id/range()/left()/right() grammar unchanged.
+        prefix:id/range()/left()/right() grammar unchanged. corresp tokens are
+        normalized (right() -> left() of the next token) so gap positions
+        highlight correctly regardless of where in the line they fall - see
+        WitnessFragmentResolver.normalize_corresp_token.
         """
         ptrs = element.findall('tei:ptr', namespaces=ns)
         links = element.findall('tei:link', namespaces=ns)
-        note_element = element.find('tei:note', namespaces=ns)
 
         text, html, corresp, entry_links = '', '', None, None
+        is_omission = element.get('ana') == 'hc:OmissionVariant'
 
         if ptrs:
             target_tokens = [p.get('target') for p in ptrs if p.get('target')]
             if target_tokens:
-                text, html = resolver.resolve_text_html(target_tokens)
-                corresp = ' '.join(target_tokens)
-            if not text and element.get('ana') == 'hc:OmissionVariant':
-                text, html = 'om.', '<i>om.</i>'
+                corresp = ' '.join(resolver.normalize_corresp_token(t) for t in target_tokens)
+                if is_omission:
+                    text, html = 'om.', '<i>om.</i>'
+                else:
+                    text, html = resolver.resolve_text_html(target_tokens)
         elif links:
             pairs = [(link_el.get('target') or '').split() for link_el in links]
             pairs = [pair for pair in pairs if len(pair) == 2]
             if pairs:
-                corresp = ' '.join(token for pair in pairs for token in pair)
+                # Only the witness-side tokens go into this reading's own corresp -
+                # the base-side tokens are already covered by the entry's lemma
+                # (_resolve_transposition_lemma), so including them here too would
+                # double-highlight them (green from the lemma, then orange from
+                # this reading, visually winning).
                 witness_side_tokens = [pair[1] for pair in pairs]
-                text, html = resolver.resolve_text_html(witness_side_tokens)
+                corresp = ' '.join(resolver.normalize_corresp_token(t) for t in witness_side_tokens)
+                text, html = resolver.resolve_ordered_text_html(witness_side_tokens)
                 entry_links = [{'base': pair[0], 'witness': pair[1]} for pair in pairs]
 
         attributes = dict(element.attrib)
@@ -299,8 +460,6 @@ class Apparatus:
             'html': html,
             'attributes': attributes
         }
-        if note_element is not None:
-            result['note'] = ''.join(note_element.itertext()).strip()
         if entry_links:
             result['links'] = entry_links
 
@@ -611,6 +770,8 @@ class Apparatus:
     
 
 def process_synoptic_token(el:et.Element) -> str:
+    if not isinstance(el.tag, str):  # skip comments and processing instructions
+        return ''
     tag_name = el.tag.split('}')[-1] if '}' in el.tag else el.tag
     result = ''
     if tag_name in ['w', 'pc']:
@@ -628,20 +789,33 @@ def process_synoptic_token(el:et.Element) -> str:
             result += process_synoptic_token(child)
         if el.tail is not None and el.tail.strip() != '':
             result += el.tail
-    elif tag_name in ['orig', 'sic', 'hi', 'initial']:
-        if el.text is not None:
-            result += el.text.strip()
-        for child in el:
-            result += process_synoptic_token(child)
+    elif tag_name == 'reg':
+        # Regularized/normalized form - suppressed; the diplomatic <orig> (or
+        # plain text) sibling is preferred, matching the same convention used
+        # to render apparatus reading text from these files (location_resolver).
+        # Its tail is still part of the surrounding flow, so it isn't dropped.
         if el.tail is not None and el.tail.strip() != '':
             result += el.tail
-    elif tag_name in ['titlePart']:
+    elif tag_name == 'titlePart':
         if el.text is not None:
             result += el.text.strip()
         for child in el:
             result += process_synoptic_token(child)
-            
-        
+    else:
+        # Default: any other inline element (orig, sic, hi, initial, ex,
+        # metamark, ...) is transparent pass-through content - include its own
+        # text, its children, and every child's tail. Using a default rather
+        # than a fixed whitelist avoids silently dropping real word content
+        # (e.g. <ex>n</ex> abbreviation expansions) whenever markup not
+        # anticipated by an explicit branch appears in the source.
+        if el.text is not None:
+            result += el.text.strip()
+        for child in el:
+            result += process_synoptic_token(child)
+            if child.tail is not None and child.tail.strip() != '':
+                result += child.tail
+        if el.tail is not None and el.tail.strip() != '':
+            result += el.tail
     return result
 
 

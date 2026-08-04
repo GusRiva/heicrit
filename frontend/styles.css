@@ -745,6 +745,37 @@ main {
     font-size: 0.9em;
 }
 
+.apparatus-note {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 0.5rem 0.5rem 0.6rem;
+    padding: 0.15rem 0.6rem;
+    min-width: 4rem;
+    font-size: 0.9em;
+    color: #555;
+    border-left: 2px solid #ddd;
+    min-height: 1.2em;
+    outline: none;
+    cursor: text;
+}
+
+.apparatus-note:hover,
+.apparatus-note:focus {
+    border-left-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.04);
+}
+
+.apparatus-note:empty::before {
+    content: attr(data-placeholder);
+    color: #bbb;
+    font-style: italic;
+}
+
+.apparatus-note i,
+.apparatus-note em {
+    font-style: italic;
+}
+
 /* Apparatus Layout with Main Text */
 .apparatus-layout {
     display: flex;

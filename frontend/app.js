@@ -601,6 +601,9 @@ class HeiCritApp {
         
         // Set up drag-and-drop sorting for apparatus entries
         this.setupApparatusSorting(tabId);
+
+        // Set up editable note areas (italics -> <mentioned> on save)
+        this.setupNoteEditing(tabId);
     }
 
     updateNavigationControls(tabId) {
@@ -1739,14 +1742,86 @@ class HeiCritApp {
             }
             
             html += '</div>';
+
+            // Note area - a sibling of (not nested in) the draggable subentry,
+            // so text selection for italicizing doesn't fight with HTML5 drag.
+            if (!entry.is_placeholder && entry.note) {
+                html += this.renderNoteArea(entry);
+            }
         });
-        
+
         html += `
                 </div>
             </div>
         </div>`;
-        
+
         return html;
+    }
+
+    renderNoteArea(entry) {
+        // entry.id is 1-based (sequential position among <app> elements);
+        // the backend indexes <app> elements 0-based, so convert here once.
+        const entryIndex = (entry.id || 1) - 1;
+        const note = entry.note;
+        const readingIndexAttr = (note.reading_index === null || note.reading_index === undefined)
+            ? '' : note.reading_index;
+
+        return `<div class="apparatus-note"
+                     contenteditable="true"
+                     data-entry-index="${entryIndex}"
+                     data-note-target="${this.escapeHtml(note.target)}"
+                     data-note-reading-index="${readingIndexAttr}"
+                     data-placeholder="+">${note.html || ''}</div>`;
+    }
+
+    setupNoteEditing(tabId) {
+        const content = document.getElementById(`apparatus-content-${tabId}`);
+        if (!content) return;
+
+        content.querySelectorAll('.apparatus-note').forEach(noteEl => {
+            noteEl.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'i') {
+                    e.preventDefault();
+                    document.execCommand('italic');
+                }
+            });
+
+            noteEl.addEventListener('blur', () => {
+                this.saveEntryNote(tabId, noteEl);
+            });
+        });
+    }
+
+    async saveEntryNote(tabId, noteEl) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return;
+
+        const entryIndex = parseInt(noteEl.getAttribute('data-entry-index'), 10);
+        const target = noteEl.getAttribute('data-note-target');
+        const readingIndexAttr = noteEl.getAttribute('data-note-reading-index');
+        const readingIndex = readingIndexAttr === '' ? null : parseInt(readingIndexAttr, 10);
+        const noteHtml = noteEl.innerHTML.trim();
+
+        try {
+            const response = await this.apiRequest('/apparatus/note/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apparatus_file: tab.data.apparatusFile,
+                    project_directory: tab.data.projectDirectory,
+                    entry_index: entryIndex,
+                    target: target,
+                    reading_index: readingIndex,
+                    note_html: noteHtml
+                })
+            });
+
+            if (!response.success) {
+                console.error('Failed to save note:', response.error);
+            }
+        } catch (error) {
+            console.error('Error saving note:', error);
+        }
     }
 
     updateNavigationControls() {
