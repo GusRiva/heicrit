@@ -88,6 +88,7 @@ class Apparatus:
             print(f"ERROR: Could not parse apparatus file {self._apparatus_filepath}: {str(e)}")
             raise
     
+    
     def _extract_leithandschrift_path(self) -> str | None:
         """
         Extract the siglum info for the leithandschrift.
@@ -100,7 +101,7 @@ class Apparatus:
                 return None
                 
             # Find witness with ana="hc:Leithandschrift"
-            leithandschrift_witness = self._root.find('.//tei:witness[@ana="hc:Leithandschrift"]', namespaces=ns)
+            leithandschrift_witness = self._root.find('.//tei:witness[@ana="hc:BaseText"]', namespaces=ns)
             if leithandschrift_witness is None:
                 return None        
             
