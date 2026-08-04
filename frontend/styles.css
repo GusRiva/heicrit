@@ -657,7 +657,7 @@ main {
 }
 
 .classical-subentry:not(:first-child) {
-    margin-left: 3rem;
+    margin-left: 1rem;
     margin-top: 0.3rem;
 }
 
@@ -748,9 +748,9 @@ main {
 .apparatus-note {
     display: inline-block;
     vertical-align: middle;
-    margin: 0 0.5rem 0.5rem 0.6rem;
+    margin: 0 0.5rem 0.1rem 0.6rem;
     padding: 0.15rem 0.6rem;
-    min-width: 4rem;
+    min-width: 2rem;
     font-size: 0.9em;
     color: #555;
     border-left: 2px solid #ddd;
