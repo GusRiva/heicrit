@@ -11,7 +11,7 @@ from io import BytesIO
 from lxml import etree as et
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns
-from load_functions import resolve_relative_path, find_file_in_project
+from load_functions import resolve_relative_path, find_file_in_project, parse_location_token
 
 
 class SynopticMap:
@@ -280,7 +280,18 @@ class SynopticMap:
                     # Parse witness file and extract elements if project files are available
                     if file_name and apparatus_filepath and project_files:
                         try:
-                            parse_result = self._parse_witness_file(file_name, apparatus_filepath, project_files)
+                            # Prefer the siglum already resolved by Apparatus (handles the
+                            # new format's external witness-index indirection); the witness
+                            # file itself may carry no inline siglum in that format.
+                            siglum_hint = None
+                            if apparatus_witness_mapping is not None:
+                                for mapping_info in apparatus_witness_mapping.values():
+                                    if mapping_info.get('synoptic_prefix') == ident:
+                                        siglum_hint = mapping_info.get('siglum')
+                                        break
+
+                            parse_result = self._parse_witness_file(
+                                file_name, apparatus_filepath, project_files, siglum_hint=siglum_hint)
                             if isinstance(parse_result, dict) and 'elements' in parse_result:
                                 wit_info['elements'] = parse_result['elements']
                                 wit_info['siglum'] = parse_result.get('siglum')
@@ -318,7 +329,24 @@ class SynopticMap:
                         'target': target_list
                     }
                     found_keys.add(loci_map_key)
-            
+
+            # New-format synoptic maps omit <link @n>; synthesize it from the
+            # corresponding <l @n> in the already-parsed leiths witness elements
+            # rather than leaving placeholder locations displaying a raw locus key.
+            # Handles both plain ids ("b:l_71_2") and anchor forms
+            # ("b:right(l_71_46)") - the anchored id still resolves to a real <l>.
+            for loci_key, info in loci_map.items():
+                if not info.get('n'):
+                    spec = parse_location_token(loci_key)
+                    if not spec:
+                        continue
+                    anchor_id = spec['start'] if spec['kind'] == 'range' else spec.get('id')
+                    if not anchor_id:
+                        continue
+                    line_element = wits_map.get(spec['prefix'], {}).get('elements', {}).get(anchor_id)
+                    if line_element is not None:
+                        info['n'] = line_element.get('n')
+
             self._loci = loci_map
             self._wits = wits_map
             return True
@@ -327,37 +355,46 @@ class SynopticMap:
             print(f"ERROR: Could not parse synoptic map content: {str(e)}")
             return False
     
-    def _parse_witness_file(self, file_name: str, apparatus_filepath: str, 
-                           project_files: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    def _parse_witness_file(self, file_name: str, apparatus_filepath: str,
+                           project_files: dict[str, dict[str, Any]],
+                           siglum_hint: str | None = None) -> dict[str, Any]:
         """
         Parse a witness file and extract all elements with xml:id attributes.
-        
+
         Args:
             file_name: Name of the witness file to parse
             apparatus_filepath: Path to the apparatus file (for relative resolution)
             project_files: Dictionary of project files
-            
+            siglum_hint: Siglum already resolved elsewhere (e.g. by Apparatus, via
+                the new format's external witness-index file); used instead of
+                looking for an inline idno, which the new format's witness
+                fragment files don't carry
+
         Returns:
             Dictionary mapping xml:id to element objects
         """
         try:
             resolved_path = resolve_relative_path(file_name, apparatus_filepath)
             file_data = find_file_in_project(resolved_path, project_files)
-            
-            
+
+
             if not file_data:
                 return {}
-            
-            # Parse the witness file
-            parser = HeiEditionsParser(resolve_entities=True)
+
+            # recover=True: some witness fragments reference entities missing from
+            # heipy's bundled declaration set - don't let one bad entity anywhere in
+            # the document block parsing the rest of it.
+            parser = HeiEditionsParser(resolve_entities=True, recover=True)
             content_bytes = file_data['content'].encode('utf-8')
             doc = et.parse(BytesIO(content_bytes), parser)
             root = doc.getroot()
-            
-            # Extract siglum from the witness file
-            siglum = root.find('.//tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns)
-            siglum_text = siglum.text if siglum is not None else None
-            
+
+            # Extract siglum from the witness file (old format); fall back to the hint
+            siglum_text = siglum_hint
+            if siglum_text is None:
+                siglum = root.find('.//tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns)
+                siglum_text = siglum.text if siglum is not None else None
+
             elements_map = {}
             for el in root.iter():
                 if "{http://www.w3.org/XML/1998/namespace}id" not in el.attrib or el.tag == "{http://www.tei-c.org/ns/1.0}w":

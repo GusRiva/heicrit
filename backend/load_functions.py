@@ -1,4 +1,37 @@
 
+def local_name(el):
+    """
+    Return an lxml element's tag without its namespace prefix.
+    """
+    tag = el.tag
+    return tag.split('}')[-1] if isinstance(tag, str) and '}' in tag else tag
+
+
+def parse_location_token(token):
+    """
+    Parse a "prefix:spec" location token (e.g. "a:w_5_1", "a:range(w_5_1,w_5_4)",
+    "a:left(w_7_2)", "a:right(w_23_1)") into its prefix and address kind.
+
+    Returns:
+        dict with 'prefix' and 'kind' ('single' | 'range' | 'left' | 'right').
+        'single'/'left'/'right' entries also have 'id'; 'range' entries have
+        'start' and 'end'. Returns None if the token has no "prefix:" part.
+    """
+    if ':' not in token:
+        return None
+    prefix, spec = token.split(':', 1)
+    spec = spec.strip()
+
+    if spec.startswith('left(') and spec.endswith(')'):
+        return {'prefix': prefix, 'kind': 'left', 'id': spec[5:-1].strip()}
+    if spec.startswith('right(') and spec.endswith(')'):
+        return {'prefix': prefix, 'kind': 'right', 'id': spec[6:-1].strip()}
+    if spec.startswith('range(') and spec.endswith(')'):
+        start, end = spec[6:-1].split(',', 1)
+        return {'prefix': prefix, 'kind': 'range', 'start': start.strip(), 'end': end.strip()}
+    return {'prefix': prefix, 'kind': 'single', 'id': spec}
+
+
 def resolve_relative_path(target_path, base_filepath):
     """
     Resolve a relative path based on a base file path

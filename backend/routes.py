@@ -826,6 +826,21 @@ def get_synoptic_table():
             './/tei:prefixDef[@ana="hc:SynopticTextPrefixDefinition"]',
             namespaces=ns_map
         )
+        # Prefer siglums already resolved by the loaded Apparatus (it knows how to
+        # look them up via the new format's external witness-index file, which
+        # witness fragment files themselves carry no inline siglum for), falling
+        # back to reading an inline idno directly from the witness file (old
+        # format, or when no apparatus is currently loaded).
+        apparatus_prefix_siglum = {}
+        if apparatus is not None:
+            try:
+                for mapping_info in apparatus.get_witness_to_prefix_mapping().values():
+                    prefix = mapping_info.get('synoptic_prefix')
+                    if prefix:
+                        apparatus_prefix_siglum[prefix] = mapping_info.get('siglum')
+            except Exception:
+                pass
+
         witnesses = []
         for pd in synoptic_prefix_defs:
             ident = pd.get('ident')
@@ -839,19 +854,19 @@ def get_synoptic_table():
             # Strip leading path components to get a project-relative key
             file_name = replacement_clean.lstrip('.').lstrip('/')
 
-            # Try to load siglum from the cached project files
-            siglum = None
-            try:
-                witness_data = find_file_in_project(witness_rel_path, project_files_cache)
-                if witness_data:
-                    witness_doc = et.parse(BytesIO(witness_data['content'].encode('utf-8')), parser)
-                    siglum_el = witness_doc.getroot().find(
-                        './/tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns_map
-                    )
-                    if siglum_el is not None and siglum_el.text:
-                        siglum = siglum_el.text.strip()
-            except Exception:
-                pass
+            siglum = apparatus_prefix_siglum.get(ident)
+            if not siglum:
+                try:
+                    witness_data = find_file_in_project(witness_rel_path, project_files_cache)
+                    if witness_data:
+                        witness_doc = et.parse(BytesIO(witness_data['content'].encode('utf-8')), parser)
+                        siglum_el = witness_doc.getroot().find(
+                            './/tei:idno[@ana="hc:EditorialSiglum"]', namespaces=ns_map
+                        )
+                        if siglum_el is not None and siglum_el.text:
+                            siglum = siglum_el.text.strip()
+                except Exception:
+                    pass
 
             witnesses.append({
                 'prefix': ident,

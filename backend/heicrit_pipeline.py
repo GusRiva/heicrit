@@ -83,7 +83,7 @@ def append_synoptic_links_funct(root, parameters):
                 corresp_value = str(target_value)
             gap.set('corresp', corresp_value)
         
-        if 'n' in synoptic_entry:
+        if synoptic_entry.get('n'):
             gap.set('n', synoptic_entry.get('n'))
         
         if pos is None:    

@@ -1546,6 +1546,13 @@ class HeiCritApp {
         if (result.witness_mapping) {
             this.witnessMapping = result.witness_mapping;
         }
+
+        // Store the leithandschrift's synoptic prefix (e.g. "b"), used when building
+        // corresp values for newly created apparatus entries - must not be hardcoded,
+        // since the base witness's prefix varies per project.
+        if (result.leiths_prefix) {
+            this.leithsPrefix = result.leiths_prefix;
+        }
         
         // If this result also contains synoptic map data (from project processing), store it
         if (result.synoptic_map && Object.keys(result.synoptic_map).length > 0) {
@@ -3606,7 +3613,7 @@ class HeiCritApp {
         
         // Get current location from the active entry
         const currentLoc = this.getCurrentLocation(tab);
-        const currentCorresp = `a:l_${currentLoc}`;
+        const currentCorresp = `${this.leithsPrefix || 'a'}:l_${currentLoc}`;
         
         // Initialize newEntries array if not exists
         if (!tab.newEntries) {
@@ -3733,7 +3740,7 @@ class HeiCritApp {
     createApparatusEntry(loc) {
         const entry = {
             loc: loc,
-            corresp: `a:l_${loc}`,
+            corresp: `${this.leithsPrefix || 'a'}:l_${loc}`,
             lemma: null,
             readings: []
         };
