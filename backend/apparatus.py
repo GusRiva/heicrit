@@ -87,6 +87,86 @@ def html_note_to_tei(note_html: str) -> et.Element:
     return note_element
 
 
+# Variant types the new-format write path accepts.
+ALLOWED_NEW_FORMAT_ANA = frozenset({
+    'hc:AdditionVariant',
+    'hc:OmissionVariant',
+    'hc:SubstitutionVariant',
+    'hc:TranspositionVariant',
+})
+
+
+def build_ptr_element(target: str) -> et.Element:
+    """Build a single new-format <ptr target="prefix:location"/> element."""
+    ptr_element = et.Element(f'{{{TEI_NS}}}ptr')
+    ptr_element.set('target', target)
+    return ptr_element
+
+
+def build_link_element(base_target: str, witness_target: str) -> et.Element:
+    """Build a single new-format <link target="base_target witness_target"/>
+    element, pairing one base-text token with its corresponding witness token
+    (used for transpositions instead of <ptr>)."""
+    link_element = et.Element(f'{{{TEI_NS}}}link')
+    link_element.set('target', f'{base_target} {witness_target}')
+    return link_element
+
+
+def build_rdg_element(wit_ids: list[str], ana: str, ptr_targets: list[str]) -> et.Element:
+    """
+    Build a new-format <rdg wit="#id1 #id2" ana="..."><ptr .../>...</rdg>
+    element from already-resolved witness ids and ptr target strings.
+    """
+    rdg_element = et.Element(f'{{{TEI_NS}}}rdg')
+    rdg_element.set('wit', ' '.join(f'#{wit_id}' for wit_id in wit_ids))
+    rdg_element.set('ana', ana)
+    for ptr_target in ptr_targets:
+        rdg_element.append(build_ptr_element(ptr_target))
+    return rdg_element
+
+
+def build_transposition_rdg_element(wit_ids: list[str], link_pairs: list[dict]) -> et.Element:
+    """
+    Build a new-format <rdg wit="#id1 #id2" ana="hc:TranspositionVariant">
+    <link .../>...</rdg> element from already-resolved witness ids and
+    base/witness link pairs ({'base': 'prefix:id', 'witness': 'prefix:id'}).
+    """
+    rdg_element = et.Element(f'{{{TEI_NS}}}rdg')
+    rdg_element.set('wit', ' '.join(f'#{wit_id}' for wit_id in wit_ids))
+    rdg_element.set('ana', 'hc:TranspositionVariant')
+    for pair in link_pairs:
+        rdg_element.append(build_link_element(pair['base'], pair['witness']))
+    return rdg_element
+
+
+def build_new_format_app_element(target: str | None, readings: list[dict]) -> et.Element:
+    """
+    Build a whole new-format <app target="..."><rdg .../>...</app> element.
+
+    Args:
+        target: the @target address (the base text's own reading location).
+            None/omitted for transposition-only entries, which anchor via
+            their first <link> instead (see Apparatus._derive_loc_and_corresp).
+        readings: list of dicts, one per <rdg> to build - either
+            {'wit': [ids], 'ana': str, 'ptrs': [targets]} (ptr-based) or
+            {'wit': [ids], 'ana': 'hc:TranspositionVariant', 'links': [{'base','witness'}, ...]}
+            (link-based)
+
+    Returns:
+        The unattached <app> element - the caller is responsible for
+        inserting it into (or replacing children of) the document tree.
+    """
+    app_element = et.Element(f'{{{TEI_NS}}}app')
+    if target:
+        app_element.set('target', target)
+    for reading in readings:
+        if reading.get('links'):
+            app_element.append(build_transposition_rdg_element(reading['wit'], reading['links']))
+        else:
+            app_element.append(build_rdg_element(reading['wit'], reading['ana'], reading['ptrs']))
+    return app_element
+
+
 class Apparatus:
     """
     A class to manage apparatus data with improved structure and functionality.
@@ -300,16 +380,17 @@ class Apparatus:
         e.g. the base text omits a word most other witnesses have) overrides it.
         """
         target = app.get('target')
+        lem_element = app.find('tei:lem', namespaces=ns)
         entry = {
             'id': index + 1,
             'loc': None,
             'corresp': None,
             'target': target,
             'lemma': None,
+            'lemma_is_explicit': lem_element is not None,
             'readings': []
         }
 
-        lem_element = app.find('tei:lem', namespaces=ns)
         if lem_element is not None:
             entry['lemma'] = self._extract_lem_or_rdg(lem_element, resolver)
         elif target:
@@ -757,7 +838,8 @@ class Apparatus:
             'entries': self._entries.copy(),
             'entries_count': self.get_entries_count(),
             'leiths_path': self._leiths_path,
-            'corresp': self.get_corresp_attribute()
+            'corresp': self.get_corresp_attribute(),
+            'format': self._format
         }
     
     def __str__(self) -> str:

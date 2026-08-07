@@ -1490,6 +1490,33 @@ main {
     border-width: 2px;
 }
 
+/* Transposition ordering: a small number badge under a token showing its
+   correspondence order - lemma tokens numbered by document position, each
+   transposition reading group's tokens numbered by click order per witness
+   (see updateTranspositionNumbering / buildTranspositionSavePayload). */
+.syn-token.transposition-numbered {
+    position: relative;
+}
+
+.syn-token.transposition-numbered::after {
+    content: attr(data-transposition-index);
+    position: absolute;
+    left: 50%;
+    bottom: -16px;
+    transform: translateX(-50%);
+    min-width: 14px;
+    padding: 0 3px;
+    font-size: 0.7em;
+    font-weight: bold;
+    line-height: 14px;
+    text-align: center;
+    color: white;
+    background-color: #f9a825;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+}
+
 .syn-token.selected-reading-1 {
     background-color: rgba(255, 152, 0, 0.5);
     border-color: #ff9800;

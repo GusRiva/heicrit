@@ -9,7 +9,10 @@ from heipy.namespaces import ns
 from load_functions import resolve_relative_path, find_file_in_project
 from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
 from synoptic_map import SynopticMap
-from apparatus import Apparatus, process_synoptic_unit_for_comparison, html_note_to_tei
+from apparatus import (
+    Apparatus, process_synoptic_unit_for_comparison, html_note_to_tei,
+    build_new_format_app_element, build_rdg_element, ALLOWED_NEW_FORMAT_ANA
+)
 
 
 
@@ -394,9 +397,10 @@ def parse_apparatus_file():
             'success': True,
             'message': f'Parsed apparatus file with {len(apparatus_entries)} entries',
             'apparatus_count': len(apparatus_entries),
-            'apparatus_filepath': apparatus_filepath
+            'apparatus_filepath': apparatus_filepath,
+            'format': apparatus.get_format()
         })
-        
+
     except Exception as e:
         return jsonify({'error': f'Failed to parse apparatus: {str(e)}'}), 500
 
@@ -563,9 +567,10 @@ def finalize_project():
             'synoptic_map_count': synoptic_map.get_loci_count(),
             'synoptic_wits': synoptic_map.get_wits(),
             'synoptic_wits_count': synoptic_map.get_wits_count(),
-            'synoptic_file': synoptic_map.get_file_path()
+            'synoptic_file': synoptic_map.get_file_path(),
+            'format': apparatus.get_format()
         })
-        
+
     except Exception as e:
         return jsonify({'error': f'Failed to finalize project: {str(e)}'}), 500
 
@@ -650,6 +655,36 @@ def resolve_apparatus_file_on_disk(apparatus_file, project_directory):
             apparatus_file = project_root_path
 
     return apparatus_file if os.path.exists(apparatus_file) else None
+
+
+def write_apparatus_file_and_refresh(resolved_file, apparatus_file, root):
+    """
+    Serialize root, write it to resolved_file on disk, keep project_files_cache
+    in sync (the same pattern /synoptic/save-table already uses), and
+    reconstruct the global `apparatus` object from the fresh content so the
+    caller's response - and any later read via the cache - reflects the write.
+
+    apparatus_file must be the project-relative path as received from the
+    frontend request (the same convention /apparatus/parse already uses to
+    construct Apparatus), NOT resolved_file's on-disk path - project_files_cache
+    keys and Apparatus's file-resolution logic both expect the project-relative
+    form.
+    """
+    global apparatus, project_files_cache
+
+    output_content = et.tostring(root, encoding='unicode', pretty_print=True)
+    full_content = '<?xml version="1.0" encoding="UTF-8"?>\n' + output_content
+
+    with open(resolved_file, 'w', encoding='utf-8') as f:
+        f.write(full_content)
+
+    for project_path, pf_data in project_files_cache.items():
+        if project_path.endswith(apparatus_file) or project_path == apparatus_file:
+            pf_data['content'] = full_content
+            break
+
+    apparatus = Apparatus(apparatus_file, project_files_cache)
+    return apparatus
 
 
 @api.route('/apparatus/save', methods=['POST'])
@@ -778,10 +813,7 @@ def save_apparatus_note():
         if note_html and note_html.strip():
             host_element.append(html_note_to_tei(note_html))
 
-        output_content = et.tostring(root, encoding='unicode', pretty_print=True)
-        with open(resolved_file, 'w', encoding='utf-8') as f:
-            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            f.write(output_content)
+        write_apparatus_file_and_refresh(resolved_file, apparatus_file, root)
 
         return jsonify({'success': True})
 
@@ -790,6 +822,258 @@ def save_apparatus_note():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to save note: {str(e)}'}), 500
+
+
+def _load_app_elements_for_write(apparatus_file, project_directory):
+    """
+    Resolve+read+parse the apparatus file fresh from disk for a write
+    operation, returning (resolved_file, root, app_elements). Raises the same
+    exceptions the caller's try/except already handles; callers should check
+    for a None resolved_file (file not found) themselves before proceeding.
+    """
+    resolved_file = resolve_apparatus_file_on_disk(apparatus_file, project_directory)
+    if not resolved_file:
+        return None, None, None
+
+    with open(resolved_file, encoding='utf-8') as f:
+        content = f.read()
+
+    root = et.fromstring(content.encode('utf-8'))
+    app_elements = root.xpath('.//tei:app', namespaces=ns)
+    return resolved_file, root, app_elements
+
+
+def _validate_new_format_readings(readings):
+    """
+    Validate the shared 'readings' shape used by entry create/update. Returns
+    an error string, or None if valid.
+
+    Transposition readings (ana == hc:TranspositionVariant) are structurally
+    different from the other three types: they carry 'links' (base/witness
+    token pairs) instead of 'ptrs', and an <app> anchors via its first <link>
+    rather than @target - so an entry can't mix transposition and
+    non-transposition readings.
+    """
+    if not readings or not isinstance(readings, list):
+        return 'At least one reading is required'
+
+    ana_values = {reading.get('ana') for reading in readings}
+    is_transposition = 'hc:TranspositionVariant' in ana_values
+    if is_transposition and len(ana_values) > 1:
+        return 'Transposition readings cannot be mixed with other variant types in the same entry'
+
+    for reading in readings:
+        if not reading.get('wit'):
+            return 'Each reading needs at least one witness'
+        if reading.get('ana') not in ALLOWED_NEW_FORMAT_ANA:
+            return f"Invalid or missing variant type (ana): {reading.get('ana')!r}"
+
+        if reading.get('ana') == 'hc:TranspositionVariant':
+            if reading.get('ptrs'):
+                return 'Transposition readings use links, not ptrs'
+            links = reading.get('links')
+            if not links:
+                return 'Each transposition reading needs at least one link pair'
+            for pair in links:
+                if not pair.get('base') or not pair.get('witness'):
+                    return 'Each transposition link needs both a base and a witness token reference'
+        else:
+            if reading.get('links'):
+                return 'Only transposition readings use links'
+            if not reading.get('ptrs'):
+                return 'Each reading needs at least one token reference'
+
+    return None
+
+
+@api.route('/apparatus/entry/create', methods=['POST'])
+def create_apparatus_entry_new_format():
+    """
+    Create a new apparatus entry in the new data model. Either target/<ptr>
+    based (Addition/Omission/Substitution) or, for a transposition entry,
+    target-less/<link> based (readings carry 'links' instead of 'ptrs' - see
+    _validate_new_format_readings).
+    Expected JSON: {
+        apparatus_file, project_directory,
+        target: "b:range(w_71_2_4,w_71_2_5)",  # omitted/null for transposition-only entries
+        readings: [ { wit: [ids], ana: "hc:...", ptrs: [...] | links: [{base, witness}, ...] }, ... ]
+    }
+    Response: { success, apparatus_entries: [...], created_entry_id }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        apparatus_file = data.get('apparatus_file')
+        project_directory = data.get('project_directory', '')
+        target = data.get('target')
+        readings = data.get('readings')
+
+        if not apparatus_file:
+            return jsonify({'error': 'No apparatus file specified'}), 400
+        readings_error = _validate_new_format_readings(readings)
+        if readings_error:
+            return jsonify({'error': readings_error}), 400
+
+        is_transposition = readings[0].get('ana') == 'hc:TranspositionVariant'
+        if not is_transposition and not target:
+            return jsonify({'error': 'target is required'}), 400
+
+        resolved_file, root, app_elements = _load_app_elements_for_write(apparatus_file, project_directory)
+        if not resolved_file:
+            return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
+
+        list_app = root.find('.//tei:listApp', namespaces=ns)
+        parent = list_app if list_app is not None else root.find('.//tei:body', namespaces=ns)
+        if parent is None:
+            return jsonify({'error': 'Could not find <listApp> or <body> in apparatus file'}), 400
+
+        new_app = build_new_format_app_element(target, readings)
+        parent.append(new_app)
+
+        updated_apparatus = write_apparatus_file_and_refresh(resolved_file, apparatus_file, root)
+        fresh_entries = updated_apparatus.get_entries()
+
+        return jsonify({
+            'success': True,
+            'apparatus_entries': fresh_entries,
+            'created_entry_id': len(fresh_entries)
+        })
+
+    except Exception as e:
+        print(f"ERROR: Could not create apparatus entry: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to create entry: {str(e)}'}), 500
+
+
+@api.route('/apparatus/entry/update', methods=['POST'])
+def update_apparatus_entry_new_format():
+    """
+    Update an existing new-format apparatus entry's target/readings.
+    Expected JSON: {
+        apparatus_file, project_directory,
+        entry_index (0-based, document order among <app> elements),
+        target, readings: [ { wit, ana, ptrs }, ... ]
+    }
+    Rejects (400) transposition entries (no @target) and explicit-<lem>
+    entries (has a <lem> child) - both stay read-only in this pass.
+    Rebuild strategy: wholesale-replaces the <app>'s children, but preserves
+    each existing <rdg>'s <note> by matching it to the new <rdg> at the same
+    index position. This is not a true diff - if an edit reorders/adds/removes
+    reading groups such that index positions shift, a note could reattach to
+    the wrong reading or be dropped. Acceptable for now since reading-group
+    index ordering is stable within a normal edit session.
+    Response: { success, apparatus_entries: [...] }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        apparatus_file = data.get('apparatus_file')
+        project_directory = data.get('project_directory', '')
+        entry_index = data.get('entry_index')
+        target = data.get('target')
+        readings = data.get('readings')
+
+        if not apparatus_file:
+            return jsonify({'error': 'No apparatus file specified'}), 400
+        if entry_index is None:
+            return jsonify({'error': 'entry_index is required'}), 400
+        if not target:
+            return jsonify({'error': 'target is required'}), 400
+        readings_error = _validate_new_format_readings(readings)
+        if readings_error:
+            return jsonify({'error': readings_error}), 400
+
+        resolved_file, root, app_elements = _load_app_elements_for_write(apparatus_file, project_directory)
+        if not resolved_file:
+            return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
+        if entry_index < 0 or entry_index >= len(app_elements):
+            return jsonify({'error': f'No apparatus entry at index {entry_index}'}), 404
+
+        app_element = app_elements[entry_index]
+
+        if app_element.get('target') is None:
+            return jsonify({'error': 'This entry is a transposition and cannot be edited here'}), 400
+        if app_element.find('tei:lem', namespaces=ns) is not None:
+            return jsonify({'error': 'This entry has an explicit <lem> override and cannot be edited here'}), 400
+
+        old_rdg_elements = app_element.findall('tei:rdg', namespaces=ns)
+        preserved_notes = {}
+        for index, rdg in enumerate(old_rdg_elements):
+            note_element = rdg.find('tei:note', namespaces=ns)
+            if note_element is not None:
+                preserved_notes[index] = note_element
+
+        for child in list(app_element):
+            app_element.remove(child)
+        app_element.set('target', target)
+
+        for index, reading in enumerate(readings):
+            rdg_element = build_rdg_element(reading['wit'], reading['ana'], reading['ptrs'])
+            if index in preserved_notes:
+                rdg_element.append(preserved_notes[index])
+            app_element.append(rdg_element)
+
+        updated_apparatus = write_apparatus_file_and_refresh(resolved_file, apparatus_file, root)
+
+        return jsonify({
+            'success': True,
+            'apparatus_entries': updated_apparatus.get_entries()
+        })
+
+    except Exception as e:
+        print(f"ERROR: Could not update apparatus entry: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to update entry: {str(e)}'}), 500
+
+
+@api.route('/apparatus/entry/delete', methods=['POST'])
+def delete_apparatus_entry_new_format():
+    """
+    Delete an existing new-format apparatus entry.
+    Expected JSON: { apparatus_file, project_directory, entry_index }
+    Response: { success, apparatus_entries: [...] }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        apparatus_file = data.get('apparatus_file')
+        project_directory = data.get('project_directory', '')
+        entry_index = data.get('entry_index')
+
+        if not apparatus_file:
+            return jsonify({'error': 'No apparatus file specified'}), 400
+        if entry_index is None:
+            return jsonify({'error': 'entry_index is required'}), 400
+
+        resolved_file, root, app_elements = _load_app_elements_for_write(apparatus_file, project_directory)
+        if not resolved_file:
+            return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
+        if entry_index < 0 or entry_index >= len(app_elements):
+            return jsonify({'error': f'No apparatus entry at index {entry_index}'}), 404
+
+        app_element = app_elements[entry_index]
+        app_element.getparent().remove(app_element)
+
+        updated_apparatus = write_apparatus_file_and_refresh(resolved_file, apparatus_file, root)
+
+        return jsonify({
+            'success': True,
+            'apparatus_entries': updated_apparatus.get_entries()
+        })
+
+    except Exception as e:
+        print(f"ERROR: Could not delete apparatus entry: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to delete entry: {str(e)}'}), 500
 
 
 def _set_element_content(element, data):

@@ -27,7 +27,14 @@ class HeiCritApp {
             'reading-1': []
         };
         this.nextReadingGroupIndex = 2;
-        
+        // New-format only: holds 'hc:TranspositionVariant' for a reading
+        // group put into transposition (ordered-selection) mode, absent/empty
+        // otherwise (Addition/Omission/Substitution are auto-detected). In
+        // transposition mode, the lemma is selected normally and each
+        // reading group's tokens are numbered by click order per witness -
+        // see updateTranspositionNumbering/buildTranspositionSavePayload.
+        this.selectedReadingAna = {};
+
         // Project tracking for save functionality
         this.currentProjectDirectory = null;
         this.currentApparatusFile = null;
@@ -169,12 +176,17 @@ class HeiCritApp {
                                     <div class="apparatus-details-title">
                                         <h4>Location Details</h4>
                                         <div class="apparatus-toolbar">
-                                            <button id="new-variant-btn-${tabId}" class="apparatus-btn">New Variant</button>
-                                            <button id="edit-variant-btn-${tabId}" class="apparatus-btn">Edit Variant</button>
+                                            <button id="new-variant-btn-${tabId}" class="apparatus-btn">New Entry</button>
+                                            <button id="edit-variant-btn-${tabId}" class="apparatus-btn">Edit Entry</button>
+                                            <button id="delete-variant-btn-${tabId}" class="apparatus-btn" style="display: none;">Delete Entry</button>
                                             <select id="reading-group-select-${tabId}" class="reading-group-select" style="display: none;">
                                                 <option value="lemma">Lemma</option>
                                                 <option value="reading-1">Reading 1</option>
                                                 <option value="new-group">+ New reading group</option>
+                                            </select>
+                                            <select id="reading-ana-select-${tabId}" class="reading-ana-select" style="display: none;">
+                                                <option value="">Addition / Omission / Substitution (auto)</option>
+                                                <option value="hc:TranspositionVariant">Transposition</option>
                                             </select>
                                         </div>
                                     </div>
@@ -372,7 +384,9 @@ class HeiCritApp {
         // Setup entry creation events
         const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
         const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
+        const deleteVariantBtn = document.getElementById(`delete-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
+        const readingAnaSelect = document.getElementById(`reading-ana-select-${tabId}`);
 
         if (newVariantBtn) {
             newVariantBtn.addEventListener('click', () => this.toggleCreationMode(tabId));
@@ -381,9 +395,17 @@ class HeiCritApp {
         if (editVariantBtn) {
             editVariantBtn.addEventListener('click', () => this.toggleEditMode(tabId));
         }
-        
+
+        if (deleteVariantBtn) {
+            deleteVariantBtn.addEventListener('click', () => this.deleteCurrentEntryOnServer(tabId));
+        }
+
         if (readingGroupSelect) {
             readingGroupSelect.addEventListener('change', (e) => this.handleReadingGroupChange(tabId, e.target.value));
+        }
+
+        if (readingAnaSelect) {
+            readingAnaSelect.addEventListener('change', (e) => this.handleAnaChange(tabId, this.currentReadingGroup, e.target.value));
         }
     }
 
@@ -565,6 +587,7 @@ class HeiCritApp {
             if (content) {
                 content.innerHTML = '<p>No apparatus entries to display</p>';
             }
+            this.updateDeleteButtonVisibility(tabId);
             return;
         }
 
@@ -604,6 +627,29 @@ class HeiCritApp {
 
         // Set up editable note areas (italics -> <mentioned> on save)
         this.setupNoteEditing(tabId);
+
+        this.updateDeleteButtonVisibility(tabId);
+    }
+
+    updateDeleteButtonVisibility(tabId) {
+        const tab = this.tabs.get(tabId);
+        const deleteBtn = document.getElementById(`delete-variant-btn-${tabId}`);
+        if (!deleteBtn) return;
+
+        const isNewFormat = tab && tab.data && tab.data.apparatusFormat === 'new';
+        if (!isNewFormat || this.creationMode || this.editMode) {
+            deleteBtn.style.display = 'none';
+            return;
+        }
+
+        // Transposition entries CAN be deleted (the backend just removes the
+        // <app> by index regardless of its structure) - unlike editing, delete
+        // doesn't need to reconstruct or validate the entry's content.
+        // Explicit-<lem>-override entries stay excluded, same as edit.
+        const entry = this.getCurrentActiveEntry(tabId);
+        const isDeletable = entry && !entry.is_placeholder && !entry.lemma_is_explicit;
+
+        deleteBtn.style.display = isDeletable ? '' : 'none';
     }
 
     updateNavigationControls(tabId) {
@@ -1556,6 +1602,12 @@ class HeiCritApp {
         if (result.leiths_prefix) {
             this.leithsPrefix = result.leiths_prefix;
         }
+
+        // Store the detected apparatus data model ('old' or 'new') - drives which
+        // entry create/edit/delete code path (and UI) is used.
+        if (result.format) {
+            this.apparatusFormat = result.format;
+        }
         
         // If this result also contains synoptic map data (from project processing), store it
         if (result.synoptic_map && Object.keys(result.synoptic_map).length > 0) {
@@ -1624,7 +1676,8 @@ class HeiCritApp {
                 // Add project paths for save functionality
                 projectDirectory: this.currentProjectDirectory,
                 apparatusFile: this.currentApparatusFile,
-                synopticMapFile: this.synopticMapFile
+                synopticMapFile: this.synopticMapFile,
+                apparatusFormat: this.apparatusFormat || 'old'
             });
             
             const apparatusCount = this.apparatusData ? this.apparatusData.count : 0;
@@ -2748,7 +2801,7 @@ class HeiCritApp {
             newVariantBtn.classList.add('active');
             readingGroupSelect.style.display = 'inline-block';
             
-            // Hide the Edit Reading button during creation mode
+            // Hide the Edit Entry button during creation mode
             const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
             if (editVariantBtn) {
                 editVariantBtn.style.display = 'none';
@@ -2767,7 +2820,9 @@ class HeiCritApp {
             };
             this.currentReadingGroup = 'lemma';
             this.nextReadingGroupIndex = 2;
-            
+            this.selectedReadingAna = {};
+            this.updateAnaSelectForGroup(tabId, 'lemma');
+
             // Set up token click handlers and event delegation
             this.setupTokenClickHandlers(tabId);
             this.setupTokenEventDelegation();
@@ -2814,16 +2869,37 @@ class HeiCritApp {
     }
     
     exitCreationMode(tabId) {
+        // New-format only: persist the new entry before tearing down creation
+        // mode. On validation/server failure, stay in creation mode (don't run
+        // the cleanup below) so the user can fix the selection and retry.
+        const tab = this.tabs.get(tabId);
+        if (tab && tab.data && tab.data.apparatusFormat === 'new') {
+            const hasSelection = Object.values(this.selectedTokens).some(tokens => tokens && tokens.length > 0);
+            if (hasSelection) {
+                this.saveNewEntryToServer(tabId).then(success => {
+                    if (success) {
+                        this._finishExitCreationMode(tabId);
+                    }
+                });
+                return;
+            }
+        }
+        this._finishExitCreationMode(tabId);
+    }
+
+    _finishExitCreationMode(tabId) {
         this.creationMode = false;
         const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
         const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
-        newVariantBtn.textContent = 'New Variant';
+        newVariantBtn.textContent = 'New Entry';
         newVariantBtn.classList.remove('active');
         readingGroupSelect.style.display = 'none';
-        
-        // Show the Edit Reading button again
+        const readingAnaSelect = document.getElementById(`reading-ana-select-${tabId}`);
+        if (readingAnaSelect) readingAnaSelect.style.display = 'none';
+
+        // Show the Edit Entry button again
         if (editVariantBtn) {
             editVariantBtn.style.display = '';
         }
@@ -3054,7 +3130,8 @@ class HeiCritApp {
                 
                 readingGroupSelect.value = targetGroup;
             }
-        } 
+            this.updateAnaSelectForGroup(tabId, targetGroup);
+        }
     }
     
     getAvailableReadingGroups() {
@@ -3152,16 +3229,15 @@ class HeiCritApp {
         // Determine which line this token belongs to
         const synLine = token.closest('.syn-line');
         const isMainText = synLine && synLine.classList.contains('main-text');
-        
-        // If clicking on main text (first line), force lemma selection
-        const readingGroup = isMainText ? 'lemma' : this.currentReadingGroup;
-        
-        
+
         // Get witness information to distinguish tokens with same ID from different witnesses
         const witnessInfo = this.getWitnessInfoFromLine(synLine);
-        const witnessId = witnessInfo ? witnessInfo.witnessId : null;
         const isPreSpace = token.classList.contains('syn-token-pre');
         const isPostSpace = token.classList.contains('syn-token-post');
+
+        // If clicking on main text (first line), force lemma selection
+        const readingGroup = isMainText ? 'lemma' : this.currentReadingGroup;
+        const witnessId = witnessInfo ? witnessInfo.witnessId : null;
 
         // Find which group (if any) currently contains this specific token
         // Match on tokenId, witnessId, AND pre/post space type (pre-space and word share the same tokenId)
@@ -3213,11 +3289,33 @@ class HeiCritApp {
 
 
         
-        // Save entry immediately after any token change (only in creation mode)
-        if (this.creationMode) {
+        // Save entry immediately after any token change (only in creation mode).
+        // Old format only: this builds a client-only "ghost" entry keyed by an
+        // old-format corresp string (leithsPrefix:l_N) and points
+        // tab.currentEntryIndex at it for live preview. New-format corresp
+        // keys look different (they include the poem-number segment, e.g.
+        // "b:l_71_9" not "b:l_9"), so doing this for new-format projects left
+        // tab.currentEntryIndex pointing at a key that doesn't exist in the
+        // real server response once the entry is actually saved on Finish -
+        // refreshApparatusEntriesInTab then failed to find it and fell back
+        // to index 0, jumping the view back to the first entry. New-format
+        // entries are only persisted once, at Finish, via saveNewEntryToServer;
+        // the selection highlighting above already provides live feedback
+        // without needing this bookkeeping.
+        const tab = this.tabs.get(tabId);
+        const isNewFormat = tab && tab.data && tab.data.apparatusFormat === 'new';
+        if (this.creationMode && !isNewFormat) {
             this.saveNewEntry(tabId);
         }
-        
+
+        // Refresh the transposition order-number badges (lemma tokens numbered
+        // by document position, each transposition reading group's tokens
+        // numbered by click order per witness) whenever the lemma or a
+        // transposition-flagged reading group changes.
+        if (isNewFormat && Object.values(this.selectedReadingAna).includes('hc:TranspositionVariant')) {
+            this.updateTranspositionNumbering(tabId);
+        }
+
         // Check if event handlers are still attached
         const tokens = document.querySelectorAll('.syn-token');
         let tokensWithHandlers = 0;
@@ -3227,7 +3325,72 @@ class HeiCritApp {
             }
         });
     }
-    
+
+    findWordTokenElement(tokenId, witnessId) {
+        // Word tokens only (never a .syn-token-pre/-post gap marker) - gap
+        // positions aren't meaningful for transposition pairing.
+        const tokenElements = document.querySelectorAll(`[data-token-id="${tokenId}"]`);
+        for (const tokenElement of tokenElements) {
+            if (tokenElement.classList.contains('syn-token-pre') || tokenElement.classList.contains('syn-token-post')) {
+                continue;
+            }
+            const synLine = tokenElement.closest('.syn-line');
+            const witnessInfo = this.getWitnessInfoFromLine(synLine);
+            if (witnessInfo && witnessInfo.witnessId === witnessId) {
+                return tokenElement;
+            }
+        }
+        return null;
+    }
+
+    setTranspositionNumber(tokenData, index) {
+        const el = this.findWordTokenElement(tokenData.tokenId, tokenData.witnessInfo.witnessId);
+        if (!el) return;
+        el.classList.add('transposition-numbered');
+        el.setAttribute('data-transposition-index', index);
+    }
+
+    updateTranspositionNumbering(tabId) {
+        // Lemma tokens are selected normally (no special click handling) and
+        // numbered by their DOCUMENT position (order-independent - the lemma
+        // selection doesn't encode correspondence order on its own). Each
+        // transposition-flagged reading group's tokens are numbered by CLICK
+        // order instead, separately per witness, so witness token #N is
+        // understood to correspond to lemma token #N (see
+        // buildTranspositionSavePayload, which pairs them by that index).
+        const tabPanel = document.getElementById(`panel-${tabId}`);
+        if (!tabPanel) return;
+
+        tabPanel.querySelectorAll('.transposition-numbered').forEach(el => {
+            el.classList.remove('transposition-numbered');
+            el.removeAttribute('data-transposition-index');
+        });
+
+        const transpositionGroups = Object.keys(this.selectedReadingAna).filter(
+            group => this.selectedReadingAna[group] === 'hc:TranspositionVariant'
+        );
+        if (transpositionGroups.length === 0) return; // nothing in transposition mode - leave everything cleared
+
+        // Number the lemma as soon as any group is in transposition mode,
+        // even before the first reading token is clicked - it's already
+        // selected via the normal lemma selection by this point.
+        const lemmaTokens = this.selectedTokens.lemma || [];
+        const sortedLemma = [...lemmaTokens].sort((a, b) => this.tokenSortKey(a.tokenId) - this.tokenSortKey(b.tokenId));
+        sortedLemma.forEach((tokenData, index) => {
+            this.setTranspositionNumber(tokenData, index + 1);
+        });
+
+        transpositionGroups.forEach(group => {
+            const tokens = this.selectedTokens[group] || [];
+            const countByWitness = {};
+            tokens.forEach(tokenData => {
+                const witId = tokenData.witnessInfo.witnessId;
+                countByWitness[witId] = (countByWitness[witId] || 0) + 1;
+                this.setTranspositionNumber(tokenData, countByWitness[witId]);
+            });
+        });
+    }
+
     // checkTokenForEdit(tabId, event) {
     //     console.log('DEBUG: checkTokenForEdit called');
     //     event.stopPropagation();
@@ -3328,6 +3491,21 @@ class HeiCritApp {
     // }
     
     enterEditMode(tabId, entry) {
+        // New-format only: transposition entries (<link> pairs, no @target) and
+        // explicit-<lem>-override entries stay read-only for now - editing them
+        // needs a fundamentally different authoring UI that hasn't been built.
+        const tab = this.tabs.get(tabId);
+        if (tab && tab.data && tab.data.apparatusFormat === 'new') {
+            if (entry.readings && entry.readings.some(r => r.links)) {
+                this.showErrorPopup('Cannot Edit', 'Transposition entries cannot be edited here yet.');
+                return;
+            }
+            if (entry.lemma_is_explicit) {
+                this.showErrorPopup('Cannot Edit', 'Entries with an explicit adopted-reading override cannot be edited here yet.');
+                return;
+            }
+        }
+
         // Set edit mode flag and store the entry being edited
         this.editMode = true;
         this.editingEntry = entry;
@@ -3337,7 +3515,7 @@ class HeiCritApp {
         const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
-        // Change the Edit Reading button to show Finish
+        // Change the Edit Entry button to show Finish
         if (editVariantBtn) {
             editVariantBtn.textContent = 'Finish';
             editVariantBtn.classList.add('active');
@@ -3366,35 +3544,41 @@ class HeiCritApp {
     }
     
     populateSelectedTokensFromEntry(tabId, entry) {
-        
+
         // Reset selectedTokens
         this.selectedTokens = {
             lemma: [],
             'reading-1': []
         };
         this.nextReadingGroupIndex = 2;
-        
+        this.selectedReadingAna = {};
+
         // Parse lemma tokens
         if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
             const lemmaCorresp = entry.lemma.attributes.corresp;
             const lemmaTokens = this.parseTokensFromCorresp(lemmaCorresp);
             this.selectedTokens.lemma = lemmaTokens;
         }
-        
+
         // Parse reading tokens
         if (entry.readings) {
             entry.readings.forEach((reading, index) => {
                 if (reading.attributes && reading.attributes.corresp) {
                     const readingGroup = `reading-${index + 1}`;
-                    
+
                     // Ensure the reading group exists in selectedTokens
                     if (!this.selectedTokens[readingGroup]) {
                         this.selectedTokens[readingGroup] = [];
                     }
-                    
+
                     const readingTokens = this.parseTokensFromCorresp(reading.attributes.corresp);
                     this.selectedTokens[readingGroup] = readingTokens;
-                    
+
+                    // New-format only: seed this reading group's variant type
+                    if (reading.attributes.ana) {
+                        this.selectedReadingAna[readingGroup] = reading.attributes.ana;
+                    }
+
                     // Update next reading group index
                     this.nextReadingGroupIndex = Math.max(this.nextReadingGroupIndex, index + 2);
                 }
@@ -3407,6 +3591,7 @@ class HeiCritApp {
         // Reset dropdown to lemma
         this.currentReadingGroup = 'lemma';
         this.resetReadingGroupDropdownForEdit(tabId);
+        this.updateAnaSelectForGroup(tabId, 'lemma');
     }
     
     parseTokensFromCorresp(corresp) {
@@ -3523,9 +3708,25 @@ class HeiCritApp {
     }
     
     exitEditMode(tabId) {
-        // Save the edited entry
+        const tab = this.tabs.get(tabId);
+        if (tab && tab.data && tab.data.apparatusFormat === 'new') {
+            // New-format only: persist the edit before tearing down edit mode.
+            // On validation/server failure, stay in edit mode so the user can
+            // fix the selection and retry.
+            this.saveEditedEntryToServer(tabId).then(success => {
+                if (success) {
+                    this._finishExitEditMode(tabId);
+                }
+            });
+            return;
+        }
+
+        // Old format: save the edited entry (client-only, unchanged)
         this.saveEditedEntry(tabId);
-        
+        this._finishExitEditMode(tabId);
+    }
+
+    _finishExitEditMode(tabId) {
         // Clean up edit mode
         this.editMode = false;
         this.editingEntry = null;
@@ -3534,23 +3735,25 @@ class HeiCritApp {
         const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         
-        // Restore the New Variant button
+        // Restore the New Entry button
         if (newVariantBtn) {
-            newVariantBtn.textContent = 'New Variant';
+            newVariantBtn.textContent = 'New Entry';
             newVariantBtn.classList.remove('active');
             newVariantBtn.style.backgroundColor = '';
             newVariantBtn.style.display = ''; // Show it again
         }
         
-        // Restore the Edit Reading button
+        // Restore the Edit Entry button
         if (editVariantBtn) {
-            editVariantBtn.textContent = 'Edit Reading';
+            editVariantBtn.textContent = 'Edit Entry';
             editVariantBtn.classList.remove('active');
         }
         
         if (readingGroupSelect) {
             readingGroupSelect.style.display = 'none';
         }
+        const readingAnaSelect = document.getElementById(`reading-ana-select-${tabId}`);
+        if (readingAnaSelect) readingAnaSelect.style.display = 'none';
         
         // Clear all selected tokens
         this.clearSelectedTokens(tabId);
@@ -3667,17 +3870,24 @@ class HeiCritApp {
         } else {
             this.currentReadingGroup = value;
         }
+        this.updateAnaSelectForGroup(tabId, this.currentReadingGroup);
     }
     
     clearSelectedTokens(tabId) {
         const tabPanel = document.getElementById(`panel-${tabId}`);
         if (!tabPanel) return;
-        
+
         // Remove all selection classes
         Object.keys(this.selectedTokens).forEach(group => {
             tabPanel.querySelectorAll(`.selected-${group}`).forEach(token => {
                 token.classList.remove(`selected-${group}`);
             });
+        });
+
+        // Clear any leftover transposition order-number badges
+        tabPanel.querySelectorAll('.transposition-numbered').forEach(token => {
+            token.classList.remove('transposition-numbered');
+            token.removeAttribute('data-transposition-index');
         });
     }
     
@@ -3775,7 +3985,13 @@ class HeiCritApp {
         return m ? parseInt(m[1]) * 100000 + parseInt(m[2]) : 0;
     }
 
-    buildCorrespForTokens(prefix, tokens) {
+    buildCorrespPartsForTokens(prefix, tokens) {
+        // Returns the individual "prefix:spec" address parts as an array (not
+        // joined into a string) - a range() part contains an internal ", "
+        // separator, so callers that need to count/enumerate distinct
+        // addresses must use this instead of splitting buildCorrespForTokens's
+        // joined output on whitespace (that would wrongly split one range()
+        // into two parts).
         const wordTokens = tokens.filter(t => !t.isPreSpace && !t.isPostSpace);
         const prePostParts = tokens
             .filter(t => t.isPreSpace || t.isPostSpace)
@@ -3789,7 +4005,11 @@ class HeiCritApp {
             wordPart = `${prefix}:${wordTokens[0].tokenId}`;
         }
 
-        return [...prePostParts, ...(wordPart ? [wordPart] : [])].join(' ');
+        return [...prePostParts, ...(wordPart ? [wordPart] : [])];
+    }
+
+    buildCorrespForTokens(prefix, tokens) {
+        return this.buildCorrespPartsForTokens(prefix, tokens).join(' ');
     }
 
     buildLeftContent(tokenData) {
@@ -3810,6 +4030,343 @@ class HeiCritApp {
             html: `<em>nach</em>${this.escapeHtml(tail)}`,
             children: [{ tag: 'emph', text: 'nach', tail: tail }]
         };
+    }
+
+    buildNewFormatSavePayload() {
+        // New-format only: turn the current token selection into a
+        // { target, readings } payload for /apparatus/entry/create or
+        // /apparatus/entry/update, or an { error } describing why the
+        // current selection can't be saved. Dispatches to the transposition
+        // branch when any reading group is in transposition (paired-click)
+        // mode; otherwise auto-detects Addition/Omission/Substitution from
+        // the shape of the lemma vs. each reading group's selection.
+        const transpositionGroups = Object.keys(this.selectedReadingAna).filter(
+            group => this.selectedReadingAna[group] === 'hc:TranspositionVariant'
+        );
+        if (transpositionGroups.length > 0) {
+            return this.buildTranspositionSavePayload(transpositionGroups);
+        }
+
+        const lemmaTokens = this.selectedTokens.lemma || [];
+        if (lemmaTokens.length === 0) {
+            return { error: 'Select at least one lemma token (from the base text row) before saving.' };
+        }
+        const nonBaseLemmaToken = lemmaTokens.find(t => t.witnessInfo.prefix !== this.leithsPrefix);
+        if (nonBaseLemmaToken) {
+            return { error: 'The lemma must be selected from the base text row only.' };
+        }
+        const targetParts = this.buildCorrespPartsForTokens(this.leithsPrefix, lemmaTokens);
+        if (targetParts.length !== 1) {
+            return { error: 'The lemma selection must resolve to a single location (one word, range, or gap position).' };
+        }
+        const target = targetParts[0];
+        const lemmaIsGapOnly = lemmaTokens.every(t => t.isPreSpace || t.isPostSpace);
+        const lemmaIsWordOnly = lemmaTokens.every(t => !t.isPreSpace && !t.isPostSpace);
+
+        const readingGroupNames = Object.keys(this.selectedTokens).filter(
+            group => group !== 'lemma' && this.selectedTokens[group] && this.selectedTokens[group].length > 0
+        );
+        if (readingGroupNames.length === 0) {
+            return { error: 'Select at least one reading (tokens from a witness other than the base text).' };
+        }
+
+        const readings = [];
+        for (const group of readingGroupNames) {
+            const tokens = this.selectedTokens[group];
+
+            const isGapOnly = tokens.every(t => t.isPreSpace || t.isPostSpace);
+            const isWordOnly = tokens.every(t => !t.isPreSpace && !t.isPostSpace);
+            if (!isGapOnly && !isWordOnly) {
+                return { error: `${group}: select either words or a single gap position, not both.` };
+            }
+
+            // Variant type is fully determined by the shape of the lemma vs.
+            // this reading - no manual choice needed (see the plan's table:
+            // word/word -> Substitution, gap/word -> Addition, word/gap ->
+            // Omission, gap/gap -> error, at least one side needs a word).
+            let ana;
+            if (lemmaIsGapOnly && isGapOnly) {
+                return { error: `${group}: the base text and this reading can't both be empty gap positions - at least one side must have a word.` };
+            } else if (lemmaIsGapOnly && isWordOnly) {
+                ana = 'hc:AdditionVariant';
+            } else if (lemmaIsWordOnly && isGapOnly) {
+                ana = 'hc:OmissionVariant';
+            } else {
+                ana = 'hc:SubstitutionVariant';
+            }
+
+            const witGroups = {};
+            tokens.forEach(token => {
+                const witId = token.witnessInfo.witnessId;
+                if (!witGroups[witId]) witGroups[witId] = [];
+                witGroups[witId].push(token);
+            });
+
+            const wit = Object.keys(witGroups);
+            const ptrs = [];
+            Object.values(witGroups).forEach(witTokens => {
+                const parts = this.buildCorrespPartsForTokens(witTokens[0].witnessInfo.prefix, witTokens);
+                ptrs.push(...parts);
+            });
+
+            readings.push({ wit, ana, ptrs });
+        }
+
+        return { target, readings };
+    }
+
+    buildTranspositionSavePayload(transpositionGroups) {
+        // Lemma is selected normally (base-text tokens, any order) and
+        // numbered by document position (see updateTranspositionNumbering).
+        // Each transposition reading group's tokens are numbered by CLICK
+        // order per witness - witness token #N pairs with lemma token #N, so
+        // each witness present must contribute exactly as many tokens as the
+        // lemma has.
+        const lemmaTokens = this.selectedTokens.lemma || [];
+        if (lemmaTokens.length === 0) {
+            return { error: 'Select the base-text (lemma) tokens involved in the transposition first.' };
+        }
+        const nonBaseLemmaToken = lemmaTokens.find(t => t.witnessInfo.prefix !== this.leithsPrefix);
+        if (nonBaseLemmaToken) {
+            return { error: 'The lemma must be selected from the base text row only.' };
+        }
+        if (lemmaTokens.some(t => t.isPreSpace || t.isPostSpace)) {
+            return { error: 'Transposition lemma tokens must be words, not gap positions.' };
+        }
+        const sortedLemma = [...lemmaTokens].sort((a, b) => this.tokenSortKey(a.tokenId) - this.tokenSortKey(b.tokenId));
+
+        const mixedGroup = Object.keys(this.selectedTokens).find(group =>
+            group !== 'lemma' && !transpositionGroups.includes(group) &&
+            this.selectedTokens[group] && this.selectedTokens[group].length > 0
+        );
+        if (mixedGroup) {
+            return { error: `${mixedGroup} has a normal token selection - a transposition entry can't mix transposition and non-transposition readings.` };
+        }
+
+        const readings = [];
+        for (const group of transpositionGroups) {
+            const tokens = (this.selectedTokens[group] || []).filter(t => !t.isPreSpace && !t.isPostSpace);
+            if (tokens.length === 0) {
+                return { error: `${group}: click the witness token(s) that correspond, in order, to the ${sortedLemma.length} lemma token(s).` };
+            }
+
+            const byWitness = {};
+            tokens.forEach(t => {
+                const witId = t.witnessInfo.witnessId;
+                if (!byWitness[witId]) byWitness[witId] = [];
+                byWitness[witId].push(t);
+            });
+
+            const links = [];
+            for (const [witId, witTokens] of Object.entries(byWitness)) {
+                if (witTokens.length !== sortedLemma.length) {
+                    return { error: `${group}: witness "${witId}" has ${witTokens.length} token(s) selected, but the lemma has ${sortedLemma.length} - select exactly the same number, in corresponding order.` };
+                }
+                witTokens.forEach((witnessToken, index) => {
+                    links.push({
+                        base: `${sortedLemma[index].witnessInfo.prefix}:${sortedLemma[index].tokenId}`,
+                        witness: `${witnessToken.witnessInfo.prefix}:${witnessToken.tokenId}`
+                    });
+                });
+            }
+
+            readings.push({ wit: Object.keys(byWitness), ana: 'hc:TranspositionVariant', links });
+        }
+
+        return { target: null, readings };
+    }
+
+    getCurrentActiveEntry(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.entryKeys || tab.currentEntryIndex < 0) return null;
+        const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
+        const currentEntries = tab.groupedEntries[currentCorresp];
+        if (!currentEntries || tab.activeSubentryIndex < 0 || tab.activeSubentryIndex >= currentEntries.length) return null;
+        return currentEntries[tab.activeSubentryIndex];
+    }
+
+    refreshApparatusEntriesInTab(tabId, freshEntries) {
+        // Rebuilds a tab's whole apparatus-entries view from a fresh server
+        // response after a create/update/delete - avoids reasoning about
+        // stale entry.id/index values, which shift after any insert/delete.
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
+        const synopticMap = tab.synopticMapData ? tab.synopticMapData.synoptic_map : {};
+        const mergedEntries = this.mergeApparatusWithSynopticMap(freshEntries, synopticMap);
+
+        const previousCorresp = tab.entryKeys ? tab.entryKeys[tab.currentEntryIndex] : null;
+
+        tab.apparatusEntries = mergedEntries;
+        tab.groupedEntries = this.groupEntriesByCorresp(mergedEntries);
+        tab.entryKeys = Object.keys(tab.groupedEntries);
+        tab.entryKeys.sort((a, b) => {
+            const locA = tab.groupedEntries[a][0]?.loc || '';
+            const locB = tab.groupedEntries[b][0]?.loc || '';
+            const numA = parseInt(locA) || 0;
+            const numB = parseInt(locB) || 0;
+            return numA - numB;
+        });
+
+        const restoredIndex = previousCorresp ? tab.entryKeys.indexOf(previousCorresp) : -1;
+        tab.currentEntryIndex = restoredIndex >= 0 ? restoredIndex : 0;
+
+        if (tab.entryKeys.length > 0) {
+            const currentEntries = tab.groupedEntries[tab.entryKeys[tab.currentEntryIndex]];
+            tab.activeSubentryIndex = this.findFirstNonPlaceholderEntry(currentEntries);
+        } else {
+            tab.activeSubentryIndex = -1;
+        }
+
+        this.updateApparatusDisplay(tabId);
+        this.markGapSymbolsWithContent(tab);
+    }
+
+    async saveNewEntryToServer(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return false;
+
+        const payload = this.buildNewFormatSavePayload();
+        if (payload.error) {
+            this.showErrorPopup('Cannot Save Entry', payload.error);
+            return false;
+        }
+
+        try {
+            const response = await this.apiRequest('/apparatus/entry/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apparatus_file: tab.data.apparatusFile,
+                    project_directory: tab.data.projectDirectory,
+                    target: payload.target,
+                    readings: payload.readings
+                })
+            });
+
+            if (!response.success) {
+                this.showErrorPopup('Save Failed', response.error || 'Failed to save the new entry.');
+                return false;
+            }
+
+            this.refreshApparatusEntriesInTab(tabId, response.apparatus_entries);
+            return true;
+        } catch (error) {
+            this.showErrorPopup('Save Failed', `Error saving entry: ${error.message}`);
+            return false;
+        }
+    }
+
+    async saveEditedEntryToServer(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data || !this.editingEntry) return false;
+
+        const payload = this.buildNewFormatSavePayload();
+        if (payload.error) {
+            this.showErrorPopup('Cannot Save Entry', payload.error);
+            return false;
+        }
+
+        const entryIndex = (this.editingEntry.id || 1) - 1;
+
+        try {
+            const response = await this.apiRequest('/apparatus/entry/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apparatus_file: tab.data.apparatusFile,
+                    project_directory: tab.data.projectDirectory,
+                    entry_index: entryIndex,
+                    target: payload.target,
+                    readings: payload.readings
+                })
+            });
+
+            if (!response.success) {
+                this.showErrorPopup('Save Failed', response.error || 'Failed to save changes to the entry.');
+                return false;
+            }
+
+            this.refreshApparatusEntriesInTab(tabId, response.apparatus_entries);
+            return true;
+        } catch (error) {
+            this.showErrorPopup('Save Failed', `Error saving entry: ${error.message}`);
+            return false;
+        }
+    }
+
+    async deleteCurrentEntryOnServer(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return;
+
+        const entry = this.getCurrentActiveEntry(tabId);
+        if (!entry || entry.is_placeholder) {
+            this.showErrorPopup('Cannot Delete', 'No apparatus entry is currently selected.');
+            return;
+        }
+        if (entry.lemma_is_explicit) {
+            this.showErrorPopup('Cannot Delete', 'Entries with an explicit adopted-reading override cannot be deleted here yet.');
+            return;
+        }
+
+        if (!confirm('Delete this apparatus entry? This cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await this.apiRequest('/apparatus/entry/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apparatus_file: tab.data.apparatusFile,
+                    project_directory: tab.data.projectDirectory,
+                    entry_index: (entry.id || 1) - 1
+                })
+            });
+
+            if (!response.success) {
+                this.showErrorPopup('Delete Failed', response.error || 'Failed to delete the entry.');
+                return;
+            }
+
+            this.refreshApparatusEntriesInTab(tabId, response.apparatus_entries);
+        } catch (error) {
+            this.showErrorPopup('Delete Failed', `Error deleting entry: ${error.message}`);
+        }
+    }
+
+    handleAnaChange(tabId, group, value) {
+        if (!group || group === 'lemma') return;
+        if (value) {
+            this.selectedReadingAna[group] = value;
+        } else {
+            delete this.selectedReadingAna[group];
+        }
+        // Show/clear the order-number badges immediately - don't wait for the
+        // first reading-token click, the lemma is typically already selected
+        // by the time Transposition is chosen here.
+        this.updateTranspositionNumbering(tabId);
+    }
+
+    updateAnaSelectForGroup(tabId, group) {
+        const tab = this.tabs.get(tabId);
+        const select = document.getElementById(`reading-ana-select-${tabId}`);
+        if (!select) return;
+
+        // Only shown during creation: Addition/Omission/Substitution are
+        // auto-detected from the selection shape (no manual choice needed),
+        // and the only remaining manual choice - Transposition - isn't
+        // available when editing (existing entries can't be converted into
+        // or out of a transposition here; enterEditMode already refuses to
+        // edit transposition entries at all).
+        const isNewFormat = tab && tab.data && tab.data.apparatusFormat === 'new';
+
+        if (isNewFormat && this.creationMode && group && group !== 'lemma') {
+            select.style.display = '';
+            select.value = this.selectedReadingAna[group] || '';
+        } else {
+            select.style.display = 'none';
+        }
     }
 
     createApparatusEntry(loc) {
