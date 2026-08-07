@@ -776,6 +776,39 @@ main {
     font-style: italic;
 }
 
+.apparatus-note-save-btn {
+    display: none;
+    vertical-align: middle;
+    margin-left: -0.3rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    line-height: 1.4rem;
+    padding: 0;
+    border: 1px solid #4caf50;
+    border-radius: 50%;
+    background: #fff;
+    color: #4caf50;
+    font-size: 0.85em;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.apparatus-note-save-btn:hover {
+    background: #4caf50;
+    color: #fff;
+}
+
+/* Distinct from :hover (which can be active at the same time, right after a
+   click) so the save confirmation is actually visible - a different color
+   plus a scale pulse rather than just a background/text-color match. */
+.apparatus-note-save-btn.just-saved {
+    background: #1976d2;
+    border-color: #1976d2;
+    color: #fff;
+    transform: scale(1.25);
+}
+
 /* Apparatus Layout with Main Text */
 .apparatus-layout {
     display: flex;

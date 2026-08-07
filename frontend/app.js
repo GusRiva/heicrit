@@ -136,6 +136,20 @@ class HeiCritApp {
         }
     }
 
+    // Colored square emoji matching .selected-lemma / .selected-reading-N in
+    // styles.css, so dropdown options show at a glance which highlight color
+    // a group corresponds to (native <option> elements can't hold styled
+    // <span>s, so the color has to come from the glyph itself).
+    getReadingGroupLabel(group) {
+        if (group === 'lemma') return '🟩 Lemma';
+        const match = group.match(/reading-(\d+)/);
+        if (!match) return group;
+        const number = parseInt(match[1], 10);
+        const colorEmojis = ['🟧', '🟪', '🟦', '🟥', '🟫', '🟨'];
+        const emoji = colorEmojis[(number - 1) % colorEmojis.length];
+        return `${emoji} Reading ${number}`;
+    }
+
     createTabPanel(tabId) {
         const tab = this.tabs.get(tabId);
         const panel = document.createElement('div');
@@ -180,8 +194,8 @@ class HeiCritApp {
                                             <button id="edit-variant-btn-${tabId}" class="apparatus-btn">Edit Entry</button>
                                             <button id="delete-variant-btn-${tabId}" class="apparatus-btn" style="display: none;">Delete Entry</button>
                                             <select id="reading-group-select-${tabId}" class="reading-group-select" style="display: none;">
-                                                <option value="lemma">Lemma</option>
-                                                <option value="reading-1">Reading 1</option>
+                                                <option value="lemma">${this.getReadingGroupLabel('lemma')}</option>
+                                                <option value="reading-1">${this.getReadingGroupLabel('reading-1')}</option>
                                                 <option value="new-group">+ New reading group</option>
                                             </select>
                                             <select id="reading-ana-select-${tabId}" class="reading-ana-select" style="display: none;">
@@ -1824,14 +1838,23 @@ class HeiCritApp {
                      data-entry-index="${entryIndex}"
                      data-note-target="${this.escapeHtml(note.target)}"
                      data-note-reading-index="${readingIndexAttr}"
-                     data-placeholder="+">${note.html || ''}</div>`;
+                     data-placeholder="+">${note.html || ''}</div><button type="button" class="apparatus-note-save-btn" title="Save note">&check;</button>`;
     }
 
     setupNoteEditing(tabId) {
         const content = document.getElementById(`apparatus-content-${tabId}`);
         if (!content) return;
 
-        content.querySelectorAll('.apparatus-note').forEach(noteEl => {
+        const noteEls = content.querySelectorAll('.apparatus-note');
+        console.log(`[notes] setupNoteEditing(${tabId}): found ${noteEls.length} note area(s)`);
+
+        noteEls.forEach(noteEl => {
+            const saveBtn = noteEl.nextElementSibling;
+            const hasSaveBtn = saveBtn && saveBtn.classList.contains('apparatus-note-save-btn');
+            if (!hasSaveBtn) {
+                console.warn('[notes] no save button found as nextElementSibling of', noteEl);
+            }
+
             noteEl.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'i') {
                     e.preventDefault();
@@ -1839,21 +1862,52 @@ class HeiCritApp {
                 }
             });
 
+            // Show the save button only while the note is focused (per the
+            // requested UX), and save on blur too as a fallback.
+            noteEl.addEventListener('focus', () => {
+                if (hasSaveBtn) saveBtn.style.display = 'inline-block';
+            });
+
             noteEl.addEventListener('blur', () => {
+                if (hasSaveBtn) saveBtn.style.display = 'none';
+                console.log('[notes] blur -> saveEntryNote', { tabId, entryIndex: noteEl.getAttribute('data-entry-index') });
                 this.saveEntryNote(tabId, noteEl);
             });
+
+            if (hasSaveBtn) {
+                // mousedown (not click) fires BEFORE the note field blurs, and
+                // preventDefault() stops the button from stealing focus - so
+                // the note stays focused and its current content is what gets
+                // saved, rather than racing the blur handler above.
+                saveBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    console.log('[notes] save button mousedown -> saveEntryNote', { tabId, entryIndex: noteEl.getAttribute('data-entry-index') });
+                    this.saveEntryNote(tabId, noteEl, saveBtn);
+                });
+            }
         });
     }
 
-    async saveEntryNote(tabId, noteEl) {
+    async saveEntryNote(tabId, noteEl, saveBtn) {
         const tab = this.tabs.get(tabId);
-        if (!tab || !tab.data) return;
+        if (!tab || !tab.data) {
+            console.warn('[notes] saveEntryNote aborted: no tab/tab.data', { tabId, tab });
+            this.updateStatus('Could not save note: no active project tab', 'error');
+            return;
+        }
 
         const entryIndex = parseInt(noteEl.getAttribute('data-entry-index'), 10);
         const target = noteEl.getAttribute('data-note-target');
         const readingIndexAttr = noteEl.getAttribute('data-note-reading-index');
         const readingIndex = readingIndexAttr === '' ? null : parseInt(readingIndexAttr, 10);
         const noteHtml = noteEl.innerHTML.trim();
+
+        this.updateStatus('Saving note...');
+        console.log('[notes] saveEntryNote request', {
+            apparatus_file: tab.data.apparatusFile,
+            project_directory: tab.data.projectDirectory,
+            entry_index: entryIndex, target, reading_index: readingIndex, note_html: noteHtml
+        });
 
         try {
             const response = await this.apiRequest('/apparatus/note/save', {
@@ -1869,12 +1923,46 @@ class HeiCritApp {
                 })
             });
 
+            console.log('[notes] saveEntryNote response', response);
+
             if (!response.success) {
                 console.error('Failed to save note:', response.error);
+                this.updateStatus(`Failed to save note: ${response.error || 'unknown error'}`, 'error');
+                this.showErrorPopup('Save Failed', response.error || 'Failed to save the note.');
+                return;
+            }
+
+            // /apparatus/note/save only returns {success}, not a fresh
+            // entries list (unlike create/update/delete) - update the
+            // in-memory entry directly so the saved note is still there when
+            // the user navigates away and back, without needing a full
+            // server round-trip refresh.
+            this.updateLocalNoteState(tab, entryIndex, target, readingIndex, noteHtml, noteEl.textContent.trim());
+
+            this.updateStatus('Note saved');
+            if (saveBtn) {
+                saveBtn.classList.add('just-saved');
+                setTimeout(() => saveBtn.classList.remove('just-saved'), 600);
             }
         } catch (error) {
             console.error('Error saving note:', error);
+            this.updateStatus(`Error saving note: ${error.message}`, 'error');
+            this.showErrorPopup('Save Failed', `Error saving note: ${error.message}`);
         }
+    }
+
+    updateLocalNoteState(tab, entryIndex, target, readingIndex, noteHtml, noteText) {
+        // entry.id is 1-based; entryIndex (sent to the backend) is 0-based -
+        // same conversion as renderNoteArea, inverted.
+        const entry = (tab.apparatusEntries || []).find(e => (e.id - 1) === entryIndex);
+        if (!entry || !entry.note) {
+            console.warn('[notes] updateLocalNoteState: could not find entry to update', { entryIndex });
+            return;
+        }
+        entry.note.html = noteHtml;
+        entry.note.text = noteText;
+        entry.note.target = target;
+        entry.note.reading_index = readingIndex;
     }
 
     updateNavigationControls() {
@@ -3184,7 +3272,7 @@ class HeiCritApp {
         // Create new option
         const newOption = document.createElement('option');
         newOption.value = groupName;
-        newOption.textContent = `Reading ${readingNumber}`;
+        newOption.textContent = this.getReadingGroupLabel(groupName);
         
         // Insert in the correct position (before the "new group" option)
         const newGroupOption = select.querySelector('option[value="new-group"]');
@@ -3681,17 +3769,16 @@ class HeiCritApp {
         if (!readingGroupSelect) return;
         
         // Clear existing options except lemma
-        readingGroupSelect.innerHTML = '<option value="lemma">Lemma</option>';
-        
+        readingGroupSelect.innerHTML = `<option value="lemma">${this.getReadingGroupLabel('lemma')}</option>`;
+
         // Add options for existing reading groups
         Object.keys(this.selectedTokens).forEach(group => {
             if (group !== 'lemma') {
                 const match = group.match(/reading-(\d+)/);
                 if (match) {
-                    const readingNumber = parseInt(match[1]);
                     const option = document.createElement('option');
                     option.value = group;
-                    option.textContent = `Reading ${readingNumber}`;
+                    option.textContent = this.getReadingGroupLabel(group);
                     readingGroupSelect.appendChild(option);
                 }
             }
@@ -3833,8 +3920,8 @@ class HeiCritApp {
         
         // Add default options
         const options = [
-            { value: 'lemma', text: 'Lemma' },
-            { value: 'reading-1', text: 'Reading 1' },
+            { value: 'lemma', text: this.getReadingGroupLabel('lemma') },
+            { value: 'reading-1', text: this.getReadingGroupLabel('reading-1') },
             { value: 'new-group', text: '+ New reading group' }
         ];
         
@@ -3861,7 +3948,7 @@ class HeiCritApp {
             const select = document.getElementById(`reading-group-select-${tabId}`);
             const newOption = document.createElement('option');
             newOption.value = newGroupName;
-            newOption.textContent = `Reading ${this.nextReadingGroupIndex - 1}`;
+            newOption.textContent = this.getReadingGroupLabel(newGroupName);
             select.insertBefore(newOption, select.lastElementChild);
             
             // Select the new group
