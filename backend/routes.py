@@ -783,10 +783,10 @@ def _validate_new_format_readings(readings):
     an error string, or None if valid.
 
     Transposition readings (ana == hc:TranspositionVariant) are structurally
-    different from the other three types: they carry 'links' (base/witness
-    token pairs) instead of 'ptrs', and an <app> anchors via its first <link>
-    rather than @target - so an entry can't mix transposition and
-    non-transposition readings.
+    different from the other three types: they carry 'links' (one base token
+    paired with a list of witness tokens sharing that same position) instead
+    of 'ptrs', and an <app> anchors via its first <link> rather than @target -
+    so an entry can't mix transposition and non-transposition readings.
     """
     if not readings or not isinstance(readings, list):
         return 'At least one reading is required'
@@ -809,8 +809,8 @@ def _validate_new_format_readings(readings):
             if not links:
                 return 'Each transposition reading needs at least one link pair'
             for pair in links:
-                if not pair.get('base') or not pair.get('witness'):
-                    return 'Each transposition link needs both a base and a witness token reference'
+                if not pair.get('base') or not pair.get('witnesses'):
+                    return 'Each transposition link needs a base token and at least one witness token reference'
         else:
             if reading.get('links'):
                 return 'Only transposition readings use links'
@@ -830,7 +830,7 @@ def create_apparatus_entry_new_format():
     Expected JSON: {
         apparatus_file, project_directory,
         target: "b:range(w_71_2_4,w_71_2_5)",  # omitted/null for transposition-only entries
-        readings: [ { wit: [ids], ana: "hc:...", ptrs: [...] | links: [{base, witness}, ...] }, ... ]
+        readings: [ { wit: [ids], ana: "hc:...", ptrs: [...] | links: [{base, witnesses: [...]}, ...] }, ... ]
     }
     Response: { success, apparatus_entries: [...], created_entry_id }
     """
@@ -868,6 +868,27 @@ def create_apparatus_entry_new_format():
 
         updated_apparatus = write_apparatus_file_and_refresh(resolved_file, apparatus_file, root)
         fresh_entries = updated_apparatus.get_entries()
+
+        # Keep the file grouped by verse: if appending landed the new entry out
+        # of verse order (e.g. creating a verse-2 entry after verse 3-20
+        # already exist), re-sort <listApp>'s children by verse number and
+        # write once more. Reuses the loc values get_entries() just computed
+        # above - no extra text/witness resolution beyond what this request
+        # already had to do to build the response.
+        if list_app is not None:
+            try:
+                numeric_locs = [int(e.get('loc')) for e in fresh_entries]
+                already_sorted = all(
+                    numeric_locs[i] <= numeric_locs[i + 1] for i in range(len(numeric_locs) - 1))
+            except (TypeError, ValueError):
+                already_sorted = True  # can't safely reason about non-numeric locs - leave order as-is
+
+            if not already_sorted:
+                current_children = list(list_app)
+                for i in sorted(range(len(current_children)), key=lambda i: numeric_locs[i]):
+                    list_app.append(current_children[i])  # append moves an existing child - reconstructs sorted order
+                updated_apparatus = write_apparatus_file_and_refresh(resolved_file, apparatus_file, root)
+                fresh_entries = updated_apparatus.get_entries()
 
         return jsonify({
             'success': True,
@@ -1008,6 +1029,77 @@ def delete_apparatus_entry_new_format():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to delete entry: {str(e)}'}), 500
+
+
+@api.route('/apparatus/entry/reorder', methods=['POST'])
+def reorder_apparatus_entries_new_format():
+    """
+    Persist a manual reorder of a set of existing apparatus entries (e.g. the
+    subentries sharing one verse/corresp group) to the file. The referenced
+    entries are repositioned, in the given relative order, as a contiguous
+    block starting at the position of the earliest one among them - every
+    other <app> element's relative position is left untouched. Cross-verse
+    order is derived client-side from each entry's line number and doesn't
+    depend on raw file order, so this only needs to reposition the given set.
+    Expected JSON: {
+        apparatus_file, project_directory,
+        entry_order: [entry_index, ...]  # 0-based, document order (same
+                                           # addressing as entry_index on
+                                           # update/delete) - the CURRENT
+                                           # indices of the entries being
+                                           # reordered, listed in their NEW
+                                           # desired sequence
+    }
+    Response: { success, apparatus_entries: [...] }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        apparatus_file = data.get('apparatus_file')
+        project_directory = data.get('project_directory', '')
+        entry_order = data.get('entry_order')
+
+        if not apparatus_file:
+            return jsonify({'error': 'No apparatus file specified'}), 400
+        if not entry_order or len(entry_order) < 2:
+            return jsonify({'error': 'entry_order must list at least 2 entry indices'}), 400
+        if len(set(entry_order)) != len(entry_order):
+            return jsonify({'error': 'entry_order contains duplicate indices'}), 400
+
+        resolved_file, root, app_elements = _load_app_elements_for_write(apparatus_file, project_directory)
+        if not resolved_file:
+            return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
+
+        if any(i < 0 or i >= len(app_elements) for i in entry_order):
+            return jsonify({'error': 'entry_order contains an out-of-range index'}), 400
+
+        parent = app_elements[entry_order[0]].getparent()
+        # Captured before removing anything: the earliest-positioned entry in
+        # the set is always at or before every other index being moved, so
+        # later removals (which only touch entries at or after this point)
+        # can't invalidate this index.
+        insert_index = list(parent).index(app_elements[min(entry_order)])
+
+        elements_to_move = [app_elements[i] for i in entry_order]
+        for element in elements_to_move:
+            parent.remove(element)
+        for offset, element in enumerate(elements_to_move):
+            parent.insert(insert_index + offset, element)
+
+        updated_apparatus = write_apparatus_file_and_refresh(resolved_file, apparatus_file, root)
+
+        return jsonify({
+            'success': True,
+            'apparatus_entries': updated_apparatus.get_entries()
+        })
+
+    except Exception as e:
+        print(f"ERROR: Could not reorder apparatus entries: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to reorder entries: {str(e)}'}), 500
 
 
 @api.route('/synoptic/table', methods=['POST'])

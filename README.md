@@ -8,7 +8,7 @@ HeiCrit is a web-based editor for creating and managing critical apparatus in sc
 - **Apparatus entry** — records a point of variation: a lemma (the reading in the base text) and one or more variant readings from other witnesses.
 - **Synoptic map** — an alignment table that maps every location in the base text to the corresponding element in every other witness, accounting for lacunae and different pagination.
 
-See [`docs/data.md`](docs/data.md) for a full description of the data model.
+See [`docs/apparatus_editing.md`](docs/apparatus_editing.md) for a user guide to the main editing workflow, [`docs/synopse_editing.md`](docs/synopse_editing.md) for the Synoptic Map Editor, and [`docs/data.md`](docs/data.md) for a full description of the data model.
 
 ## How to Run
 
@@ -57,6 +57,8 @@ frontend/
 
 docs/
   CLAUDE.md             Developer guide for AI-assisted development
+  apparatus_editing.md  User guide to the main apparatus editing workflow
+  synopse_editing.md    User guide to the Synoptic Map Editor
   data.md               Complete data model reference
 ```
 

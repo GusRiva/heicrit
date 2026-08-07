@@ -3122,35 +3122,47 @@ class HeiCritApp {
         const corresp = e.target.dataset.corresp;
         
         if (draggedIndex === targetIndex) return;
-        
-        // Update the data structure
+
+        // Persist the reorder to the server; refreshApparatusEntriesInTab
+        // (called on success) already re-renders the display, so no separate
+        // update here.
         this.reorderApparatusEntries(tabId, corresp, draggedIndex, targetIndex);
-        
-        // Refresh the display
-        this.updateApparatusDisplay(tabId);
     }
-    
-    reorderApparatusEntries(tabId, corresp, fromIndex, toIndex) {
+
+    async reorderApparatusEntries(tabId, corresp, fromIndex, toIndex) {
         const tab = this.tabs.get(tabId);
-        if (!tab || !tab.groupedEntries || !tab.groupedEntries[corresp]) return;
-        
-        const entries = tab.groupedEntries[corresp];
-        
+        if (!tab || !tab.data || !tab.groupedEntries || !tab.groupedEntries[corresp]) return;
+
+        const entries = tab.groupedEntries[corresp].slice();
+
         // Move the entry from fromIndex to toIndex
         const [movedEntry] = entries.splice(fromIndex, 1);
         entries.splice(toIndex, 0, movedEntry);
-        
-        // Update the activeSubentryIndex if needed
-        if (tab.activeSubentryIndex === fromIndex) {
-            tab.activeSubentryIndex = toIndex;
-        } else if (tab.activeSubentryIndex > fromIndex && tab.activeSubentryIndex <= toIndex) {
-            tab.activeSubentryIndex--;
-        } else if (tab.activeSubentryIndex < fromIndex && tab.activeSubentryIndex >= toIndex) {
-            tab.activeSubentryIndex++;
+
+        const entry_order = entries.map(entry => entry.id - 1);
+
+        try {
+            const response = await this.apiRequest('/apparatus/entry/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apparatus_file: tab.data.apparatusFile,
+                    project_directory: tab.data.projectDirectory,
+                    entry_order: entry_order
+                })
+            });
+
+            if (!response.success) {
+                this.showErrorPopup('Reorder Failed', response.error || 'Failed to reorder the entries.');
+                return;
+            }
+
+            this.refreshApparatusEntriesInTab(tabId, response.apparatus_entries);
+        } catch (error) {
+            this.showErrorPopup('Reorder Failed', `Error reordering entries: ${error.message}`);
         }
-    
     }
-    
+
     setupKeyboardShortcuts(tabId) {
         // Create keyboard shortcut handler
         this.keyboardHandler = (event) => {
@@ -4073,20 +4085,27 @@ class HeiCritApp {
                 byWitness[witId].push(t);
             });
 
-            const links = [];
             for (const [witId, witTokens] of Object.entries(byWitness)) {
                 if (witTokens.length !== sortedLemma.length) {
                     return { error: `${group}: witness "${witId}" has ${witTokens.length} token(s) selected, but the lemma has ${sortedLemma.length} - select exactly the same number, in corresponding order.` };
                 }
-                witTokens.forEach((witnessToken, index) => {
-                    links.push({
-                        base: `${sortedLemma[index].witnessInfo.prefix}:${sortedLemma[index].tokenId}`,
-                        witness: `${witnessToken.witnessInfo.prefix}:${witnessToken.tokenId}`
-                    });
-                });
             }
 
-            readings.push({ wit: Object.keys(byWitness), ana: 'hc:TranspositionVariant', links });
+            // One link per lemma position, covering every witness in this
+            // group that shares it - not one link per (position, witness) -
+            // so witnesses with an identical transposition pattern collapse
+            // into a single <link target="base wit1 wit2 ..."/> instead of
+            // duplicating the same base position once per witness.
+            const witnessIds = Object.keys(byWitness);
+            const links = sortedLemma.map((lemmaToken, index) => ({
+                base: `${lemmaToken.witnessInfo.prefix}:${lemmaToken.tokenId}`,
+                witnesses: witnessIds.map(witId => {
+                    const witnessToken = byWitness[witId][index];
+                    return `${witnessToken.witnessInfo.prefix}:${witnessToken.tokenId}`;
+                })
+            }));
+
+            readings.push({ wit: witnessIds, ana: 'hc:TranspositionVariant', links });
         }
 
         return { target: null, readings };

@@ -103,12 +103,14 @@ def build_ptr_element(target: str) -> et.Element:
     return ptr_element
 
 
-def build_link_element(base_target: str, witness_target: str) -> et.Element:
-    """Build a single new-format <link target="base_target witness_target"/>
-    element, pairing one base-text token with its corresponding witness token
-    (used for transpositions instead of <ptr>)."""
+def build_link_element(base_target: str, witness_targets: list[str]) -> et.Element:
+    """Build a single new-format <link target="base_target wit1_target wit2_target ..."/>
+    element, pairing one base-text token with every witness token that shares
+    that same position (used for transpositions instead of <ptr>) - witnesses
+    with an identical transposition pattern collapse into one <link> rather
+    than duplicating the same base position once per witness."""
     link_element = et.Element(f'{{{TEI_NS}}}link')
-    link_element.set('target', f'{base_target} {witness_target}')
+    link_element.set('target', ' '.join([base_target, *witness_targets]))
     return link_element
 
 
@@ -129,13 +131,13 @@ def build_transposition_rdg_element(wit_ids: list[str], link_pairs: list[dict]) 
     """
     Build a new-format <rdg wit="#id1 #id2" ana="hc:TranspositionVariant">
     <link .../>...</rdg> element from already-resolved witness ids and
-    base/witness link pairs ({'base': 'prefix:id', 'witness': 'prefix:id'}).
+    base/witnesses link pairs ({'base': 'prefix:id', 'witnesses': ['prefix:id', ...]}).
     """
     rdg_element = et.Element(f'{{{TEI_NS}}}rdg')
     rdg_element.set('wit', ' '.join(f'#{wit_id}' for wit_id in wit_ids))
     rdg_element.set('ana', 'hc:TranspositionVariant')
     for pair in link_pairs:
-        rdg_element.append(build_link_element(pair['base'], pair['witness']))
+        rdg_element.append(build_link_element(pair['base'], pair['witnesses']))
     return rdg_element
 
 
@@ -149,7 +151,7 @@ def build_new_format_app_element(target: str | None, readings: list[dict]) -> et
             their first <link> instead (see Apparatus._derive_loc_and_corresp).
         readings: list of dicts, one per <rdg> to build - either
             {'wit': [ids], 'ana': str, 'ptrs': [targets]} (ptr-based) or
-            {'wit': [ids], 'ana': 'hc:TranspositionVariant', 'links': [{'base','witness'}, ...]}
+            {'wit': [ids], 'ana': 'hc:TranspositionVariant', 'links': [{'base','witnesses'}, ...]}
             (link-based)
 
     Returns:
@@ -388,9 +390,9 @@ class Apparatus:
     def _resolve_transposition_lemma(self, app, resolver: WitnessFragmentResolver) -> dict[str, Any] | None:
         """
         Reconstruct the lemma for a transposition entry (no @target) from the
-        base-side token of every <link target="base_id witness_id"/> pair - the
-        base text's own word order at these positions, analogous to @target's
-        role elsewhere.
+        base-side (first) token of every <link target="base_id wit1_id wit2_id ..."/>
+        - the base text's own word order at these positions, analogous to
+        @target's role elsewhere.
         """
         link_holder = app.find('tei:rdg', namespaces=ns)
         if link_holder is None:
@@ -458,18 +460,23 @@ class Apparatus:
                 else:
                     text, html = resolver.resolve_text_html(target_tokens)
         elif links:
+            # Each <link target="base wit1 wit2 ..."/> pairs one base position
+            # with every witness token that shares it - witnesses with an
+            # identical transposition pattern are written as a single <link>
+            # rather than duplicating the same base position once per witness,
+            # so a link can have more than the minimum 2 space-separated parts.
             pairs = [(link_el.get('target') or '').split() for link_el in links]
-            pairs = [pair for pair in pairs if len(pair) == 2]
+            pairs = [pair for pair in pairs if len(pair) >= 2]
             if pairs:
                 # Only the witness-side tokens go into this reading's own corresp -
                 # the base-side tokens are already covered by the entry's lemma
                 # (_resolve_transposition_lemma), so including them here too would
                 # double-highlight them (green from the lemma, then orange from
                 # this reading, visually winning).
-                witness_side_tokens = [pair[1] for pair in pairs]
+                witness_side_tokens = [token for pair in pairs for token in pair[1:]]
                 corresp = ' '.join(resolver.normalize_corresp_token(t) for t in witness_side_tokens)
                 text, html = resolver.resolve_ordered_text_html(witness_side_tokens)
-                entry_links = [{'base': pair[0], 'witness': pair[1]} for pair in pairs]
+                entry_links = [{'base': pair[0], 'witness': token} for pair in pairs for token in pair[1:]]
 
         attributes = dict(element.attrib)
         if corresp:
