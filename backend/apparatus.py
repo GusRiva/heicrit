@@ -187,8 +187,7 @@ class Apparatus:
         self._entries: list[dict[str, Any]] = []
         self._leiths_path: str | None = None
         self._root: et.Element | None = None
-        self._format: str = 'old'
-        
+
         # Parse the apparatus file
         self._parse_apparatus_file()
     
@@ -215,9 +214,6 @@ class Apparatus:
             doc = et.parse(BytesIO(content_bytes), parser)
             self._root = doc.getroot()
 
-            # Detect which data model this apparatus file uses
-            self._format = self._detect_format()
-
             # Extract leithandschrift path
             self._leiths_path = self._extract_leithandschrift_path()
 
@@ -229,27 +225,6 @@ class Apparatus:
             raise
     
     
-    def _detect_format(self) -> str:
-        """
-        Detect whether this apparatus file uses the old (inline <lem>/<rdg> text,
-        @loc/@corresp) or new (<ptr>/<link> children, @target) data model, based on
-        the presence of <ptr>/<link> children inside <lem>/<rdg> - a signal that
-        works regardless of file naming or listApp/@corresp conventions.
-        """
-        if self._root is None:
-            return 'old'
-        new_format_markers = self._root.xpath(
-            './/tei:rdg/tei:ptr | .//tei:lem/tei:ptr | .//tei:rdg/tei:link | .//tei:lem/tei:link',
-            namespaces=ns
-        )
-        return 'new' if new_format_markers else 'old'
-
-    def get_format(self) -> str:
-        """
-        Get the detected data model format ('old' or 'new') of this apparatus file.
-        """
-        return self._format
-
     def _get_base_witness_id(self) -> str | None:
         """
         Get the xml:id of the base witness (witness[@ana="hc:BaseText"]).
@@ -320,50 +295,14 @@ class Apparatus:
 
             self._entries = []
 
-            if self._format == 'new':
-                resolver = WitnessFragmentResolver(
-                    self._apparatus_filepath, self._project_files, self.get_witness_to_prefix_mapping())
-                for i, app in enumerate(app_elements):
-                    self._entries.append(self._extract_new_format_entry(i, app, resolver))
-            else:
-                for i, app in enumerate(app_elements):
-                    self._entries.append(self._extract_old_format_entry(i, app))
+            resolver = WitnessFragmentResolver(
+                self._apparatus_filepath, self._project_files, self.get_witness_to_prefix_mapping())
+            for i, app in enumerate(app_elements):
+                self._entries.append(self._extract_new_format_entry(i, app, resolver))
 
         except Exception as e:
             print(f"ERROR: Could not extract apparatus entries: {str(e)}")
             raise
-
-    def _extract_old_format_entry(self, index: int, app) -> dict[str, Any]:
-        """
-        Extract an apparatus entry in the old data model: @loc/@corresp on <app>,
-        inline text on <lem>/<rdg>.
-        """
-        entry = {
-            'id': index + 1,
-            'loc': app.get('loc'),
-            'corresp': app.get('corresp'),
-            'lemma': None,
-            'readings': []
-        }
-
-        lem_element = app.find('.//tei:lem', namespaces=ns)
-        if lem_element is not None:
-            entry['lemma'] = {
-                'text': ''.join(lem_element.itertext()).strip(),
-                'html': _inline_to_html(lem_element).strip(),
-                'attributes': dict(lem_element.attrib)
-            }
-
-        rdg_elements = app.xpath('.//tei:rdg', namespaces=ns)
-        for rdg in rdg_elements:
-            reading = {
-                'text': ''.join(rdg.itertext()).strip(),
-                'html': _inline_to_html(rdg).strip(),
-                'attributes': dict(rdg.attrib)
-            }
-            entry['readings'].append(reading)
-
-        return entry
 
     def _extract_new_format_entry(self, index: int, app, resolver: WitnessFragmentResolver) -> dict[str, Any]:
         """
@@ -838,8 +777,7 @@ class Apparatus:
             'entries': self._entries.copy(),
             'entries_count': self.get_entries_count(),
             'leiths_path': self._leiths_path,
-            'corresp': self.get_corresp_attribute(),
-            'format': self._format
+            'corresp': self.get_corresp_attribute()
         }
     
     def __str__(self) -> str:

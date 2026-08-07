@@ -646,12 +646,10 @@ class HeiCritApp {
     }
 
     updateDeleteButtonVisibility(tabId) {
-        const tab = this.tabs.get(tabId);
         const deleteBtn = document.getElementById(`delete-variant-btn-${tabId}`);
         if (!deleteBtn) return;
 
-        const isNewFormat = tab && tab.data && tab.data.apparatusFormat === 'new';
-        if (!isNewFormat || this.creationMode || this.editMode) {
+        if (this.creationMode || this.editMode) {
             deleteBtn.style.display = 'none';
             return;
         }
@@ -1085,11 +1083,9 @@ class HeiCritApp {
         // Navbar dropdown menu events
         document.getElementById('openFile').addEventListener('click', () => this.openFile());
         document.getElementById('openProjectDirectory').addEventListener('click', () => this.openProjectDirectory());
-        document.getElementById('saveProjectIcon').addEventListener('click', () => this.saveProject());
         document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
         document.getElementById('saveAsFile').addEventListener('click', () => this.saveAsFile());
-        document.getElementById('saveProject').addEventListener('click', () => this.saveProject());
-        
+
         // Toolbar icon events
         document.getElementById('openProjectDirectoryIcon').addEventListener('click', () => this.openProjectDirectory());
         document.getElementById('editSynopticMapIcon').addEventListener('click', () => this.openSynopticEditor());
@@ -1617,12 +1613,6 @@ class HeiCritApp {
             this.leithsPrefix = result.leiths_prefix;
         }
 
-        // Store the detected apparatus data model ('old' or 'new') - drives which
-        // entry create/edit/delete code path (and UI) is used.
-        if (result.format) {
-            this.apparatusFormat = result.format;
-        }
-        
         // If this result also contains synoptic map data (from project processing), store it
         if (result.synoptic_map && Object.keys(result.synoptic_map).length > 0) {
             this.synopticMapData = {
@@ -1690,8 +1680,7 @@ class HeiCritApp {
                 // Add project paths for save functionality
                 projectDirectory: this.currentProjectDirectory,
                 apparatusFile: this.currentApparatusFile,
-                synopticMapFile: this.synopticMapFile,
-                apparatusFormat: this.apparatusFormat || 'old'
+                synopticMapFile: this.synopticMapFile
             });
             
             const apparatusCount = this.apparatusData ? this.apparatusData.count : 0;
@@ -2957,20 +2946,17 @@ class HeiCritApp {
     }
     
     exitCreationMode(tabId) {
-        // New-format only: persist the new entry before tearing down creation
-        // mode. On validation/server failure, stay in creation mode (don't run
-        // the cleanup below) so the user can fix the selection and retry.
-        const tab = this.tabs.get(tabId);
-        if (tab && tab.data && tab.data.apparatusFormat === 'new') {
-            const hasSelection = Object.values(this.selectedTokens).some(tokens => tokens && tokens.length > 0);
-            if (hasSelection) {
-                this.saveNewEntryToServer(tabId).then(success => {
-                    if (success) {
-                        this._finishExitCreationMode(tabId);
-                    }
-                });
-                return;
-            }
+        // Persist the new entry before tearing down creation mode. On
+        // validation/server failure, stay in creation mode (don't run the
+        // cleanup below) so the user can fix the selection and retry.
+        const hasSelection = Object.values(this.selectedTokens).some(tokens => tokens && tokens.length > 0);
+        if (hasSelection) {
+            this.saveNewEntryToServer(tabId).then(success => {
+                if (success) {
+                    this._finishExitCreationMode(tabId);
+                }
+            });
+            return;
         }
         this._finishExitCreationMode(tabId);
     }
@@ -3377,30 +3363,15 @@ class HeiCritApp {
 
 
         
-        // Save entry immediately after any token change (only in creation mode).
-        // Old format only: this builds a client-only "ghost" entry keyed by an
-        // old-format corresp string (leithsPrefix:l_N) and points
-        // tab.currentEntryIndex at it for live preview. New-format corresp
-        // keys look different (they include the poem-number segment, e.g.
-        // "b:l_71_9" not "b:l_9"), so doing this for new-format projects left
-        // tab.currentEntryIndex pointing at a key that doesn't exist in the
-        // real server response once the entry is actually saved on Finish -
-        // refreshApparatusEntriesInTab then failed to find it and fell back
-        // to index 0, jumping the view back to the first entry. New-format
-        // entries are only persisted once, at Finish, via saveNewEntryToServer;
-        // the selection highlighting above already provides live feedback
-        // without needing this bookkeeping.
-        const tab = this.tabs.get(tabId);
-        const isNewFormat = tab && tab.data && tab.data.apparatusFormat === 'new';
-        if (this.creationMode && !isNewFormat) {
-            this.saveNewEntry(tabId);
-        }
+        // New-format entries are only persisted once, at Finish, via
+        // saveNewEntryToServer; the selection highlighting above already
+        // provides live feedback without needing any client-side buffering.
 
         // Refresh the transposition order-number badges (lemma tokens numbered
         // by document position, each transposition reading group's tokens
         // numbered by click order per witness) whenever the lemma or a
         // transposition-flagged reading group changes.
-        if (isNewFormat && Object.values(this.selectedReadingAna).includes('hc:TranspositionVariant')) {
+        if (Object.values(this.selectedReadingAna).includes('hc:TranspositionVariant')) {
             this.updateTranspositionNumbering(tabId);
         }
 
@@ -3579,19 +3550,16 @@ class HeiCritApp {
     // }
     
     enterEditMode(tabId, entry) {
-        // New-format only: transposition entries (<link> pairs, no @target) and
-        // explicit-<lem>-override entries stay read-only for now - editing them
-        // needs a fundamentally different authoring UI that hasn't been built.
-        const tab = this.tabs.get(tabId);
-        if (tab && tab.data && tab.data.apparatusFormat === 'new') {
-            if (entry.readings && entry.readings.some(r => r.links)) {
-                this.showErrorPopup('Cannot Edit', 'Transposition entries cannot be edited here yet.');
-                return;
-            }
-            if (entry.lemma_is_explicit) {
-                this.showErrorPopup('Cannot Edit', 'Entries with an explicit adopted-reading override cannot be edited here yet.');
-                return;
-            }
+        // Transposition entries (<link> pairs, no @target) and explicit-<lem>-
+        // override entries stay read-only for now - editing them needs a
+        // fundamentally different authoring UI that hasn't been built.
+        if (entry.readings && entry.readings.some(r => r.links)) {
+            this.showErrorPopup('Cannot Edit', 'Transposition entries cannot be edited here yet.');
+            return;
+        }
+        if (entry.lemma_is_explicit) {
+            this.showErrorPopup('Cannot Edit', 'Entries with an explicit adopted-reading override cannot be edited here yet.');
+            return;
         }
 
         // Set edit mode flag and store the entry being edited
@@ -3795,22 +3763,13 @@ class HeiCritApp {
     }
     
     exitEditMode(tabId) {
-        const tab = this.tabs.get(tabId);
-        if (tab && tab.data && tab.data.apparatusFormat === 'new') {
-            // New-format only: persist the edit before tearing down edit mode.
-            // On validation/server failure, stay in edit mode so the user can
-            // fix the selection and retry.
-            this.saveEditedEntryToServer(tabId).then(success => {
-                if (success) {
-                    this._finishExitEditMode(tabId);
-                }
-            });
-            return;
-        }
-
-        // Old format: save the edited entry (client-only, unchanged)
-        this.saveEditedEntry(tabId);
-        this._finishExitEditMode(tabId);
+        // Persist the edit before tearing down edit mode. On validation/server
+        // failure, stay in edit mode so the user can fix the selection and retry.
+        this.saveEditedEntryToServer(tabId).then(success => {
+            if (success) {
+                this._finishExitEditMode(tabId);
+            }
+        });
     }
 
     _finishExitEditMode(tabId) {
@@ -3854,35 +3813,6 @@ class HeiCritApp {
         
         // Update the apparatus display
         this.updateApparatusDisplay(tabId);
-    }
-    
-    saveEditedEntry(tabId) {
-        if (!this.editingEntry) return;
-        
-        // Get current location from the editing entry
-        const currentLoc = this.editingEntry.loc;
-        
-        // Create new entry data from current selections
-        const updatedEntryData = this.createApparatusEntry(currentLoc);
-        
-        // Update the editing entry with new data, preserving original structure
-        this.editingEntry.lemma = updatedEntryData.lemma;
-        this.editingEntry.readings = updatedEntryData.readings;
-        
-        // Since this.editingEntry is a reference to the original entry object,
-        // the changes should automatically be reflected in all data structures
-    }
-    
-    updateGroupedEntriesForEditedEntry(tab, editedEntry) {
-        const corresp = editedEntry.corresp;
-        
-        if (tab.groupedEntries && tab.groupedEntries[corresp]) {
-            // Find and update the entry in grouped entries
-            const entryIndex = tab.groupedEntries[corresp].findIndex(entry => entry === editedEntry);
-            if (entryIndex >= 0) {
-                tab.groupedEntries[corresp][entryIndex] = editedEntry;
-            }
-        }
     }
     
     getWitnessInfoFromLine(synLine) {
@@ -3978,75 +3908,6 @@ class HeiCritApp {
         });
     }
     
-    saveNewEntry(tabId) {
-
-        const tab = this.tabs.get(tabId);
-        if (!tab) return;
-        
-        // Get current location from the active entry
-        const currentLoc = this.getCurrentLocation(tab);
-        const currentCorresp = `${this.leithsPrefix || 'a'}:l_${currentLoc}`;
-        
-        // Initialize newEntries array if not exists
-        if (!tab.newEntries) {
-            tab.newEntries = [];
-        }
-        
-        // Initialize currentlyEditing entry for this session if not exists
-        if (!tab.currentlyEditingEntry) {
-            tab.currentlyEditingEntry = null;
-        }
-        
-        // Check if we have any selected tokens
-        const hasSelections = Object.values(this.selectedTokens).some(group => group.length > 0);
-        
-        if (hasSelections) {
-            // Create apparatus entry from current selections
-            const entryData = this.createApparatusEntry(currentLoc);
-            
-            if (!tab.currentlyEditingEntry || tab.currentlyEditingEntry.corresp !== currentCorresp) {
-                // Starting to edit a new entry - create it
-                tab.currentlyEditingEntry = entryData;
-                tab.currentlyEditingEntry.isUserCreated = true;
-                
-                // Add to newEntries array
-                tab.newEntries.push(tab.currentlyEditingEntry);
-                
-                // Add to grouped entries for display
-                this.updateGroupedEntriesWithNewEntry(tab, tab.currentlyEditingEntry);
-            } else {
-                // Update the currently editing entry
-                Object.assign(tab.currentlyEditingEntry, entryData);
-                
-                // Update in grouped entries
-                this.updateExistingEntryInGroupedEntries(tab, tab.currentlyEditingEntry);
-            }
-            
-        } else {
-            // No selections - clear currently editing entry if it exists
-            if (tab.currentlyEditingEntry && tab.currentlyEditingEntry.corresp === currentCorresp) {
-                // Remove from newEntries
-                const entryIndex = tab.newEntries.indexOf(tab.currentlyEditingEntry);
-                if (entryIndex >= 0) {
-                    tab.newEntries.splice(entryIndex, 1);
-                }
-                
-                // Remove from grouped entries
-                this.removeNewEntryFromGroupedEntries(tab, tab.currentlyEditingEntry);
-                
-                // Clear currently editing reference
-                tab.currentlyEditingEntry = null;
-            }
-        }
-        
-        // Don't update the apparatus display during creation mode to avoid DOM rebuilds
-        // that interfere with token selection. The display will be updated when
-        // creation mode is exited.
-        if (!this.creationMode) {
-            this.updateApparatusDisplay(tabId);
-        }
-    }
-    
     getCurrentLocation(tab) {
         if (tab.entryKeys && tab.entryKeys.length > 0 && typeof tab.currentEntryIndex === 'number') {
             const currentCorresp = tab.entryKeys[tab.currentEntryIndex];
@@ -4058,14 +3919,6 @@ class HeiCritApp {
         return '1'; // Default location
     }
     
-    getAnchorWordText(tokenData) {
-        const witElement = document.querySelector(`.syn-line-wit[data-line-id^="${tokenData.witnessInfo.prefix}:"]`);
-        if (!witElement) return '';
-        const synLine = witElement.closest('.syn-line');
-        if (!synLine) return '';
-        const wordSpan = synLine.querySelector(`.syn-tei-w[data-token-id="${tokenData.tokenId}"]`);
-        return wordSpan ? wordSpan.textContent.trim() : '';
-    }
 
     tokenSortKey(tokenId) {
         const m = tokenId.match(/w_(\d+)_(\d+)/);
@@ -4076,9 +3929,8 @@ class HeiCritApp {
         // Returns the individual "prefix:spec" address parts as an array (not
         // joined into a string) - a range() part contains an internal ", "
         // separator, so callers that need to count/enumerate distinct
-        // addresses must use this instead of splitting buildCorrespForTokens's
-        // joined output on whitespace (that would wrongly split one range()
-        // into two parts).
+        // addresses must use this instead of joining the parts and splitting
+        // on whitespace (that would wrongly split one range() into two parts).
         const wordTokens = tokens.filter(t => !t.isPreSpace && !t.isPostSpace);
         const prePostParts = tokens
             .filter(t => t.isPreSpace || t.isPostSpace)
@@ -4095,29 +3947,6 @@ class HeiCritApp {
         return [...prePostParts, ...(wordPart ? [wordPart] : [])];
     }
 
-    buildCorrespForTokens(prefix, tokens) {
-        return this.buildCorrespPartsForTokens(prefix, tokens).join(' ');
-    }
-
-    buildLeftContent(tokenData) {
-        const anchorWord = this.getAnchorWordText(tokenData);
-        const tail = anchorWord ? ` ${anchorWord}` : '';
-        return {
-            text: `vor${tail}`,
-            html: `<em>vor</em>${this.escapeHtml(tail)}`,
-            children: [{ tag: 'emph', text: 'vor', tail: tail }]
-        };
-    }
-
-    buildRightContent(tokenData) {
-        const anchorWord = this.getAnchorWordText(tokenData);
-        const tail = anchorWord ? ` ${anchorWord}` : '';
-        return {
-            text: `nach${tail}`,
-            html: `<em>nach</em>${this.escapeHtml(tail)}`,
-            children: [{ tag: 'emph', text: 'nach', tail: tail }]
-        };
-    }
 
     buildNewFormatSavePayload() {
         // New-format only: turn the current token selection into a
@@ -4436,7 +4265,6 @@ class HeiCritApp {
     }
 
     updateAnaSelectForGroup(tabId, group) {
-        const tab = this.tabs.get(tabId);
         const select = document.getElementById(`reading-ana-select-${tabId}`);
         if (!select) return;
 
@@ -4446,258 +4274,11 @@ class HeiCritApp {
         // available when editing (existing entries can't be converted into
         // or out of a transposition here; enterEditMode already refuses to
         // edit transposition entries at all).
-        const isNewFormat = tab && tab.data && tab.data.apparatusFormat === 'new';
-
-        if (isNewFormat && this.creationMode && group && group !== 'lemma') {
+        if (this.creationMode && group && group !== 'lemma') {
             select.style.display = '';
             select.value = this.selectedReadingAna[group] || '';
         } else {
             select.style.display = 'none';
-        }
-    }
-
-    createApparatusEntry(loc) {
-        const entry = {
-            loc: loc,
-            corresp: `${this.leithsPrefix || 'a'}:l_${loc}`,
-            lemma: null,
-            readings: []
-        };
-        
-        // Process lemma
-        if (this.selectedTokens.lemma && this.selectedTokens.lemma.length > 0) {
-            const lemmaTokens = this.selectedTokens.lemma;
-
-            // Group tokens by witness (same logic as readings)
-            const witGroups = {};
-            lemmaTokens.forEach(token => {
-                const witId = token.witnessInfo.witnessId;
-                if (!witGroups[witId]) witGroups[witId] = [];
-                witGroups[witId].push(token);
-            });
-
-            const witIds = Object.keys(witGroups).map(id => `#${id}`).join(' ');
-            const correspParts = [];
-            Object.entries(witGroups).forEach(([witId, tokens]) => {
-                correspParts.push(this.buildCorrespForTokens(tokens[0].witnessInfo.prefix, tokens));
-            });
-
-            // Use first witness tokens for text content
-            const firstWitnessTokens = witGroups[Object.keys(witGroups)[0]];
-            const preSpaceToken = firstWitnessTokens.find(t => t.isPreSpace);
-            const postSpaceToken = firstWitnessTokens.find(t => t.isPostSpace);
-            let lemmaText, lemmaHtml, lemmaChildren;
-            if (preSpaceToken) {
-                const content = this.buildLeftContent(preSpaceToken);
-                lemmaText = content.text;
-                lemmaHtml = content.html;
-                lemmaChildren = content.children;
-            } else if (postSpaceToken) {
-                const content = this.buildRightContent(postSpaceToken);
-                lemmaText = content.text;
-                lemmaHtml = content.html;
-                lemmaChildren = content.children;
-            } else {
-                lemmaText = firstWitnessTokens.map(t => t.text).join(' ');
-                lemmaHtml = null;
-                lemmaChildren = null;
-            }
-
-            entry.lemma = {
-                text: lemmaText,
-                ...(lemmaHtml && { html: lemmaHtml }),
-                ...(lemmaChildren && { children: lemmaChildren }),
-                attributes: {
-                    wit: witIds,
-                    corresp: correspParts.join(' ')
-                }
-            };
-        }
-        
-        // Process readings
-        Object.keys(this.selectedTokens).forEach(group => {
-            if (group !== 'lemma' && this.selectedTokens[group].length > 0) {
-                const readingTokens = this.selectedTokens[group];
-                
-                // Group tokens by witness
-                const witGroups = {};
-                readingTokens.forEach(token => {
-                    const witId = token.witnessInfo.witnessId;
-                    if (!witGroups[witId]) {
-                        witGroups[witId] = [];
-                    }
-                    witGroups[witId].push(token);
-                });
-                
-                // Get reading text from the first witness only
-                const firstWitnessId = Object.keys(witGroups)[0];
-                const firstWitnessTokens = witGroups[firstWitnessId];
-                const firstPreSpace = firstWitnessTokens.find(t => t.isPreSpace);
-                const firstPostSpace = firstWitnessTokens.find(t => t.isPostSpace);
-
-                let readingText, readingHtml, readingChildren;
-                if (firstPreSpace) {
-                    const content = this.buildLeftContent(firstPreSpace);
-                    readingText = content.text;
-                    readingHtml = content.html;
-                    readingChildren = content.children;
-                } else if (firstPostSpace) {
-                    const content = this.buildRightContent(firstPostSpace);
-                    readingText = content.text;
-                    readingHtml = content.html;
-                    readingChildren = content.children;
-                } else {
-                    readingText = firstWitnessTokens.map(t => t.text).join(' ');
-                    readingHtml = null;
-                    readingChildren = null;
-                }
-
-                // Create corresp and wit attributes
-                const witIds = Object.keys(witGroups).map(id => `#${id}`).join(' ');
-                const correspParts = [];
-                Object.entries(witGroups).forEach(([witId, tokens]) => {
-                    correspParts.push(this.buildCorrespForTokens(tokens[0].witnessInfo.prefix, tokens));
-                });
-
-                entry.readings.push({
-                    text: readingText,
-                    ...(readingHtml && { html: readingHtml }),
-                    ...(readingChildren && { children: readingChildren }),
-                    attributes: {
-                        wit: witIds,
-                        corresp: correspParts.join(' ')
-                    }
-                });
-            }
-        });
-        
-        return entry;
-    }
-    
-    updateGroupedEntriesWithNewEntry(tab, newEntry) {
-        const corresp = newEntry.corresp;
-        
-        // Initialize grouped entries if not exists
-        if (!tab.groupedEntries) {
-            tab.groupedEntries = {};
-        }
-        
-        // Mark the entry as user-created for styling
-        newEntry.isUserCreated = true;
-        
-        // Add to grouped entries
-        if (!tab.groupedEntries[corresp]) {
-            tab.groupedEntries[corresp] = [];
-            
-            // Add to entryKeys and sort
-            if (!tab.entryKeys) {
-                tab.entryKeys = [];
-            }
-            tab.entryKeys.push(corresp);
-            
-            // Re-sort entry keys by location
-            tab.entryKeys.sort((a, b) => {
-                const locA = tab.groupedEntries[a][0]?.loc || '';
-                const locB = tab.groupedEntries[b][0]?.loc || '';
-                const numA = parseInt(locA) || 0;
-                const numB = parseInt(locB) || 0;
-                return numA - numB;
-            });
-        }
-        
-        // Always add new user-created entry (don't replace existing ones)
-        tab.groupedEntries[corresp].push(newEntry);
-        const subentryIndex = tab.groupedEntries[corresp].length - 1;
-        
-        // Make this entry active and navigate to its location
-        const correspIndex = tab.entryKeys.indexOf(corresp);
-        if (correspIndex >= 0) {
-            tab.currentEntryIndex = correspIndex;
-            tab.activeSubentryIndex = subentryIndex;
-        }
-    }
-    
-    updateExistingEntryInGroupedEntries(tab, updatedEntry) {
-        const corresp = updatedEntry.corresp;
-        
-        if (tab.groupedEntries && tab.groupedEntries[corresp]) {
-            // Find the entry in grouped entries and update it
-            const entryIndex = tab.groupedEntries[corresp].findIndex(entry => entry === updatedEntry);
-            if (entryIndex >= 0) {
-                // Entry is already in the array and will be updated by reference
-            }
-        }
-    }
-    
-    removeNewEntryFromGroupedEntries(tab, removedEntry) {
-        const corresp = removedEntry.corresp;
-        
-        if (tab.groupedEntries && tab.groupedEntries[corresp]) {
-            // Remove user-created entries for this corresp
-            tab.groupedEntries[corresp] = tab.groupedEntries[corresp].filter(entry => !entry.isUserCreated);
-            
-            // If no entries left for this corresp, remove the corresp key entirely
-            if (tab.groupedEntries[corresp].length === 0) {
-                delete tab.groupedEntries[corresp];
-                
-                // Remove from entryKeys
-                const keyIndex = tab.entryKeys.indexOf(corresp);
-                if (keyIndex >= 0) {
-                    tab.entryKeys.splice(keyIndex, 1);
-                }
-                
-                // Adjust current entry index if needed
-                if (tab.currentEntryIndex >= tab.entryKeys.length && tab.entryKeys.length > 0) {
-                    tab.currentEntryIndex = tab.entryKeys.length - 1;
-                }
-            }
-        }
-    }
-    
-    async saveProject() {
-        if (!this.activeTabId) {
-            alert('No active project tab to save');
-            return;
-        }
-        
-        const tab = this.tabs.get(this.activeTabId);
-        if (!tab || tab.type !== 'project') {
-            alert('Active tab is not a project');
-            return;
-        }
-        
-        if (!tab.newEntries || tab.newEntries.length === 0) {
-            alert('No new entries to save');
-            return;
-        }
-        
-        try {
-            const requestData = {
-                apparatus_file: tab.data.apparatusFile,
-                new_entries: tab.newEntries,
-                project_directory: tab.data.projectDirectory
-            };
-            
-            
-            const response = await this.apiRequest('/apparatus/save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData)
-            });
-            
-            if (response.success) {
-                alert(`Project saved! ${tab.newEntries.length} new entries added.`);
-                // Clear the new entries as they're now saved
-                tab.newEntries = [];
-            } else {
-                console.error('Save failed:', response);
-                alert(`Failed to save project: ${response.error || 'Unknown error'}`);
-            }
-        } catch (error) {
-            console.error('Error saving project:', error);
-            alert('Error saving project. Check the console for details.');
         }
     }
 

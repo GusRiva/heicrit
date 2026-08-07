@@ -397,8 +397,7 @@ def parse_apparatus_file():
             'success': True,
             'message': f'Parsed apparatus file with {len(apparatus_entries)} entries',
             'apparatus_count': len(apparatus_entries),
-            'apparatus_filepath': apparatus_filepath,
-            'format': apparatus.get_format()
+            'apparatus_filepath': apparatus_filepath
         })
 
     except Exception as e:
@@ -567,8 +566,7 @@ def finalize_project():
             'synoptic_map_count': synoptic_map.get_loci_count(),
             'synoptic_wits': synoptic_map.get_wits(),
             'synoptic_wits_count': synoptic_map.get_wits_count(),
-            'synoptic_file': synoptic_map.get_file_path(),
-            'format': apparatus.get_format()
+            'synoptic_file': synoptic_map.get_file_path()
         })
 
     except Exception as e:
@@ -638,7 +636,7 @@ def resolve_apparatus_file_on_disk(apparatus_file, project_directory):
     """
     Resolve an apparatus file path (as sent by the frontend, relative to the
     project directory) to an actual path on disk, trying the project-root
-    fallback the same way both /apparatus/save and /apparatus/note/save need to.
+    fallback the same way the apparatus write routes need to.
     Returns None if no such file can be found.
     """
     if not os.path.isabs(apparatus_file):
@@ -685,70 +683,6 @@ def write_apparatus_file_and_refresh(resolved_file, apparatus_file, root):
 
     apparatus = Apparatus(apparatus_file, project_files_cache)
     return apparatus
-
-
-@api.route('/apparatus/save', methods=['POST'])
-def save_apparatus_entries():
-    """
-    Save new apparatus entries to the apparatus file
-    """
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-
-        apparatus_file = data.get('apparatus_file')
-        new_entries = data.get('new_entries', [])
-        project_directory = data.get('project_directory', '')
-
-        if not apparatus_file:
-            return jsonify({'error': 'No apparatus file specified'}), 400
-
-        if not new_entries:
-            return jsonify({'error': 'No new entries to save'}), 400
-
-        resolved_file = resolve_apparatus_file_on_disk(apparatus_file, project_directory)
-        if not resolved_file:
-            return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
-        apparatus_file = resolved_file
-
-        with open(apparatus_file, encoding='utf-8') as f:
-            content = f.read()
-
-        root = et.fromstring(content.encode('utf-8'))
-
-        # Find the text body where apparatus entries are stored
-        body = root.find('.//{http://www.tei-c.org/ns/1.0}body')
-        if body is None:
-            return jsonify({'error': 'Could not find body element in apparatus file'}), 400
-        
-        
-        # Create new apparatus entries and insert them in location order
-        entries_added = 0
-        for entry_data in new_entries:
-            new_app = create_apparatus_element(entry_data)
-            insert_apparatus_entry_in_order(body, new_app, entry_data['loc'])
-            entries_added += 1
-        
-        output_content = et.tostring(root, encoding='unicode', pretty_print=True)
-        
-        with open(apparatus_file, 'w', encoding='utf-8') as f:
-            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            f.write(output_content)
-
-        
-        return jsonify({
-            'success': True,
-            'message': f'Successfully added {entries_added} new apparatus entries',
-            'entries_added': entries_added
-        })
-        
-    except Exception as e:
-        print(f"ERROR: Exception occurred: {str(e)}")
-        print(f"Exception type: {type(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': f'Failed to save apparatus entries: {str(e)}'}), 500
 
 
 @api.route('/apparatus/note/save', methods=['POST'])
@@ -1074,80 +1008,6 @@ def delete_apparatus_entry_new_format():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to delete entry: {str(e)}'}), 500
-
-
-def _set_element_content(element, data):
-    """Set element text/children content from entry data dict."""
-    TEI = 'http://www.tei-c.org/ns/1.0'
-    children = data.get('children')
-    if children:
-        element.text = None
-        for child_data in children:
-            child = et.SubElement(element, f'{{{TEI}}}{child_data["tag"]}')
-            child.text = child_data.get('text', '')
-            child.tail = child_data.get('tail', '')
-    else:
-        element.text = data.get('text', '')
-
-
-def create_apparatus_element(entry_data):
-    """
-    Create an XML apparatus element from entry data
-    """
-    TEI = 'http://www.tei-c.org/ns/1.0'
-    app = et.Element(f'{{{TEI}}}app')
-    app.set('loc', str(entry_data['loc']))
-    app.set('corresp', entry_data['corresp'])
-
-    if entry_data.get('lemma'):
-        lemma_data = entry_data['lemma']
-        lemma = et.SubElement(app, f'{{{TEI}}}lem')
-        _set_element_content(lemma, lemma_data)
-        for attr_name, attr_value in lemma_data['attributes'].items():
-            lemma.set(attr_name, attr_value)
-
-    for reading_data in entry_data.get('readings', []):
-        rdg = et.SubElement(app, f'{{{TEI}}}rdg')
-        _set_element_content(rdg, reading_data)
-        for attr_name, attr_value in reading_data['attributes'].items():
-            rdg.set(attr_name, attr_value)
-
-    return app
-
-
-def insert_apparatus_entry_in_order(body, new_app, loc):
-    """
-    Insert the new apparatus entry in the correct location order
-    """
-    loc_num = int(loc) if loc.isdigit() else 0
-
-    # Find all existing app elements
-    apps = body.findall('.//{http://www.tei-c.org/ns/1.0}app')
-
-    # Find the correct insertion point
-    insert_index = len(apps)  # Default to end
-
-    for i, app in enumerate(apps):
-        app_loc = app.get('loc', '0')
-        app_loc_num = int(app_loc) if app_loc.isdigit() else 0
-
-        if loc_num < app_loc_num:
-            insert_index = i
-            break
-
-    # Insert the new element
-    if insert_index < len(apps):
-        # Insert before the found element
-        parent = apps[insert_index].getparent()
-        parent.insert(list(parent).index(apps[insert_index]), new_app)
-    else:
-        # Insert at the end
-        if apps:
-            parent = apps[-1].getparent()
-            parent.append(new_app)
-        else:
-            # No existing apps, add to body
-            body.append(new_app)
 
 
 @api.route('/synoptic/table', methods=['POST'])
