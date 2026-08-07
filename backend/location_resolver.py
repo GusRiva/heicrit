@@ -261,6 +261,34 @@ class WitnessFragmentResolver:
             fragment['order_index'] = order_index
         return order_index.get(xml_id, 0)
 
+    def _are_adjacent(self, spec_a: dict, spec_b: dict) -> bool:
+        """
+        True if spec_b's token immediately follows spec_a's with no other
+        w/pc token in between - used by resolve_ordered_text_html to detect a
+        skipped token between two consecutive entries of a reconstructed
+        transposition lemma/reading.
+        """
+        if spec_a['prefix'] != spec_b['prefix']:
+            return False
+        el_a = self.resolve_element(spec_a['prefix'], spec_a['id'])
+        el_b = self.resolve_element(spec_b['prefix'], spec_b['id'])
+        if el_a is None or el_b is None:
+            return False
+        parent = el_a.getparent()
+        if parent is None or el_b.getparent() is not parent:
+            return False
+        collecting = False
+        for child in parent:
+            if child is el_a:
+                collecting = True
+                continue
+            if collecting:
+                if child is el_b:
+                    return True
+                if isinstance(child.tag, str) and local_name(child) in ('w', 'pc'):
+                    return False
+        return False
+
     def resolve_ordered_text_html(self, tokens: list[str]) -> tuple[str, str]:
         """
         Resolve MULTIPLE distinct single-id tokens (e.g. the base-side or
@@ -268,19 +296,41 @@ class WitnessFragmentResolver:
         text/html string, ordered by each token's actual position in ITS OWN
         witness's document - not by the order the tokens happen to be listed
         in - so the reconstructed phrase reflects that witness's real word
-        order rather than the order links were declared in.
+        order rather than the order links were declared in. A gap between two
+        consecutive tokens (i.e. the transposition skipped over an
+        intervening word) is marked with an ellipsis, the classical
+        apparatus convention for omitted material. Tokens are deduplicated
+        (by prefix+id) before rendering, since the same base token can appear
+        once per witness sharing the same transposition pattern - without
+        this, both the word and the gap detection would be thrown off by the
+        repeat.
         """
         specs = [s for s in (parse_location_token(t) for t in tokens) if s and s['kind'] == 'single']
         specs.sort(key=lambda s: self._document_order_key(s['prefix'], s['id']))
 
+        deduped: list[dict] = []
+        seen: set[tuple[str, str]] = set()
+        for spec in specs:
+            key = (spec['prefix'], spec['id'])
+            if key not in seen:
+                seen.add(key)
+                deduped.append(spec)
+
         texts: list[str] = []
         htmls: list[str] = []
-        for spec in specs:
+        prev_spec: dict | None = None
+        for spec in deduped:
             text, html = self._resolve_id(spec['prefix'], spec['id'])
+            if not text and not html:
+                continue
+            if prev_spec is not None and not self._are_adjacent(prev_spec, spec):
+                texts.append('…')
+                htmls.append('…')
             if text:
                 texts.append(text)
             if html:
                 htmls.append(html)
+            prev_spec = spec
         return ' '.join(texts), ' '.join(htmls)
 
     def _resolve_spec(self, spec: dict) -> tuple[str, str]:
