@@ -26,21 +26,26 @@
 			</publicationStmt>
 			<sourceDesc>
 				<listWit>
-					<witness xml:id="A" ana="hc:Leithandschrift">
-						<ptr target="../texts/AH_A.xml"/>
-						<idno ana="hc:EditorialSiglum">A</idno>
+					<witness xml:id="a" ana="hc:BaseText">
+						<ptr target="../indexes/IndexOfWitnesses_AH.xml#a"/>
 					</witness>
-					<witness xml:id="Bb">
-						<ptr target="../texts/AH_Bb.xml"/>
-						<idno ana="hc:EditorialSiglum">Bb</idno>
+					<witness xml:id="bb">
+						<ptr target="../indexes/IndexOfWitnesses_AH.xml#bb"/>
 					</witness>
-					<witness xml:id="Ba">
-						<ptr target="../texts/AH_Ba.xml"/>
-						<idno ana="hc:EditorialSiglum">Ba</idno>
+					<witness xml:id="ba">
+						<ptr target="../indexes/IndexOfWitnesses_AH.xml#ba"/>
 					</witness>
-					<witness xml:id="E">
-						<ptr target="../texts/AH_E.xml"/>
-						<idno ana="hc:EditorialSiglum">E</idno>
+					<witness xml:id="c">
+						<ptr target="../indexes/IndexOfWitnesses_AH.xml#c"/>
+					</witness>
+					<witness xml:id="d">
+						<ptr target="../indexes/IndexOfWitnesses_AH.xml#d"/>
+					</witness>
+					<witness xml:id="e">
+						<ptr target="../indexes/IndexOfWitnesses_AH.xml#e"/>
+					</witness>
+					<witness xml:id="f">
+						<ptr target="../indexes/IndexOfWitnesses_AH.xml#f"/>
 					</witness>
 				</listWit>
 			</sourceDesc>
@@ -62,52 +67,8 @@
 	<text ana="hc:CompleteExpression">
 		<body>
 			<listApp corresp="../synopses/synoptic_map.xml">
-				<app loc="3" corresp="a:l_3">
-					<lem wit="#A" corresp="a:right(w_3_6)"><emph>nach</emph> vant</lem>
-					<rdg wit="#Bb" corresp="bb:w_3_6">vant</rdg>
-					<rdg wit="#Ba" corresp="ba:w_3_6">vant</rdg>
-				</app>
-				<app loc="5" corresp="a:l_5">
-					<lem wit="#A" corresp="a:range(w_5_1, w_5_4)">Dienſtman wars er zuͦ</lem>
-					<rdg wit="#Ba #Bb" corresp="ba:range(w_5_1, w_5_4) bb:range(w_5_1, w_5_4)">Vn̄ was ein dinſteman von</rdg>
-				</app>
-				<app loc="6" corresp="a:l_6">
-					<lem wit="#A" corresp="a:w_6_1">Er</lem>
-					<rdg wit="#Ba #Bb" corresp="ba:w_6_1 bb:w_6_1">der</rdg>
-				</app>
-				<app loc="6" corresp="a:l_6">
-					<lem wit="#A" corresp="a:w_6_4">mange</lem>
-					<rdg wit="#Ba #Bb" corresp="ba:w_6_4 bb:w_6_4">eine</rdg>
-				</app>
-				<app loc="7" corresp="a:l_7">
-					<lem wit="#A" corresp="a:left(w_7_2)"><emph>vor</emph> miſlichen</lem>
-					<rdg wit="#Ba #Bb" corresp="ba:w_7_2 bb:w_7_2">einem</rdg>
-				</app>
-				<app loc="7" corresp="a:l_7">
-					<lem wit="#A" corresp="a:w_7_2">miſlichen</lem>
-					<rdg wit="#Ba #Bb" corresp="ba:w_7_3 bb:w_7_3">ieſlichen</rdg>
-				</app>
-				<app loc="11" corresp="a:l_11">
-					<lem wit="#A" corresp="a:range(w_11_1, w_11_2)">Moͤhte ſenfter</lem>
-					<rdg wit="#Bb #Ba" corresp="bb:range(w_11_1, w_11_2) ba:range(w_11_1, w_11_2)">Senfter mohte</rdg>
-				</app>
-				<app loc="12" corresp="a:l_12">
-					<lem wit="#A" corresp="a:range(w_12_1, w_12_2)">Unn von</lem>
-					<rdg wit="#Bb #Ba" corresp="bb:w_12_1 ba:w_12_1">Mit</rdg>
-				</app>
-				<app loc="12" corresp="a:l_12">
-					<lem wit="#A" corresp="a:w_12_4">gewanten</lem>
-					<rdg wit="#Bb #Ba" corresp="bb:w_12_3 ba:w_12_3">geweren</rdg>
-				</app>
-				<app loc="13" corresp="a:l_13">
-					<lem wit="#A" corresp="a:left(w_13_2)"><emph>vor</emph> gottes</lem>
-					<rdg wit="#Bb #Ba" corresp="bb:w_13_2 ba:w_13_2">zv</rdg>
-				</app>
-				<app loc="74" corresp="a:l_74">
-					<lem wit="#A" corresp="a:left(w_74_3)"/>
-					<rdg wit="#Bb #Ba" corresp="bb:w_74_3 bb:w_74_4 ba:w_74_3 ba:w_74_4">ſchone Jvnch</rdg>
-				</app>
-			</listApp>
+				<app/>
+			<app loc="5" corresp="a:l_5"><lem wit="#a" corresp="a:range(w_5_1, w_5_4)">Dienſtman was er zuͦ</lem><rdg wit="#bb #ba" corresp="bb:range(w_5_1, w_5_5) ba:range(w_5_1, w_5_5)">Vnde was ein dienſtman von</rdg></app></listApp>
 		</body>
 	</text>
 </TEI>

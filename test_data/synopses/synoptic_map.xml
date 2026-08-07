@@ -5,7 +5,7 @@
    <teiHeader>
       <fileDesc>
          <titleStmt>
-            <title></title>
+            <title>Armer Heinrich Synoptic</title>
          </titleStmt>
          <publicationStmt>
             <publisher>
@@ -47,8 +47,6 @@
             <prefixDef matchPattern="(.+)" ident="e" replacementPattern="../texts/AH_E.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
             <prefixDef matchPattern="(.+)" ident="f" replacementPattern="../texts/AH_F.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
             
-            <prefixDef matchPattern="(.+)" ident="a-tr" replacementPattern="../texts/AH_tr_A.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
-            <prefixDef matchPattern="(.+)" ident="ba-tr" replacementPattern="../texts/AH_tr_Ba.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
          </listPrefixDef>
       </encodingDesc>
    </teiHeader>
