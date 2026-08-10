@@ -41,6 +41,7 @@ Click any entry in the Critical Apparatus panel to make it active and load its L
    - The **lemma** group is selected first (words from the base-text row only) — highlighted **green**.
    - Switch to a reading group via the dropdown, the **+ New reading group** option, or press **1**–**9** on the keyboard (**0** switches back to lemma). Each reading group gets its own highlight color (reading-1 orange, reading-2 purple, reading-3 blue, …).
    - Click words from any other witness row to add them to the active reading group. You can select from more than one witness in the same group if they share the same reading.
+   - **Ctrl/Cmd+click** a word to fill in every word between it and the farthest already-selected word in that same row — a quick way to extend a multi-word selection without clicking each word individually.
    - To mark an addition or omission, select a **gap position** instead of a word (click between two words) on the empty side.
 3. The variant type is auto-detected from the shape of your selection — no need to choose it manually:
 

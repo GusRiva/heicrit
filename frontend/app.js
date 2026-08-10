@@ -3353,6 +3353,28 @@ class HeiCritApp {
         const readingGroup = isMainText ? 'lemma' : this.currentReadingGroup;
         const witnessId = witnessInfo ? witnessInfo.witnessId : null;
 
+        // Ctrl/Cmd+click range-fill: if this group already has at least one
+        // OTHER word token selected in this same witness row, select every
+        // word token between the farthest of those and this click - additive,
+        // doesn't touch anything already selected outside that span. Falls
+        // through to the normal single-toggle click below when nothing else
+        // is selected yet, or when clicking a gap marker (a range needs two
+        // well-ordered word endpoints).
+        if ((event.ctrlKey || event.metaKey) && !isPreSpace && !isPostSpace && witnessId) {
+            const existingInRow = (this.selectedTokens[readingGroup] || []).filter(t =>
+                t.witnessInfo && t.witnessInfo.witnessId === witnessId &&
+                !t.isPreSpace && !t.isPostSpace &&
+                t.tokenId !== tokenId
+            );
+            if (existingInRow.length > 0) {
+                this.fillTokenRangeSelection(readingGroup, witnessInfo, synLine, tokenId, existingInRow);
+                if (Object.values(this.selectedReadingAna).includes('hc:TranspositionVariant')) {
+                    this.updateTranspositionNumbering(tabId);
+                }
+                return;
+            }
+        }
+
         // Find which group (if any) currently contains this specific token
         // Match on tokenId, witnessId, AND pre/post space type (pre-space and word share the same tokenId)
         let currentGroup = null;
@@ -3422,6 +3444,51 @@ class HeiCritApp {
             if (token.style.cursor === 'pointer') {
                 tokensWithHandlers++;
             }
+        });
+    }
+
+    fillTokenRangeSelection(readingGroup, witnessInfo, synLine, clickedTokenId, existingInRow) {
+        // Anchor on whichever already-selected token in this row is FARTHEST
+        // from the one just clicked, then select every word token between
+        // that anchor and the click (inclusive), in document order.
+        const farthest = existingInRow.reduce((best, t) =>
+            Math.abs(this.tokenSortKey(t.tokenId) - this.tokenSortKey(clickedTokenId)) >
+            Math.abs(this.tokenSortKey(best.tokenId) - this.tokenSortKey(clickedTokenId)) ? t : best
+        );
+
+        const clickedKey = this.tokenSortKey(clickedTokenId);
+        const farthestKey = this.tokenSortKey(farthest.tokenId);
+        const startId = clickedKey <= farthestKey ? clickedTokenId : farthest.tokenId;
+        const endId = clickedKey <= farthestKey ? farthest.tokenId : clickedTokenId;
+
+        const synLineContent = synLine.querySelector('.syn-line-content');
+        if (!synLineContent) return;
+
+        this.collectTokensInDomRange(synLineContent, startId, endId).forEach(tokenElement => {
+            const id = tokenElement.getAttribute('data-token-id');
+
+            // Steal this token from whatever group currently holds it (same
+            // as a plain click already does), then add it to the target group.
+            Object.keys(this.selectedTokens).forEach(group => {
+                const before = this.selectedTokens[group].length;
+                this.selectedTokens[group] = this.selectedTokens[group].filter(t => !(
+                    t.tokenId === id && t.witnessInfo && t.witnessInfo.witnessId === witnessInfo.witnessId &&
+                    !t.isPreSpace && !t.isPostSpace
+                ));
+                if (this.selectedTokens[group].length !== before) {
+                    tokenElement.classList.remove(`selected-${group}`);
+                }
+            });
+
+            if (!this.selectedTokens[readingGroup]) this.selectedTokens[readingGroup] = [];
+            this.selectedTokens[readingGroup].push({
+                tokenId: id,
+                text: tokenElement.textContent.trim(),
+                witnessInfo,
+                isPreSpace: false,
+                isPostSpace: false
+            });
+            tokenElement.classList.add(`selected-${readingGroup}`);
         });
     }
 
@@ -3757,33 +3824,35 @@ class HeiCritApp {
         const witnessInfo = this.getWitnessInfoFromLine(synLine);
         if (!witnessInfo) return [];
 
-        const allTokens = synLineContent.querySelectorAll('.syn-token:not(.syn-token-pre):not(.syn-token-post)[data-token-id]');
+        return this.collectTokensInDomRange(synLineContent, startId, endId).map(tokenElement => ({
+            tokenId: tokenElement.getAttribute('data-token-id'),
+            text: tokenElement.textContent.trim(),
+            witnessInfo: witnessInfo,
+            isPreSpace: false,
+            isPostSpace: false
+        }));
+    }
 
-        const tokens = [];
+    collectTokensInDomRange(container, startTokenId, endTokenId) {
+        // Walks a witness row's word tokens in document order, collecting
+        // every one from startTokenId to endTokenId inclusive. Shared by
+        // expandTokenRange (parsing a saved corresp range()) and the
+        // Ctrl/Cmd+click range-fill (extending a live selection to the
+        // farthest already-selected token).
+        const allTokens = container.querySelectorAll('.syn-token:not(.syn-token-pre):not(.syn-token-post)[data-token-id]');
+        const result = [];
         let inRange = false;
         let foundStart = false;
-        for (const tokenElement of allTokens) {
-            const tokenId = tokenElement.getAttribute('data-token-id');
-
-            if (tokenId === startId) {
+        for (const el of allTokens) {
+            const id = el.getAttribute('data-token-id');
+            if (id === startTokenId) {
                 inRange = true;
                 foundStart = true;
             }
-
-            if (inRange) {
-                tokens.push({
-                    tokenId: tokenId,
-                    text: tokenElement.textContent.trim(),
-                    witnessInfo: witnessInfo,
-                    isPreSpace: false,
-                    isPostSpace: false
-                });
-            }
-
-            if (tokenId === endId && foundStart) break;
+            if (inRange) result.push(el);
+            if (id === endTokenId && foundStart) break;
         }
-
-        return tokens;
+        return result;
     }
 
     applyTokenSelections(tabId) {
