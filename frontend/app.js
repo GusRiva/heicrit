@@ -1110,7 +1110,27 @@ class HeiCritApp {
         document.getElementById('openProjectDirectoryIcon').addEventListener('click', () => this.openProjectDirectory());
         document.getElementById('switchApparatusFileIcon').addEventListener('click', () => this.switchApparatusFile());
         document.getElementById('editSynopticMapIcon').addEventListener('click', () => this.openSynopticEditor());
-        
+
+        // Global "n" shortcut for New Entry (mirrors clicking the button,
+        // including its "Finish" toggle once in creation mode). Ignored
+        // while typing anywhere (a note, the main text editor, the goto-loc
+        // box, ...), while editing an existing entry (the button itself is
+        // hidden then), or when no project is open.
+        document.addEventListener('keydown', (event) => {
+            if (event.key.toLowerCase() !== 'n' || event.ctrlKey || event.metaKey || event.altKey) return;
+
+            const active = document.activeElement;
+            if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+                return;
+            }
+
+            const tab = this.tabs.get(this.activeTabId);
+            if (!tab || tab.type !== 'project' || this.editMode) return;
+
+            event.preventDefault();
+            this.toggleCreationMode(this.activeTabId);
+        });
+
         // Add click handler for any element with data-container-id attribute
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-container-id]');

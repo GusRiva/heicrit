@@ -36,7 +36,7 @@ Click any entry in the Critical Apparatus panel to make it active and load its L
 
 ## Creating a new entry
 
-1. Click **New Entry** (it becomes **Finish**, and a reading-group dropdown appears).
+1. Click **New Entry** (it becomes **Finish**, and a reading-group dropdown appears) — or press **N** on the keyboard (ignored while typing in a note or other text field, and while editing an existing entry).
 2. In the Location Details panel, click words to build your selection:
    - The **lemma** group is selected first (words from the base-text row only) — highlighted **green**.
    - Switch to a reading group via the dropdown, the **+ New reading group** option, or press **1**–**9** on the keyboard (**0** switches back to lemma). Each reading group gets its own highlight color (reading-1 orange, reading-2 purple, reading-3 blue, …).
