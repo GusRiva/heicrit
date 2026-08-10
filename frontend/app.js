@@ -191,7 +191,8 @@ class HeiCritApp {
                                         <h4>Location Details</h4>
                                         <div class="apparatus-toolbar">
                                             <button id="new-variant-btn-${tabId}" class="apparatus-btn">New Entry</button>
-                                            <button id="edit-variant-btn-${tabId}" class="apparatus-btn">Edit Entry</button>
+                                            <button id="edit-variant-btn-${tabId}" class="apparatus-btn" style="display: none;">Edit Entry</button>
+                                            <button id="cancel-variant-btn-${tabId}" class="apparatus-btn apparatus-btn-cancel" style="display: none;">Cancel</button>
                                             <button id="delete-variant-btn-${tabId}" class="apparatus-btn" style="display: none;">Delete Entry</button>
                                             <select id="reading-group-select-${tabId}" class="reading-group-select" style="display: none;">
                                                 <option value="lemma">${this.getReadingGroupLabel('lemma')}</option>
@@ -398,6 +399,7 @@ class HeiCritApp {
         // Setup entry creation events
         const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
         const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
+        const cancelVariantBtn = document.getElementById(`cancel-variant-btn-${tabId}`);
         const deleteVariantBtn = document.getElementById(`delete-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
         const readingAnaSelect = document.getElementById(`reading-ana-select-${tabId}`);
@@ -408,6 +410,10 @@ class HeiCritApp {
 
         if (editVariantBtn) {
             editVariantBtn.addEventListener('click', () => this.toggleEditMode(tabId));
+        }
+
+        if (cancelVariantBtn) {
+            cancelVariantBtn.addEventListener('click', () => this.cancelEntryMode(tabId));
         }
 
         if (deleteVariantBtn) {
@@ -602,6 +608,7 @@ class HeiCritApp {
                 content.innerHTML = '<p>No apparatus entries to display</p>';
             }
             this.updateDeleteButtonVisibility(tabId);
+            this.updateEditButtonVisibility(tabId);
             return;
         }
 
@@ -643,6 +650,7 @@ class HeiCritApp {
         this.setupNoteEditing(tabId);
 
         this.updateDeleteButtonVisibility(tabId);
+        this.updateEditButtonVisibility(tabId);
     }
 
     updateDeleteButtonVisibility(tabId) {
@@ -662,6 +670,23 @@ class HeiCritApp {
         const isDeletable = entry && !entry.is_placeholder && !entry.lemma_is_explicit;
 
         deleteBtn.style.display = isDeletable ? '' : 'none';
+    }
+
+    updateEditButtonVisibility(tabId) {
+        const editBtn = document.getElementById(`edit-variant-btn-${tabId}`);
+        if (!editBtn) return;
+
+        // While in creation mode the button is already hidden by
+        // toggleCreationMode; while in edit mode it's the active "Finish"
+        // toggle itself - leave both alone here.
+        if (this.creationMode || this.editMode) {
+            return;
+        }
+
+        // Only show Edit Entry when the location has a real (non-placeholder)
+        // entry and it's the one currently selected.
+        const entry = this.getCurrentActiveEntry(tabId);
+        editBtn.style.display = entry && !entry.is_placeholder ? '' : 'none';
     }
 
     updateNavigationControls(tabId) {
@@ -862,10 +887,29 @@ class HeiCritApp {
 
     addHasApparatusClassFromCorresp(correspValue) {
         // Parse corresp attribute like "a:range(w_12_1, w_12_2)" or "ba:w_12_1 bb:w_12_1"
+        const correspParts = this.splitCorrespParts(correspValue);
+
+        correspParts.forEach(part => {
+            if (part.includes(':')) {
+                const colonIndex = part.indexOf(':');
+                const prefix = part.substring(0, colonIndex);
+                const tokenSpec = part.substring(colonIndex + 1);
+
+                this.addHasApparatusClassForPrefix(prefix, tokenSpec);
+            }
+        });
+    }
+
+    splitCorrespParts(correspValue) {
+        // Split a corresp/target value like "a:range(w_12_1, w_12_2)" or
+        // "ba:w_12_1 bb:w_12_1" into its "prefix:spec" parts. A naive
+        // split(' ') would break a single range() ref in two, since its own
+        // "start, end" separator is also a space - so track whether we're
+        // inside an unclosed range(...) and keep joining until it closes.
         const correspParts = [];
         let currentPart = '';
         let inRange = false;
-        
+
         const tokens = correspValue.split(/\s+/);
         for (const token of tokens) {
             if (token.includes('range(')) {
@@ -882,21 +926,13 @@ class HeiCritApp {
                 correspParts.push(token);
             }
         }
-        
+
         // Handle case where we're still in a range at the end
         if (currentPart) {
             correspParts.push(currentPart);
         }
-        
-        correspParts.forEach(part => {
-            if (part.includes(':')) {
-                const colonIndex = part.indexOf(':');
-                const prefix = part.substring(0, colonIndex);
-                const tokenSpec = part.substring(colonIndex + 1);
-                
-                this.addHasApparatusClassForPrefix(prefix, tokenSpec);
-            }
-        });
+
+        return correspParts;
     }
 
     parseTokenSpec(tokenSpec) {
@@ -986,36 +1022,9 @@ class HeiCritApp {
 
     highlightTokensFromCorresp(correspValue, type) {
         // Parse corresp attribute like "a:range(w_12_1, w_12_2)" or "ba:w_12_1 bb:w_12_1"
-        
-        // More sophisticated parsing to handle ranges with spaces
-        const correspParts = [];
-        let currentPart = '';
-        let inRange = false;
-        
-        const tokens = correspValue.split(/\s+/);
-        for (const token of tokens) {
-            if (token.includes('range(')) {
-                inRange = true;
-                currentPart = token;
-            } else if (inRange && token.endsWith(')')) {
-                currentPart += ' ' + token;
-                correspParts.push(currentPart);
-                currentPart = '';
-                inRange = false;
-            } else if (inRange) {
-                currentPart += ' ' + token;
-            } else {
-                correspParts.push(token);
-            }
-        }
-        
-        // Handle case where we're still in a range at the end
-        if (currentPart) {
-            correspParts.push(currentPart);
-        }
-        
+        const correspParts = this.splitCorrespParts(correspValue);
+
         correspParts.forEach(part => {
-            
             if (part.includes(':')) {
                 const colonIndex = part.indexOf(':');
                 const prefix = part.substring(0, colonIndex);
@@ -2877,11 +2886,17 @@ class HeiCritApp {
             newVariantBtn.textContent = 'Finish';
             newVariantBtn.classList.add('active');
             readingGroupSelect.style.display = 'inline-block';
-            
+
             // Hide the Edit Entry button during creation mode
             const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
             if (editVariantBtn) {
                 editVariantBtn.style.display = 'none';
+            }
+
+            // Show the Cancel button during creation mode
+            const cancelVariantBtn = document.getElementById(`cancel-variant-btn-${tabId}`);
+            if (cancelVariantBtn) {
+                cancelVariantBtn.style.display = 'inline-block';
             }
             
             // Reset dropdown to initial state
@@ -2964,20 +2979,23 @@ class HeiCritApp {
     _finishExitCreationMode(tabId) {
         this.creationMode = false;
         const newVariantBtn = document.getElementById(`new-variant-btn-${tabId}`);
-        const editVariantBtn = document.getElementById(`edit-variant-btn-${tabId}`);
         const readingGroupSelect = document.getElementById(`reading-group-select-${tabId}`);
-        
+
         newVariantBtn.textContent = 'New Entry';
         newVariantBtn.classList.remove('active');
         readingGroupSelect.style.display = 'none';
         const readingAnaSelect = document.getElementById(`reading-ana-select-${tabId}`);
         if (readingAnaSelect) readingAnaSelect.style.display = 'none';
 
-        // Show the Edit Entry button again
-        if (editVariantBtn) {
-            editVariantBtn.style.display = '';
+        // The Edit Entry button's visibility is recalculated below by
+        // updateApparatusDisplay -> updateEditButtonVisibility.
+
+        // Hide the Cancel button again
+        const cancelVariantBtn = document.getElementById(`cancel-variant-btn-${tabId}`);
+        if (cancelVariantBtn) {
+            cancelVariantBtn.style.display = 'none';
         }
-        
+
         // Clear all selected tokens
         this.clearSelectedTokens(tabId);
         
@@ -3015,9 +3033,19 @@ class HeiCritApp {
                 }
             }
         }
-        
+
     }
-    
+
+    cancelEntryMode(tabId) {
+        // Discard the in-progress entry without persisting anything to the
+        // server - reuses the same cleanup a successful save runs.
+        if (this.creationMode) {
+            this._finishExitCreationMode(tabId);
+        } else if (this.editMode) {
+            this._finishExitEditMode(tabId);
+        }
+    }
+
     setupTokenClickHandlers(tabId) {
         const tabPanel = document.getElementById(`panel-${tabId}`);
         if (!tabPanel) {
@@ -3593,11 +3621,17 @@ class HeiCritApp {
         if (newVariantBtn) {
             newVariantBtn.style.display = 'none';
         }
-        
+
+        // Show the Cancel button during edit mode
+        const cancelVariantBtn = document.getElementById(`cancel-variant-btn-${tabId}`);
+        if (cancelVariantBtn) {
+            cancelVariantBtn.style.display = 'inline-block';
+        }
+
         if (readingGroupSelect) {
             readingGroupSelect.style.display = 'inline-block';
         }
-        
+
         // Clear all existing token selections and navigation highlights
         this.clearSelectedTokens(tabId);
         this.clearTokenHighlights(tabId);
@@ -3624,7 +3658,7 @@ class HeiCritApp {
         // Parse lemma tokens
         if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
             const lemmaCorresp = entry.lemma.attributes.corresp;
-            const lemmaTokens = this.parseTokensFromCorresp(lemmaCorresp);
+            const lemmaTokens = this.parseTokensFromCorresp(tabId, lemmaCorresp);
             this.selectedTokens.lemma = lemmaTokens;
         }
 
@@ -3639,7 +3673,7 @@ class HeiCritApp {
                         this.selectedTokens[readingGroup] = [];
                     }
 
-                    const readingTokens = this.parseTokensFromCorresp(reading.attributes.corresp);
+                    const readingTokens = this.parseTokensFromCorresp(tabId, reading.attributes.corresp);
                     this.selectedTokens[readingGroup] = readingTokens;
 
                     // New-format only: seed this reading group's variant type
@@ -3662,9 +3696,10 @@ class HeiCritApp {
         this.updateAnaSelectForGroup(tabId, 'lemma');
     }
     
-    parseTokensFromCorresp(corresp) {
+    parseTokensFromCorresp(tabId, corresp) {
         const tokens = [];
-        const tokenRefs = corresp.split(' ');
+        const root = document.getElementById(`apparatus-details-content-${tabId}`) || document;
+        const tokenRefs = this.splitCorrespParts(corresp);
 
         tokenRefs.forEach(ref => {
             if (!ref.includes(':')) return;
@@ -3673,13 +3708,17 @@ class HeiCritApp {
             const tokenSpec = ref.substring(colonIndex + 1);
 
             const spec = this.parseTokenSpec(tokenSpec);
-            if (spec.type === 'range') return; // ranges not pre-selected in edit mode
+
+            if (spec.type === 'range') {
+                tokens.push(...this.expandTokenRange(root, prefix, spec.start, spec.end));
+                return;
+            }
 
             const tokenId = spec.id;
             const isPreSpace = spec.type === 'left';
             const isPostSpace = spec.type === 'right';
 
-            const tokenElements = document.querySelectorAll(`[data-token-id="${tokenId}"]`);
+            const tokenElements = root.querySelectorAll(`[data-token-id="${tokenId}"]`);
 
             tokenElements.forEach(tokenElement => {
                 // Match the correct span type
@@ -3704,7 +3743,49 @@ class HeiCritApp {
 
         return tokens;
     }
-    
+
+    expandTokenRange(root, prefix, startId, endId) {
+        // Ranges only ever cover 2+ consecutive word tokens (never gap
+        // markers) - mirrors the walk in addHasApparatusClassToTokenRange,
+        // but builds selectable token records instead of toggling a class.
+        const witElement = root.querySelector(`.syn-line-wit[data-line-id^="${prefix}:"]`);
+        if (!witElement) return [];
+        const synLine = witElement.closest('.syn-line');
+        const synLineContent = synLine ? synLine.querySelector('.syn-line-content') : null;
+        if (!synLineContent) return [];
+
+        const witnessInfo = this.getWitnessInfoFromLine(synLine);
+        if (!witnessInfo) return [];
+
+        const allTokens = synLineContent.querySelectorAll('.syn-token:not(.syn-token-pre):not(.syn-token-post)[data-token-id]');
+
+        const tokens = [];
+        let inRange = false;
+        let foundStart = false;
+        for (const tokenElement of allTokens) {
+            const tokenId = tokenElement.getAttribute('data-token-id');
+
+            if (tokenId === startId) {
+                inRange = true;
+                foundStart = true;
+            }
+
+            if (inRange) {
+                tokens.push({
+                    tokenId: tokenId,
+                    text: tokenElement.textContent.trim(),
+                    witnessInfo: witnessInfo,
+                    isPreSpace: false,
+                    isPostSpace: false
+                });
+            }
+
+            if (tokenId === endId && foundStart) break;
+        }
+
+        return tokens;
+    }
+
     applyTokenSelections(tabId) {
         Object.keys(this.selectedTokens).forEach(group => {
             this.selectedTokens[group].forEach(tokenData => {
@@ -3806,7 +3887,13 @@ class HeiCritApp {
             editVariantBtn.textContent = 'Edit Entry';
             editVariantBtn.classList.remove('active');
         }
-        
+
+        // Hide the Cancel button again
+        const cancelVariantBtn = document.getElementById(`cancel-variant-btn-${tabId}`);
+        if (cancelVariantBtn) {
+            cancelVariantBtn.style.display = 'none';
+        }
+
         if (readingGroupSelect) {
             readingGroupSelect.style.display = 'none';
         }
@@ -3933,8 +4020,19 @@ class HeiCritApp {
     
 
     tokenSortKey(tokenId) {
-        const m = tokenId.match(/w_(\d+)_(\d+)/);
-        return m ? parseInt(m[1]) * 100000 + parseInt(m[2]) : 0;
+        // Token ids are "w_" followed by 2+ underscore-separated numeric
+        // segments - "w_17_3" (line 17, word 3) in some projects, but
+        // "w_10_1_5" (folio 10, line 1, word 5) in others. Only the LAST
+        // segment is the in-line word position that determines adjacency;
+        // earlier segments are a coarser, constant location prefix. Capturing
+        // just the first two segments (as this used to) silently drops the
+        // real word number whenever there are 3+ segments, making every word
+        // in a line compare equal. Fold all segments into one mixed-radix
+        // number instead, so comparisons and "adjacent = diff of 1" checks
+        // stay correct regardless of how many segments the id has.
+        const m = tokenId.match(/^w_(\d+(?:_\d+)*)$/);
+        if (!m) return 0;
+        return m[1].split('_').reduce((acc, seg) => acc * 100000 + parseInt(seg, 10), 0);
     }
 
     buildCorrespPartsForTokens(prefix, tokens) {
@@ -3948,15 +4046,34 @@ class HeiCritApp {
             .filter(t => t.isPreSpace || t.isPostSpace)
             .map(t => t.isPreSpace ? `${prefix}:left(${t.tokenId})` : `${prefix}:right(${t.tokenId})`);
 
-        let wordPart;
-        if (wordTokens.length >= 2) {
-            const sorted = [...wordTokens].sort((a, b) => this.tokenSortKey(a.tokenId) - this.tokenSortKey(b.tokenId));
-            wordPart = `${prefix}:range(${sorted[0].tokenId}, ${sorted[sorted.length - 1].tokenId})`;
-        } else if (wordTokens.length === 1) {
-            wordPart = `${prefix}:${wordTokens[0].tokenId}`;
+        return [...prePostParts, ...this.buildWordRangeParts(prefix, wordTokens)];
+    }
+
+    buildWordRangeParts(prefix, wordTokens) {
+        // Word tokens can be clicked in any order and needn't be adjacent -
+        // collapsing them all into one min-to-max range() would silently
+        // absorb unselected words sitting between two disjoint picks. Instead
+        // split into maximal contiguous runs (by document position) and emit
+        // one range()/single-token spec per run, same as the multi-part
+        // handling already used for left()/right() gap markers above.
+        if (wordTokens.length === 0) return [];
+
+        const sorted = [...wordTokens].sort((a, b) => this.tokenSortKey(a.tokenId) - this.tokenSortKey(b.tokenId));
+
+        const runs = [[sorted[0]]];
+        for (let i = 1; i < sorted.length; i++) {
+            const isAdjacent = this.tokenSortKey(sorted[i].tokenId) === this.tokenSortKey(sorted[i - 1].tokenId) + 1;
+            if (isAdjacent) {
+                runs[runs.length - 1].push(sorted[i]);
+            } else {
+                runs.push([sorted[i]]);
+            }
         }
 
-        return [...prePostParts, ...(wordPart ? [wordPart] : [])];
+        return runs.map(run => run.length >= 2
+            ? `${prefix}:range(${run[0].tokenId}, ${run[run.length - 1].tokenId})`
+            : `${prefix}:${run[0].tokenId}`
+        );
     }
 
 

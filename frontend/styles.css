@@ -1502,6 +1502,14 @@ main {
     background: #218838;
 }
 
+.apparatus-btn-cancel {
+    background: #6c757d;
+}
+
+.apparatus-btn-cancel:hover {
+    background: #5a6268;
+}
+
 .reading-group-select {
     padding: 4px 8px;
     border: 1px solid #ccc;
