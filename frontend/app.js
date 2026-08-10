@@ -42,7 +42,17 @@ class HeiCritApp {
         // Store bound event handlers for proper removal
         this.tokenClickHandler = null;
         this.delegationHandler = null;
-        
+
+        // Loading-popup step tracking - see showLoadingPopup/updateLoadingStep.
+        // A loading sequence can call showLoadingPopup() more than once (e.g.
+        // to hide it behind a file-picker popup and then bring it back), and
+        // each call rebuilds the step list from scratch - these track which
+        // steps to show and which are already completed so a rebuild doesn't
+        // lose earlier progress marks. Reset at the start of each independent
+        // loading sequence (processProjectDirectory, switchApparatusFile).
+        this.activeLoadingSteps = null;
+        this.completedLoadingSteps = new Set();
+
         this.init();
     }
 
@@ -1092,11 +1102,13 @@ class HeiCritApp {
         // Navbar dropdown menu events
         document.getElementById('openFile').addEventListener('click', () => this.openFile());
         document.getElementById('openProjectDirectory').addEventListener('click', () => this.openProjectDirectory());
+        document.getElementById('switchApparatusFile').addEventListener('click', () => this.switchApparatusFile());
         document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
         document.getElementById('saveAsFile').addEventListener('click', () => this.saveAsFile());
 
         // Toolbar icon events
         document.getElementById('openProjectDirectoryIcon').addEventListener('click', () => this.openProjectDirectory());
+        document.getElementById('switchApparatusFileIcon').addEventListener('click', () => this.switchApparatusFile());
         document.getElementById('editSynopticMapIcon').addEventListener('click', () => this.openSynopticEditor());
         
         // Add click handler for any element with data-container-id attribute
@@ -1232,7 +1244,9 @@ class HeiCritApp {
 
     async processProjectDirectory(files) {
         try {
-            // Show loading popup
+            // Fresh independent loading sequence - start from scratch, reading from disk.
+            this.activeLoadingSteps = null;
+            this.completedLoadingSteps = new Set();
             this.showLoadingPopup();
             this.updateLoadingStep('step-reading', 'active');
             this.updateStatus('Processing project directory...');
@@ -1291,6 +1305,56 @@ class HeiCritApp {
         } catch (error) {
             this.showErrorPopup('Project Directory Error', `Failed to process project directory: ${error.message}`);
         }
+    }
+
+    async switchApparatusFile() {
+        if (!this.currentProjectDirectory || this.projectFiles.size === 0) {
+            alert('No project is open yet. Use "Open Project Directory" first.');
+            return;
+        }
+
+        if (this.creationMode || this.editMode) {
+            if (!confirm('You have an entry in progress. Switching apparatus files will discard it. Continue?')) {
+                return;
+            }
+            // Reuse the same cleanup Cancel already does, minus any save call.
+            this.cancelEntryMode(this.activeTabId);
+        }
+
+        const apparatusFiles = Array.from(this.projectFiles.entries())
+            .filter(([path]) => path.includes('/apparatus/') && path.endsWith('.xml'))
+            .map(([path, fileData]) => ({ path, ...fileData }));
+
+        if (apparatusFiles.length === 0) {
+            alert('No apparatus files found in this project.');
+            return;
+        }
+
+        const chosen = await new Promise(resolve => {
+            this.showFilePickerPopup({
+                title: 'Switch Apparatus File',
+                description: 'Choose a different apparatus file from this project.',
+                candidates: apparatusFiles.map(f => ({
+                    path: f.path,
+                    label: this.extractApparatusTitle(f.content) || f.path.split('/').pop(),
+                    sublabel: f.path,
+                    content: f.content
+                })),
+                onSelect: (candidate) => resolve(candidate),
+                onCancel: () => resolve(null)
+            });
+        });
+
+        if (!chosen) return;
+
+        // Fresh independent loading sequence, reusing project files already
+        // cached in memory - skip the "Reading project files" step since
+        // nothing gets re-read from disk here.
+        this.activeLoadingSteps = null;
+        this.completedLoadingSteps = new Set();
+        this.showLoadingPopup(HeiCritApp.DEFAULT_LOADING_STEPS.filter(s => s.id !== 'step-reading'));
+        await this.processApparatusFileFromProject(chosen.content, chosen.path);
+        this.hideLoadingPopup();
     }
 
     async autoProcessProjectFiles() {
@@ -2209,7 +2273,30 @@ class HeiCritApp {
         }
     }
     
-    showLoadingPopup() {
+    // Full step list for a from-disk project load. switchApparatusFile()
+    // passes a reduced list (no "Reading project files") since it reuses
+    // already-cached project files instead of reading anything from disk.
+    static DEFAULT_LOADING_STEPS = [
+        { id: 'step-reading', label: 'Reading project files' },
+        { id: 'step-apparatus', label: 'Parsing apparatus file' },
+        { id: 'step-witnesses', label: 'Loading witness mappings' },
+        { id: 'step-synoptic', label: 'Processing synoptic map' },
+        { id: 'step-maintext', label: 'Generating main text' },
+        { id: 'step-display', label: 'Building interface' }
+    ];
+
+    showLoadingPopup(steps = null) {
+        // A single loading sequence can call this more than once (e.g. to
+        // hide the popup behind a file-picker popup and bring it back) -
+        // reuse whichever step list the sequence already started with unless
+        // a caller explicitly overrides it, and reapply any steps already
+        // marked completed so a rebuild doesn't lose earlier progress marks.
+        if (steps) {
+            this.activeLoadingSteps = steps;
+        } else if (!this.activeLoadingSteps) {
+            this.activeLoadingSteps = HeiCritApp.DEFAULT_LOADING_STEPS;
+        }
+
         // Remove existing loading popup if present
         const existingPopup = document.querySelector('.loading-overlay');
         if (existingPopup) {
@@ -2224,19 +2311,19 @@ class HeiCritApp {
                 <p>Processing TEI files and building apparatus...</p>
                 <div class="loading-spinner"></div>
                 <div class="loading-steps">
-                    <div class="loading-step" id="step-reading">Reading project files</div>
-                    <div class="loading-step" id="step-apparatus">Parsing apparatus file</div>
-                    <div class="loading-step" id="step-witnesses">Loading witness mappings</div>
-                    <div class="loading-step" id="step-synoptic">Processing synoptic map</div>
-                    <div class="loading-step" id="step-maintext">Generating main text</div>
-                    <div class="loading-step" id="step-display">Building interface</div>
+                    ${this.activeLoadingSteps.map(s => `<div class="loading-step" id="${s.id}">${s.label}</div>`).join('')}
                 </div>
             </div>
         `;
         document.body.appendChild(overlay);
+
+        this.completedLoadingSteps.forEach(stepId => this.updateLoadingStep(stepId, 'completed'));
     }
 
     updateLoadingStep(stepId, status = 'active') {
+        if (status === 'completed') {
+            this.completedLoadingSteps.add(stepId);
+        }
         const step = document.getElementById(stepId);
         if (step) {
             // Remove previous status classes
