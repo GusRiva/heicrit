@@ -1110,6 +1110,7 @@ class HeiCritApp {
         document.getElementById('openProjectDirectoryIcon').addEventListener('click', () => this.openProjectDirectory());
         document.getElementById('switchApparatusFileIcon').addEventListener('click', () => this.switchApparatusFile());
         document.getElementById('editSynopticMapIcon').addEventListener('click', () => this.openSynopticEditor());
+        document.getElementById('reloadTextsIcon').addEventListener('click', () => this.reloadTexts());
 
         // Global "n" shortcut for New Entry (mirrors clicking the button,
         // including its "Finish" toggle once in creation mode). Ignored
@@ -1270,61 +1271,65 @@ class HeiCritApp {
             this.showLoadingPopup();
             this.updateLoadingStep('step-reading', 'active');
             this.updateStatus('Processing project directory...');
-            
-            // Store all files in the project
-            this.projectFiles.clear();
-            
-            // Extract and store project directory path
-            if (files.length > 0 && files[0].webkitRelativePath) {
-                const firstFilePath = files[0].webkitRelativePath;
-                // Extract the root directory name (first part of the path)
-                this.currentProjectDirectory = firstFilePath.split('/')[0];
-            }
-            
-            // Filter files to only process relevant folders: apparatus, synopses, texts
-            const relevantFolders = ['apparatus', 'synopses', 'texts'];
-            const filteredFiles = files.filter(file => {
-                const relativePath = file.webkitRelativePath || file.name;
-                const pathParts = relativePath.split('/');
-                
-                // Skip files in root directory or irrelevant folders
-                if (pathParts.length < 2) return false;
-                
-                // Check if the first folder (after project root) is in our relevant folders
-                const folderName = pathParts[1];
-                return relevantFolders.includes(folderName);
-            });
-            
-            // Read filtered files and store them
-            const fileReadPromises = filteredFiles.map(file => {
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        // Use the webkitRelativePath to preserve directory structure
-                        const relativePath = file.webkitRelativePath || file.name;
-                        this.projectFiles.set(relativePath, {
-                            content: e.target.result,
-                            file: file,
-                            path: relativePath
-                        });
-                        resolve();
-                    };
-                    reader.readAsText(file);
-                });
-            });
-            
-            // Wait for all files to be read
-            await Promise.all(fileReadPromises);
-            
+
+            await this.readFilesIntoProjectFiles(files);
+
             this.updateLoadingStep('step-reading', 'completed');
             this.updateStatus(`Loaded ${this.projectFiles.size} files from relevant folders (apparatus, synopses, texts)`);
-            
+
             // Auto-detect and process apparatus and synoptic map files
             await this.autoProcessProjectFiles();
-            
+
         } catch (error) {
             this.showErrorPopup('Project Directory Error', `Failed to process project directory: ${error.message}`);
         }
+    }
+
+    async readFilesIntoProjectFiles(files) {
+        // Store all files in the project
+        this.projectFiles.clear();
+
+        // Extract and store project directory path
+        if (files.length > 0 && files[0].webkitRelativePath) {
+            const firstFilePath = files[0].webkitRelativePath;
+            // Extract the root directory name (first part of the path)
+            this.currentProjectDirectory = firstFilePath.split('/')[0];
+        }
+
+        // Filter files to only process relevant folders: apparatus, synopses, texts
+        const relevantFolders = ['apparatus', 'synopses', 'texts'];
+        const filteredFiles = files.filter(file => {
+            const relativePath = file.webkitRelativePath || file.name;
+            const pathParts = relativePath.split('/');
+
+            // Skip files in root directory or irrelevant folders
+            if (pathParts.length < 2) return false;
+
+            // Check if the first folder (after project root) is in our relevant folders
+            const folderName = pathParts[1];
+            return relevantFolders.includes(folderName);
+        });
+
+        // Read filtered files and store them
+        const fileReadPromises = filteredFiles.map(file => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // Use the webkitRelativePath to preserve directory structure
+                    const relativePath = file.webkitRelativePath || file.name;
+                    this.projectFiles.set(relativePath, {
+                        content: e.target.result,
+                        file: file,
+                        path: relativePath
+                    });
+                    resolve();
+                };
+                reader.readAsText(file);
+            });
+        });
+
+        // Wait for all files to be read
+        await Promise.all(fileReadPromises);
     }
 
     async switchApparatusFile() {
@@ -1375,6 +1380,70 @@ class HeiCritApp {
         this.showLoadingPopup(HeiCritApp.DEFAULT_LOADING_STEPS.filter(s => s.id !== 'step-reading'));
         await this.processApparatusFileFromProject(chosen.content, chosen.path);
         this.hideLoadingPopup();
+    }
+
+    async rereadProjectFilesInPlace() {
+        // Re-reads each already-cached project File object's current bytes,
+        // without reprompting the OS folder picker. Browsers snapshot File
+        // objects to varying degrees - this reflects on-disk edits in
+        // Chromium-based browsers (including the Electron shell) in
+        // practice, but isn't guaranteed by spec everywhere. A rejected
+        // read (e.g. NotReadableError if a file was moved/deleted) is left
+        // to propagate to the caller.
+        const entries = Array.from(this.projectFiles.entries());
+        await Promise.all(entries.map(async ([path, fileData]) => {
+            const content = await fileData.file.text();
+            this.projectFiles.set(path, { ...fileData, content });
+        }));
+    }
+
+    async reloadTexts() {
+        if (!this.currentProjectDirectory || this.projectFiles.size === 0) {
+            alert('No project is open yet. Use "Open Project Directory" first.');
+            return;
+        }
+        if (!this.currentApparatusFile) {
+            alert('No apparatus file is currently loaded.');
+            return;
+        }
+
+        if (this.creationMode || this.editMode) {
+            if (!confirm('You have an entry in progress. Reloading texts will discard it. Continue?')) {
+                return;
+            }
+            // Reuse the same cleanup Cancel already does, minus any save call.
+            this.cancelEntryMode(this.activeTabId);
+        }
+
+        try {
+            this.activeLoadingSteps = null;
+            this.completedLoadingSteps = new Set();
+            this.showLoadingPopup();
+            this.updateLoadingStep('step-reading', 'active');
+            this.updateStatus('Re-reading witness texts from disk...');
+
+            await this.rereadProjectFilesInPlace();
+
+            this.updateLoadingStep('step-reading', 'completed');
+
+            const apparatusFileData = this.projectFiles.get(this.currentApparatusFile);
+            if (!apparatusFileData) {
+                throw new Error(`Apparatus file (${this.currentApparatusFile}) is no longer available`);
+            }
+
+            await this.processApparatusFileFromProject(apparatusFileData.content, this.currentApparatusFile, true);
+
+            this.hideLoadingPopup();
+            this.updateStatus('Texts reloaded from disk.');
+        } catch (error) {
+            this.hideLoadingPopup();
+            this.showErrorPopup(
+                'Reload Failed',
+                `Could not re-read project files from disk (${error.message}). This can happen if the ` +
+                `browser no longer has access to the original files. Use "Open Project Directory" to ` +
+                `reselect the project folder and try again.`
+            );
+        }
     }
 
     async autoProcessProjectFiles() {
@@ -1440,31 +1509,31 @@ class HeiCritApp {
     }
 
 
-    async processApparatusFileFromProject(content, filepath) {
+    async processApparatusFileFromProject(content, filepath, isReload = false) {
         try {
             this.updateStatus('Processing apparatus file from project...');
-            
+
             // Store the apparatus file path for save functionality
             this.currentApparatusFile = filepath;
-            
+
             // Basic client-side XML validation first
             if (!this.validateXML(content)) {
                 return; // Error popup will be shown by validateXML
             }
-            
+
             // Send file to backend with project context for relative path resolution
-            await this.sendApparatusToBackendWithProject(content, filepath);
-            
+            await this.sendApparatusToBackendWithProject(content, filepath, isReload);
+
         } catch (error) {
             this.showErrorPopup('Apparatus File Error', `Failed to process apparatus file: ${error.message}`);
         }
     }
 
-    async sendApparatusToBackendWithProject(content, filepath) {
+    async sendApparatusToBackendWithProject(content, filepath, isReload = false) {
         try {
             // First validate the file with backend
             this.updateStatus('Validating apparatus file structure...');
-            
+
             const validationResponse = await this.apiRequest('/apparatus/validate', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -1480,7 +1549,7 @@ class HeiCritApp {
             }
 
             // Process in steps with real backend calls
-            await this.processApparatusInSteps(content, filepath);
+            await this.processApparatusInSteps(content, filepath, isReload);
 
         } catch (error) {
             this.showErrorPopup('Backend Error', `Failed to communicate with backend: ${error.message}`);
@@ -1558,7 +1627,7 @@ class HeiCritApp {
         return retryResponse;
     }
 
-    async processApparatusInSteps(content, filepath) {
+    async processApparatusInSteps(content, filepath, isReload = false) {
         try {
             const projectFiles = this.getProjectFileList();
             let combinedResponse = {};
@@ -1657,8 +1726,12 @@ class HeiCritApp {
                 ...finalResponse
             };
             
-            this.handleApparatusProcessingResult(fullResponse, filepath);
-            
+            if (isReload) {
+                this.handleApparatusReloadResult(fullResponse, filepath);
+            } else {
+                this.handleApparatusProcessingResult(fullResponse, filepath);
+            }
+
         } catch (error) {
             this.showErrorPopup('Processing Error', `Failed to process apparatus: ${error.message}`);
         }
@@ -1676,24 +1749,24 @@ class HeiCritApp {
         return fileList;
     }
 
-    handleApparatusProcessingResult(result, filename) {
+    storeApparatusProcessingData(result, filename) {
         // Store apparatus data
         this.apparatusData = {
             entries: result.apparatus_entries || [],
             filename: filename,
             count: result.apparatus_count || 0
         };
-        
+
         // Store leiths-info if available (contains siglum for main text)
         if (result['leiths-info']) {
             this.leithsInfo = result['leiths-info'];
         }
-        
+
         // Store witness order if available
         if (result.witness_order) {
             this.witnessOrder = result.witness_order;
         }
-        
+
         // Store witness mapping if available
         if (result.witness_mapping) {
             this.witnessMapping = result.witness_mapping;
@@ -1720,7 +1793,7 @@ class HeiCritApp {
         if (result.synoptic_file) {
             this.synopticMapFile = result.synoptic_file;
         }
-        
+
         // Store main text data if available
         if (result.main_text) {
             this.mainTextData = {
@@ -1728,9 +1801,41 @@ class HeiCritApp {
                 filename: filename
             };
         }
-        
+    }
+
+    handleApparatusProcessingResult(result, filename) {
+        this.storeApparatusProcessingData(result, filename);
+
         // Refresh display with apparatus, synoptic map, and main text data
         this.refreshDisplay();
+    }
+
+    handleApparatusReloadResult(result, filename) {
+        this.storeApparatusProcessingData(result, filename);
+
+        // Unlike handleApparatusProcessingResult, don't go through
+        // refreshDisplay() - it closes and recreates the project tab, which
+        // would reset tab.currentEntryIndex back to 0 and lose the user's
+        // place. Update the existing tab and its DOM in place instead.
+        const projectTab = Array.from(this.tabs.values()).find(t => t.type === 'project');
+        if (!projectTab) {
+            // Shouldn't happen for a reload (a project must already be open), but fall back safely.
+            this.refreshDisplay();
+            return;
+        }
+
+        projectTab.apparatusData = this.apparatusData;
+        projectTab.synopticMapData = this.synopticMapData;
+        projectTab.mainTextData = this.mainTextData;
+
+        const mainTextContent = document.getElementById(`main-text-content-${projectTab.id}`);
+        if (mainTextContent && this.mainTextData) {
+            mainTextContent.innerHTML = this.mainTextData.content;
+        }
+
+        // Reuses the same merge/position-preservation logic already used
+        // after create/update/delete of an apparatus entry.
+        this.refreshApparatusEntriesInTab(projectTab.id, this.apparatusData.entries);
     }
 
     handleSynopticMapProcessingResult(result, filename) {

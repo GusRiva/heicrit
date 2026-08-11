@@ -96,3 +96,13 @@ Each reading has a small **+** area next to it. Click it and type a note; **Ctrl
 ## Saving and files
 
 Entry creation, editing, deletion, reordering, and notes all save directly to the apparatus XML file as you perform them — there's no separate "save project" step for apparatus data.
+
+---
+
+## Reloading texts after an external fix
+
+If you notice a mistake in a witness's transcription or tokenization, fix it in whatever tool you use to edit the TEI/XML text files, then click **Reload Texts** in the toolbar. This re-reads the witness text files, regenerates the Main Text panel and the current Location Details comparison, and leaves you on the same apparatus entry — no need to reopen the project. It does not touch the apparatus XML file itself.
+
+If an entry is in progress (creating or editing), you'll be asked to confirm first — reloading discards it, since the token positions it refers to may no longer match.
+
+Reloading re-reads the files already selected when the project was opened, without reprompting the folder picker. If the browser can no longer access them (e.g. the project folder was moved), you'll get an error asking you to reopen the project directory instead.
