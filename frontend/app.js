@@ -1779,8 +1779,13 @@ class HeiCritApp {
             this.leithsPrefix = result.leiths_prefix;
         }
 
-        // If this result also contains synoptic map data (from project processing), store it
-        if (result.synoptic_map && Object.keys(result.synoptic_map).length > 0) {
+        // Store synoptic map data from this load. Always replace (even with an
+        // empty map) rather than only when non-empty - a freshly created
+        // apparatus file legitimately has zero synoptic links until its
+        // synoptic map is populated, and silently keeping a previous
+        // project's synoptic map around causes stale location markers/counts
+        // to bleed into the new project's display.
+        if (result.synoptic_map !== undefined) {
             this.synopticMapData = {
                 synoptic_map: result.synoptic_map,
                 synoptic_wits: result.synoptic_wits || {},
@@ -1857,8 +1862,15 @@ class HeiCritApp {
         
         // Merge apparatus entries with synoptic map to show complete list
         const completeEntries = this.mergeApparatusWithSynopticMap(apparatusEntries, synopticMap);
-        
-        if (completeEntries.length > 0 || apparatusEntries.length > 0) {
+
+        // Gate on "a project was actually loaded" (this.apparatusData is only
+        // ever set once a load succeeds), not on "it happens to have entries" -
+        // a freshly created apparatus file with no <app> entries yet and an
+        // unpopulated synoptic map is a legitimate, valid project state and
+        // must still replace whatever was displayed before, just with an
+        // empty apparatus panel - not silently leave a previous project's tab
+        // on screen.
+        if (this.apparatusData) {
             // Create or update project tab
             const projectName = this.getCurrentDisplayFilename();
             
