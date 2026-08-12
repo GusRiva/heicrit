@@ -32,6 +32,7 @@ class SynopticMap:
         self._loci: dict[str, dict[str, Any]] = {}
         self._file_path: str | None = file_path
         self._wits: dict[str, dict[str, str]] = {}  # Store witness information
+        self._parse_error: dict[str, Any] | None = None
         
     def get_loci(self) -> dict[str, dict[str, Any]]:
         """
@@ -69,6 +70,16 @@ class SynopticMap:
             raise ValueError("wits_dict must be a dictionary")
         self._wits = wits_dict.copy()
     
+    def get_parse_error(self) -> dict[str, Any] | None:
+        """
+        Get structured details about why the last parse_content() call failed.
+
+        Returns:
+            A dict describing the error (at least 'type' and 'message'), or
+            None if the last parse succeeded (or none has been attempted).
+        """
+        return self._parse_error
+
     def get_file_path(self) -> str | None:
         """
         Get the file path where this synoptic map was loaded from.
@@ -245,6 +256,7 @@ class SynopticMap:
         Returns:
             True if parsing was successful, False otherwise
         """
+        self._parse_error = None
         try:
             parser = HeiEditionsParser()
             content_bytes = content.encode('utf-8')
@@ -308,17 +320,30 @@ class SynopticMap:
             # Extract link elements
             link_elements = root.xpath('.//tei:link', namespaces=ns)
             
+            if not leiths_prefix:
+                print("ERROR: Can't find main text prefix.")
+                self._parse_error = {
+                    'type': 'missing_leiths_prefix',
+                    'message': 'Could not determine the base text (Leithandschrift) prefix.'
+                }
+                return False
+
             loci_map = {}
             found_keys = set()
+            links_missing_base_text = []
             for link in link_elements:
                 n = link.get('n')
                 target = link.get('target', '')
                 target_list = [t.strip() for t in target.split() if t.strip()]
-                
-                if not leiths_prefix:
-                    print("ERROR: Can't find main text prefix.")
-                    return False
+
                 corresp_in_leiths = [x for x in target_list if x.startswith(f"{leiths_prefix}:")]
+                if not corresp_in_leiths:
+                    # Every locus in the synoptic map must anchor to the base
+                    # text; a link without one can't be keyed or merged, and
+                    # is a data error in the synoptic map rather than a
+                    # resolution problem - report it instead of guessing.
+                    links_missing_base_text.append(target)
+                    continue
                 # Use the first corresp format as key
                 loci_map_key = corresp_in_leiths[0]
                 if loci_map_key in found_keys:
@@ -329,6 +354,21 @@ class SynopticMap:
                         'target': target_list
                     }
                     found_keys.add(loci_map_key)
+
+            if links_missing_base_text:
+                print(f"ERROR: {len(links_missing_base_text)} <link> element(s) have no "
+                      f"target for base text prefix '{leiths_prefix}:'")
+                self._parse_error = {
+                    'type': 'missing_base_text_reference',
+                    'message': (
+                        f"{len(links_missing_base_text)} <link> element(s) in the synoptic map "
+                        f"have no target referencing the base text (prefix '{leiths_prefix}:'). "
+                        "Every <link> must include a target for the base text."
+                    ),
+                    'leiths_prefix': leiths_prefix,
+                    'links': links_missing_base_text
+                }
+                return False
 
             # New-format synoptic maps omit <link @n>; synthesize it from the
             # corresponding <l @n> in the already-parsed leiths witness elements
@@ -353,8 +393,12 @@ class SynopticMap:
             
         except Exception as e:
             print(f"ERROR: Could not parse synoptic map content: {str(e)}")
+            self._parse_error = {
+                'type': 'parse_exception',
+                'message': f'Could not parse synoptic map content: {str(e)}'
+            }
             return False
-    
+
     def _parse_witness_file(self, file_name: str, apparatus_filepath: str,
                            project_files: dict[str, dict[str, Any]],
                            siglum_hint: str | None = None) -> dict[str, Any]:

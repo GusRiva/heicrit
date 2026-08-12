@@ -238,6 +238,11 @@ class HeiCritApp {
                     <div class="synoptic-editor-toolbar">
                         <button class="apparatus-btn" id="save-synoptic-btn-${tabId}">Save</button>
                         <button class="apparatus-btn apparatus-btn-secondary" id="add-row-btn-${tabId}">+ Add Row</button>
+                        <span class="synoptic-editor-pagination">
+                            <button class="apparatus-btn apparatus-btn-secondary" id="synoptic-prev-page-${tabId}">&lt; Prev</button>
+                            <span class="synoptic-page-label" id="synoptic-page-label-${tabId}"></span>
+                            <button class="apparatus-btn apparatus-btn-secondary" id="synoptic-next-page-${tabId}">Next &gt;</button>
+                        </span>
                         <span class="synoptic-editor-status" id="synoptic-editor-status-${tabId}"></span>
                     </div>
                     <div class="synoptic-table-wrapper" id="synoptic-table-wrapper-${tabId}"></div>
@@ -1575,6 +1580,14 @@ class HeiCritApp {
             return synopticResponse;
         }
 
+        // The declared/chosen synoptic map file was found but its content is
+        // invalid (e.g. a <link> missing a base-text target) - this is a data
+        // error to fix in the file, not an ambiguous-resolution case, so don't
+        // fall back to letting the user pick a different file.
+        if (synopticResponse.synoptic_error) {
+            return synopticResponse;
+        }
+
         const candidates = this.candidateSynopticFiles || [];
 
         if (candidates.length === 0) {
@@ -1675,6 +1688,18 @@ class HeiCritApp {
             this.updateStatus('Processing synoptic map...');
             
             const synopticResponse = await this.resolveSynopticMap(projectFiles, filepath, witnessResponse.leiths_prefix);
+
+            if (synopticResponse.synoptic_error) {
+                // Make the invalid file available to the synoptic map editor
+                // (toolbar icon) so the user can open it, fix the flagged
+                // links, save, and reload - without loading the base text or
+                // witnesses off of the currently-broken map.
+                if (synopticResponse.synoptic_file) {
+                    this.synopticMapFile = synopticResponse.synoptic_file;
+                }
+                this.showSynopticMapErrorPopup(synopticResponse.synoptic_error);
+                return;
+            }
 
             if (!synopticResponse.success) {
                 this.showErrorPopup('Processing Error', synopticResponse.error || 'Failed to process synoptic map');
@@ -2697,6 +2722,33 @@ class HeiCritApp {
         this.updateStatus('XML parsing error - check document', 'error');
     }
 
+    // Shows a dedicated error for a synoptic map that was found but whose
+    // content is invalid (e.g. <link> elements missing a base-text target),
+    // listing the offending elements so the user can fix the file. Used
+    // instead of the "choose another file" picker, since picking a different
+    // file wouldn't fix a data error inside this one.
+    showSynopticMapErrorPopup(error) {
+        const lines = [error.message || 'The synoptic map file contains an error.'];
+
+        if (Array.isArray(error.links) && error.links.length > 0) {
+            const maxShown = 25;
+            lines.push('');
+            lines.push('Affected <link> elements:');
+            error.links.slice(0, maxShown).forEach(target => {
+                lines.push(`  <link target="${target}"/>`);
+            });
+            if (error.links.length > maxShown) {
+                lines.push(`  ...and ${error.links.length - maxShown} more`);
+            }
+        }
+
+        lines.push('');
+        lines.push('Nothing was loaded. Use the "Edit Synoptic Map" toolbar button to open ' +
+            'this file, correct the flagged links, save, then reload the apparatus.');
+
+        this.showErrorPopup('Synoptic Map Error', this.escapeHtml(lines.join('\n')));
+    }
+
     updateStatus(message, type = 'info') {
         const status = document.getElementById('status');
         status.textContent = message;
@@ -2905,11 +2957,24 @@ class HeiCritApp {
         }
     }
 
+    // Renders one page of rows at a time - large synoptic maps (Iwein has
+    // ~11,500 <link> elements) produced 300k+ <input> DOM nodes when rendered
+    // in a single table, which was heavy enough to hang/crash the app. The
+    // full row set still lives in `data.rows` (in memory, from the one-shot
+    // /synoptic/table fetch); only the visible page is materialized as DOM.
     renderSynopticTable(tabId, data) {
         const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
         if (!wrapper) return;
 
-        const { witnesses, rows } = data;
+        if (data.pageSize === undefined) data.pageSize = 200;
+        if (data.currentPage === undefined) data.currentPage = 0;
+
+        const { witnesses, rows, pageSize } = data;
+        const totalRows = rows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+        data.currentPage = Math.min(Math.max(0, data.currentPage), totalPages - 1);
+        const start = data.currentPage * pageSize;
+        const end = Math.min(start + pageSize, totalRows);
 
         let html = '<table class="synoptic-table">';
         // Header
@@ -2921,9 +2986,10 @@ class HeiCritApp {
         }
         html += '</tr></thead>';
 
-        // Body
+        // Body - only the current page's rows
         html += '<tbody>';
-        rows.forEach((row, rowIdx) => {
+        for (let rowIdx = start; rowIdx < end; rowIdx++) {
+            const row = rows[rowIdx];
             html += `<tr data-row-index="${rowIdx}">`;
             html += `<td><input class="syn-cell syn-n-cell" data-row-index="${rowIdx}" data-col-index="0" value="${row.n || ''}"></td>`;
             witnesses.forEach((w, colIdx) => {
@@ -2931,25 +2997,85 @@ class HeiCritApp {
                 html += `<td><input class="syn-cell" data-prefix="${w.prefix}" data-row-index="${rowIdx}" data-col-index="${colIdx + 1}" value="${val}"></td>`;
             });
             html += '</tr>';
-        });
+        }
         html += '</tbody>';
         html += '</table>';
 
         wrapper.innerHTML = html;
         // Store witnesses for later use (adding rows)
         wrapper.dataset.witnesses = JSON.stringify(witnesses);
+
+        this.updateSynopticPaginationControls(tabId, data);
+    }
+
+    updateSynopticPaginationControls(tabId, data) {
+        const label = document.getElementById(`synoptic-page-label-${tabId}`);
+        const prevBtn = document.getElementById(`synoptic-prev-page-${tabId}`);
+        const nextBtn = document.getElementById(`synoptic-next-page-${tabId}`);
+        if (!label || !prevBtn || !nextBtn) return;
+
+        const totalRows = data.rows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / data.pageSize));
+        const start = data.currentPage * data.pageSize;
+        const end = Math.min(start + data.pageSize, totalRows);
+
+        label.textContent = totalRows === 0
+            ? 'No rows'
+            : `Rows ${start + 1}-${end} of ${totalRows} (page ${data.currentPage + 1}/${totalPages})`;
+        prevBtn.disabled = data.currentPage <= 0;
+        nextBtn.disabled = data.currentPage >= totalPages - 1;
+    }
+
+    // Writes the currently-rendered page's input values back into data.rows
+    // so navigating away (page change, add row, save) doesn't lose edits
+    // made on the page that's about to be replaced in the DOM.
+    flushSynopticPageEdits(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return;
+        const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
+        if (!wrapper) return;
+        const table = wrapper.querySelector('.synoptic-table');
+        if (!table) return;
+
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            const rowIdx = parseInt(tr.dataset.rowIndex, 10);
+            if (Number.isNaN(rowIdx) || rowIdx >= tab.data.rows.length) return;
+            const nInput = tr.querySelector('.syn-n-cell');
+            const cells = {};
+            tr.querySelectorAll('.syn-cell[data-prefix]').forEach(input => {
+                const v = input.value.trim();
+                if (v) cells[input.dataset.prefix] = v;
+            });
+            tab.data.rows[rowIdx] = { n: nInput ? nInput.value.trim() : '', cells };
+        });
+    }
+
+    goToSynopticPage(tabId, delta) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return;
+        this.flushSynopticPageEdits(tabId);
+        tab.data.currentPage = (tab.data.currentPage || 0) + delta;
+        this.renderSynopticTable(tabId, tab.data);
     }
 
     setupSynopticEditorEvents(tabId) {
         const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
         const saveBtn = document.getElementById(`save-synoptic-btn-${tabId}`);
         const addRowBtn = document.getElementById(`add-row-btn-${tabId}`);
+        const prevPageBtn = document.getElementById(`synoptic-prev-page-${tabId}`);
+        const nextPageBtn = document.getElementById(`synoptic-next-page-${tabId}`);
 
         if (saveBtn) {
             saveBtn.addEventListener('click', () => this.saveSynopticTable(tabId));
         }
         if (addRowBtn) {
             addRowBtn.addEventListener('click', () => this.addSynopticRow(tabId));
+        }
+        if (prevPageBtn) {
+            prevPageBtn.addEventListener('click', () => this.goToSynopticPage(tabId, -1));
+        }
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener('click', () => this.goToSynopticPage(tabId, 1));
         }
 
         if (!wrapper) return;
@@ -2958,36 +3084,73 @@ class HeiCritApp {
             const input = e.target;
             if (!input.classList.contains('syn-cell')) return;
 
+            const tab = this.tabs.get(tabId);
+            const data = tab && tab.data;
+            if (!data) return;
+
+            // rowIdx/colIdx are absolute (data-row-index is the index into
+            // data.rows, not a position within the currently rendered page).
             const rowIdx = parseInt(input.dataset.rowIndex, 10);
             const colIdx = parseInt(input.dataset.colIndex, 10);
             const table = wrapper.querySelector('.synoptic-table');
-            const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
-            const totalCols = rows[0] ? rows[0].querySelectorAll('.syn-cell').length : 0;
+            const domRows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
+            const totalCols = domRows[0] ? domRows[0].querySelectorAll('.syn-cell').length : 0;
+            const totalRows = data.rows.length;
+            const totalPages = Math.max(1, Math.ceil(totalRows / data.pageSize));
 
-            const getCell = (r, c) => {
-                if (r < 0 || r >= rows.length) return null;
-                const cells = rows[r].querySelectorAll('.syn-cell');
+            const getCell = (absRow, c) => {
+                const tr = domRows.find(r => parseInt(r.dataset.rowIndex, 10) === absRow);
+                if (!tr) return null;
+                const cells = tr.querySelectorAll('.syn-cell');
                 if (c < 0 || c >= cells.length) return null;
                 return cells[c];
+            };
+
+            // Focuses a cell that isn't on the currently rendered page by
+            // flushing edits, switching page, then focusing it post-render.
+            const focusAcrossPage = (page, absRow, c) => {
+                this.flushSynopticPageEdits(tabId);
+                data.currentPage = page;
+                this.renderSynopticTable(tabId, data);
+                const cell = document.querySelector(
+                    `#synoptic-table-wrapper-${tabId} .syn-cell[data-row-index="${absRow}"][data-col-index="${c}"]`);
+                if (cell) cell.focus();
             };
 
             if (e.key === 'Tab' && !e.shiftKey) {
                 e.preventDefault();
                 const next = getCell(rowIdx, colIdx + 1) || getCell(rowIdx + 1, 0);
-                if (next) next.focus();
-                else this.addSynopticRow(tabId);
+                if (next) {
+                    next.focus();
+                } else if (rowIdx + 1 < totalRows && data.currentPage < totalPages - 1) {
+                    focusAcrossPage(data.currentPage + 1, rowIdx + 1, 0);
+                } else {
+                    this.addSynopticRow(tabId);
+                }
             } else if (e.key === 'Tab' && e.shiftKey) {
                 e.preventDefault();
                 const prev = getCell(rowIdx, colIdx - 1) || getCell(rowIdx - 1, totalCols - 1);
-                if (prev) prev.focus();
+                if (prev) {
+                    prev.focus();
+                } else if (rowIdx - 1 >= 0 && data.currentPage > 0) {
+                    focusAcrossPage(data.currentPage - 1, rowIdx - 1, totalCols - 1);
+                }
             } else if (e.key === 'Enter' || e.key === 'ArrowDown') {
                 e.preventDefault();
                 const below = getCell(rowIdx + 1, colIdx);
-                if (below) below.focus();
+                if (below) {
+                    below.focus();
+                } else if (rowIdx + 1 < totalRows && data.currentPage < totalPages - 1) {
+                    focusAcrossPage(data.currentPage + 1, rowIdx + 1, colIdx);
+                }
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 const above = getCell(rowIdx - 1, colIdx);
-                if (above) above.focus();
+                if (above) {
+                    above.focus();
+                } else if (rowIdx - 1 >= 0 && data.currentPage > 0) {
+                    focusAcrossPage(data.currentPage - 1, rowIdx - 1, colIdx);
+                }
             } else if (e.key === 'd' && e.ctrlKey) {
                 e.preventDefault();
                 const above = getCell(rowIdx - 1, colIdx);
@@ -3010,26 +3173,21 @@ class HeiCritApp {
     async saveSynopticTable(tabId) {
         const tab = this.tabs.get(tabId);
         const statusEl = document.getElementById(`synoptic-editor-status-${tabId}`);
-        const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
-        if (!wrapper) return;
+        if (!tab || !tab.data) return;
 
-        const table = wrapper.querySelector('.synoptic-table');
-        if (!table) return;
+        // Pull in edits from whichever page is currently on screen before
+        // reading data.rows - it's the only page not yet reflected there.
+        this.flushSynopticPageEdits(tabId);
 
-        const rows = [];
-        table.querySelectorAll('tbody tr').forEach(tr => {
-            const nInput = tr.querySelector('.syn-n-cell');
-            const n = nInput ? nInput.value.trim() : '';
-            if (!n) return;
-            const cells = {};
-            tr.querySelectorAll('.syn-cell[data-prefix]').forEach(input => {
-                const v = input.value.trim();
-                if (v) cells[input.dataset.prefix] = v;
-            });
-            rows.push({ n, cells });
-        });
+        // Keep any row with either an n or at least one witness target. Do
+        // NOT require n: new-format synoptic maps (e.g. Iwein's) legitimately
+        // omit @n on every <link>, so filtering on it here previously sent
+        // an empty row set and wiped out the whole file on save.
+        const rows = tab.data.rows
+            .map(row => ({ n: (row.n || '').trim(), cells: row.cells || {} }))
+            .filter(row => row.n || Object.keys(row.cells).length > 0);
 
-        const filePath = tab.data && tab.data.file_path;
+        const filePath = tab.data.file_path;
         if (!filePath) {
             if (statusEl) statusEl.textContent = 'Error: no file path.';
             return;
@@ -3051,44 +3209,20 @@ class HeiCritApp {
     }
 
     addSynopticRow(tabId) {
-        const wrapper = document.getElementById(`synoptic-table-wrapper-${tabId}`);
-        if (!wrapper) return;
-        const table = wrapper.querySelector('.synoptic-table');
-        if (!table) return;
-        const tbody = table.querySelector('tbody');
-        if (!tbody) return;
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return;
 
-        const witnesses = JSON.parse(wrapper.dataset.witnesses || '[]');
-        const existingRows = tbody.querySelectorAll('tr');
-        const rowIdx = existingRows.length;
+        this.flushSynopticPageEdits(tabId);
+        tab.data.rows.push({ n: '', cells: {} });
 
-        const tr = document.createElement('tr');
-        tr.dataset.rowIndex = rowIdx;
+        // New row goes on the last page - jump there so it's visible.
+        const newRowIdx = tab.data.rows.length - 1;
+        tab.data.currentPage = Math.floor(newRowIdx / tab.data.pageSize);
+        this.renderSynopticTable(tabId, tab.data);
 
-        // Update data-row-index on all cells in new row as we build
-        const nTd = document.createElement('td');
-        const nInput = document.createElement('input');
-        nInput.className = 'syn-cell syn-n-cell';
-        nInput.dataset.rowIndex = rowIdx;
-        nInput.dataset.colIndex = 0;
-        nInput.value = '';
-        nTd.appendChild(nInput);
-        tr.appendChild(nTd);
-
-        witnesses.forEach((w, colIdx) => {
-            const td = document.createElement('td');
-            const input = document.createElement('input');
-            input.className = 'syn-cell';
-            input.dataset.prefix = w.prefix;
-            input.dataset.rowIndex = rowIdx;
-            input.dataset.colIndex = colIdx + 1;
-            input.value = '';
-            td.appendChild(input);
-            tr.appendChild(td);
-        });
-
-        tbody.appendChild(tr);
-        nInput.focus();
+        const input = document.querySelector(
+            `#synoptic-table-wrapper-${tabId} .syn-n-cell[data-row-index="${newRowIdx}"]`);
+        if (input) input.focus();
     }
 
     // Entry creation mode methods

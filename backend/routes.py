@@ -473,12 +473,18 @@ def load_synoptic_map():
         synoptic_path_to_load = synoptic_filepath or corresp
 
         synoptic_loaded = False
+        synoptic_error = None
         if synoptic_path_to_load:
             witness_mapping = apparatus.get_witness_to_prefix_mapping()
             synoptic_loaded = synoptic_map.load_from_project(
                 synoptic_path_to_load, apparatus_filepath, project_files,
                 leiths_prefix=leiths_prefix,
                 apparatus_witness_mapping=witness_mapping)
+            if not synoptic_loaded:
+                # Distinguish "found the file but its content is invalid" from
+                # "couldn't resolve/find a file" - only the latter should make
+                # the frontend fall back to letting the user pick another file.
+                synoptic_error = synoptic_map.get_parse_error()
 
         return jsonify({
             'success': True,
@@ -488,6 +494,11 @@ def load_synoptic_map():
             'synoptic_map': synoptic_map.get_loci(),
             'synoptic_wits': synoptic_map.get_wits(),
             'synoptic_loaded': synoptic_loaded,
+            'synoptic_error': synoptic_error,
+            # Set as soon as the file is found, even if parsing it then fails,
+            # so the synoptic map editor can still open it (e.g. to fix a
+            # synoptic_error) without the apparatus having loaded successfully.
+            'synoptic_file': synoptic_map.get_file_path(),
             'corresp': corresp
         })
         
@@ -611,7 +622,13 @@ def process_synoptic_map_file():
             success = synoptic_map.parse_content(content)
             if success:
                 synoptic_map.set_file_path(filename)
-            
+            else:
+                parse_error = synoptic_map.get_parse_error()
+                return jsonify({
+                    'error': (parse_error or {}).get('message', 'Failed to parse synoptic map content'),
+                    'synoptic_error': parse_error
+                }), 400
+
             result = {
                 'success': True,
                 'message': f'Found {synoptic_map.get_loci_count()} synoptic map entries and {synoptic_map.get_wits_count()} witnesses',
@@ -1272,11 +1289,13 @@ def save_synoptic_table():
         for link_el in standoff.findall(f'{{{TEI}}}link'):
             standoff.remove(link_el)
 
-        # Rebuild link elements from rows
+        # Rebuild link elements from rows. A row is only meaningful if it has
+        # at least one witness target - `n` is NOT a reliable presence check:
+        # new-format synoptic maps (e.g. Iwein's) legitimately omit @n on
+        # every <link>, so filtering on blank `n` here previously discarded
+        # essentially the entire file on save.
         for row in rows:
             n = str(row.get('n', '')).strip()
-            if not n:
-                continue
             cells = row.get('cells', {})
             target_parts = []
             for prefix in witness_order:
@@ -1287,8 +1306,12 @@ def save_synoptic_table():
                 if prefix not in witness_order and value.strip():
                     target_parts.append(f'{prefix}:{value.strip()}')
 
+            if not target_parts:
+                continue
+
             link_el = et.SubElement(standoff, f'{{{TEI}}}link')
-            link_el.set('n', n)
+            if n:
+                link_el.set('n', n)
             link_el.set('target', ' '.join(target_parts))
             link_el.tail = '\n      '
 

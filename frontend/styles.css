@@ -1502,6 +1502,11 @@ main {
     background: #218838;
 }
 
+.apparatus-btn:disabled {
+    background: #adb5bd;
+    cursor: default;
+}
+
 .apparatus-btn-cancel {
     background: #6c757d;
 }
@@ -1621,6 +1626,19 @@ main {
     font-size: 0.85em;
     color: #6c757d;
     margin-left: 0.5rem;
+}
+
+.synoptic-editor-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.synoptic-page-label {
+    font-size: 0.85em;
+    color: #495057;
+    white-space: nowrap;
 }
 
 .synoptic-table-wrapper {
