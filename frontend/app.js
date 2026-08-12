@@ -2310,11 +2310,13 @@ class HeiCritApp {
         return witnessId;
     }
 
-    createSynLine(siglum, data) {
-        return `<div class="syn-line">
-                    <div class="syn-line-wit" data-line-id="${this.escapeHtml(data.lineId)}">
+    createSynLine(siglum, data, isBaseText = false) {
+        const lineClass = isBaseText ? 'syn-line syn-line-base' : 'syn-line';
+        const witClass = isBaseText ? 'syn-line-wit syn-line-wit-base' : 'syn-line-wit';
+        return `<div class="${lineClass}">
+                    <div class="${witClass}" data-line-id="${this.escapeHtml(data.lineId)}">
                         ${this.escapeHtml(siglum)}:
-                    </div> 
+                    </div>
                     <div class="syn-line-content">${data.text}</div>
                 </div>`;
     }
@@ -2812,6 +2814,7 @@ class HeiCritApp {
                     }
                     
                     // Display in apparatus witness order, filtering to only included witnesses
+                    const synLineEntries = [];
                     if (this.witnessOrder && this.witnessOrder.length > 0 && this.witnessMapping) {
                         this.witnessOrder.forEach(witnessId => {
                             // Get synoptic prefix from witness mapping
@@ -2819,19 +2822,31 @@ class HeiCritApp {
                             if (mappingInfo && mappingInfo.synoptic_prefix) {
                                 const synopticPrefix = mappingInfo.synoptic_prefix;
                                 if (prefixToData[synopticPrefix]) {
-                                    const data = prefixToData[synopticPrefix];
-                                    const siglum = mappingInfo.siglum || synopticPrefix;
-                                    message += this.createSynLine(siglum, data);
+                                    synLineEntries.push({
+                                        siglum: mappingInfo.siglum || synopticPrefix,
+                                        data: prefixToData[synopticPrefix],
+                                        isBaseText: synopticPrefix === this.leithsPrefix
+                                    });
                                 }
                             }
                         });
                     } else {
                         // Fallback to original order if no witness order available
                         Object.entries(prefixToData).forEach(([synopticPrefix, data]) => {
-                            const siglum = this.getSiglumForWitness(synopticPrefix);
-                            message += this.createSynLine(siglum, data);
+                            synLineEntries.push({
+                                siglum: this.getSiglumForWitness(synopticPrefix),
+                                data,
+                                isBaseText: synopticPrefix === this.leithsPrefix
+                            });
                         });
                     }
+
+                    // Base text (Leithandschrift) always leads, everyone else
+                    // keeps their existing relative order (stable sort).
+                    synLineEntries.sort((a, b) => (b.isBaseText ? 1 : 0) - (a.isBaseText ? 1 : 0));
+                    synLineEntries.forEach(entry => {
+                        message += this.createSynLine(entry.siglum, entry.data, entry.isBaseText);
+                    });
                 } else {
                     message += '<strong>Synoptic Comparison:</strong> Error loading comparison data<br>';
                 }

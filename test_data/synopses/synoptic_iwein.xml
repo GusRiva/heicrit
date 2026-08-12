@@ -55,15 +55,15 @@
    <standOff>
       <link target="a+:titlePart_1 b+:left(l_1) b:titlePart_1 c:titlePart_1 d+:left(l_1) d:titlePart_1 j+:titlePart_1 l:left(l_1) p+:left(l_1) p:titlePart_1 r:left(l_1) u:left(l_1) z:titlePart_1"/>
       <link target="a:tl_1 b+:left(l_1) p:tl_1 r:tl_1"/>
+      <link target="a:tl_2 b+:left(l_1) p:tl_2 r:tl_2"/>
+      <link target="a:tl_3 b+:left(l_1) r:tl_3"/>
+      <link target="a:tl_4 b+:left(l_1) r:tl_4"/>
+      <link target="a:tl_5 b+:left(l_1) r:tl_5"/>
       <link target="a+:l_1 b+:l_1 b:l_1 c:l_1 d+:l_1 d:l_1 j+:l_1 l:l_1 p+:l_1 p:l_1 r:l_1 u:l_1 z:l_1"/>
       <link target="a+:l_2 b+:l_2 b:l_2 c:l_2 d+:l_2 d:l_2 j+:l_2 l:l_2 p+:l_2 p:l_2 r:l_2 u:l_2 z:l_2"/>
-      <link target="a:tl_2 b+:left(l_1) p:tl_2 r:tl_2"/>
-      <link target="a+:l_3 b+:l_3 b:l_3 c:l_3 d+:l_3 d:l_3 j+:l_3 l:l_3 p+:l_3 p:l_3 r:l_3 u:l_3 z:l_3"/>
-      <link target="a:tl_3 b+:left(l_1) r:tl_3"/>
+      <link target="a+:l_3 b+:l_3 b:l_3 c:l_3 d+:l_3 d:l_3 j+:l_3 l:l_3 p+:l_3 p:l_3 r:l_3 u:l_3 z:l_3"/>   
       <link target="a+:l_4 b+:l_4 b:l_4 c:l_4 d+:l_4 d:l_4 j+:l_4 l:l_4 p+:l_4 p:right(l_3) r:l_4 u:l_4 z:l_4"/>
-      <link target="a:tl_4 b+:left(l_1) r:tl_4"/>
       <link target="a+:l_5 b+:l_5 b:l_5 c:l_5 d+:l_5 d:l_5 j+:l_5 l:l_5 p+:l_5 p:right(l_3) r:l_5 u:l_5 z:l_5"/>
-      <link target="a:tl_5 b+:left(l_1) r:tl_5"/>
       <link target="a+:l_6 b+:l_6 b:l_6 c:l_6 d+:l_6 d:l_6 j+:l_6 l:l_6 p+:l_6 p:right(l_3) r:l_6 u:l_6 z:l_6"/>
       <link target="a+:l_7 b+:l_7 b:l_7 c:l_7 d+:l_7 d:l_7 j+:l_7 l:l_7 p+:l_7 p:right(l_3) r:l_7 u:l_7 z:l_7"/>
       <link target="a+:l_8 b+:l_8 b:l_8 c:l_8 d+:l_8 d:l_8 j+:l_8 l:right(l_7) p+:l_8 p:right(l_3) r:l_8 u:l_8 z:l_8"/>

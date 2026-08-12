@@ -1021,6 +1021,18 @@ main {
     border-left: 1px solid #e0e0e0;
 }
 
+/* Base text (Leithandschrift) row - always shown first, set apart from the
+   other witnesses with a slim divider and a bit of breathing room. */
+.syn-line-base {
+    padding-bottom: 0.5em;
+    margin-bottom: 0.75em;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.syn-line-wit-base {
+    font-size: larger;
+}
+
 .syn-line .syn-token {
     padding: 2px 4px;
     margin-right: 2px;
