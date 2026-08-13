@@ -29,9 +29,6 @@
 					<witness xml:id="a">
 						<ptr target="../indexes/IndexOfWitnesses_Iwein.xml#a"/>
 					</witness>
-					<witness xml:id="A">
-						<ptr target="../indexes/IndexOfWitnesses_Iwein.xml#A"/>
-					</witness>
 					<witness xml:id="b">
 						<ptr target="../indexes/IndexOfWitnesses_Iwein.xml#b"/>
 					</witness>
@@ -49,6 +46,9 @@
 					</witness>
 					<witness xml:id="D">
 						<ptr target="../indexes/IndexOfWitnesses_Iwein.xml#D"/>
+					</witness>
+					<witness xml:id="A">
+						<ptr target="../indexes/IndexOfWitnesses_Iwein.xml#A"/>
 					</witness>
 					<witness xml:id="E">
 						<ptr target="../indexes/IndexOfWitnesses_Iwein.xml#E"/>
@@ -135,19 +135,19 @@
 			<listPrefixDef>
 				<prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"/>
 				<prefixDef corresp="#a" matchPattern="(.+)" ident="a" replacementPattern="../texts/Iwein_a_Dresden.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
-				<prefixDef corresp="#A" matchPattern="(.+)" ident="a+" replacementPattern="../texts/Iwein_A_Heidelberg.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#B" matchPattern="(.+)" ident="b+" replacementPattern="../texts/Iwein_B_Giessen.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#b" matchPattern="(.+)" ident="b" replacementPattern="../texts/Iwein_b_Heidelberg.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#c" matchPattern="(.+)" ident="c" replacementPattern="../texts/Iwein_c_Heidelberg.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
-				<prefixDef corresp="#C" matchPattern="(.+)" ident="c+" replacementPattern="../texts/Iwein_C_Muenchen.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#D" matchPattern="(.+)" ident="d+" replacementPattern="../texts/Iwein_D_Florenz.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#d" matchPattern="(.+)" ident="d" replacementPattern="../texts/Iwein_d_Wien.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#E" matchPattern="(.+)" ident="e+" replacementPattern="../texts/Iwein_E_Berlin.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#f" matchPattern="(.+)" ident="f" replacementPattern="../texts/Iwein_f_Dresden.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#F" matchPattern="(.+)" ident="f+" replacementPattern="../texts/Iwein_F_Linz.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#G" matchPattern="(.+)" ident="g+" replacementPattern="../texts/Iwein_G_Nuernberg.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef corresp="#C" matchPattern="(.+)" ident="c+" replacementPattern="../texts/Iwein_C_Muenchen.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#H" matchPattern="(.+)" ident="h+" replacementPattern="../texts/Iwein_H_Prag.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#J" matchPattern="(.+)" ident="j+" replacementPattern="../texts/Iwein_J_Wien.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef corresp="#A" matchPattern="(.+)" ident="a+" replacementPattern="../texts/Iwein_A_Heidelberg.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#K" matchPattern="(.+)" ident="k+" replacementPattern="../texts/Iwein_K_Sigmaringen.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#l" matchPattern="(.+)" ident="l" replacementPattern="../texts/Iwein_l_London.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
 				<prefixDef corresp="#M" matchPattern="(.+)" ident="m+" replacementPattern="../texts/Iwein_M_Kassel.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
