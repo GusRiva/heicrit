@@ -372,21 +372,27 @@ def parse_apparatus_file():
     """
     Step 1: Parse apparatus file and store in global apparatus object
     """
-    global apparatus
+    global apparatus, project_files_cache
     try:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         apparatus_content = data.get('apparatus_content')
         apparatus_filepath = data.get('apparatus_filepath')
         project_files = data.get('project_files', {})
-        
+        # Cache here - this is the only step in the open sequence that's
+        # still guaranteed to receive the full project_files payload; the
+        # later steps (synoptic/load, maintext/generate) now reuse this
+        # cache instead of requiring it to be re-sent (see routes.py's
+        # /synoptic/load and /maintext/generate).
+        project_files_cache = project_files
+
         if not apparatus_content:
             return jsonify({'error': 'No apparatus content provided'}), 400
         if not apparatus_filepath:
             return jsonify({'error': 'No apparatus filepath provided'}), 400
-        
+
         # Create Apparatus object and parse the file
         apparatus = Apparatus(apparatus_filepath, project_files)
         
@@ -459,8 +465,13 @@ def load_synoptic_map():
         if not data:
             return jsonify({'error': 'No data provided'}), 400
 
-        project_files = data.get('project_files', {})
-        project_files_cache = project_files
+        # project_files doesn't change within a single project-open sequence -
+        # /apparatus/parse already sent and cached the full set, so accept an
+        # omitted/empty project_files here and reuse the cache instead of
+        # requiring the (potentially very large) payload to be re-sent.
+        project_files = data.get('project_files') or project_files_cache
+        if data.get('project_files'):
+            project_files_cache = project_files
         apparatus_filepath = data.get('apparatus_filepath')
         leiths_prefix = data.get('leiths_prefix')
         synoptic_filepath = data.get('synoptic_filepath')
@@ -510,18 +521,23 @@ def generate_main_text():
     """
     Step 4: Generate main text HTML using loaded data
     """
-    global apparatus, synoptic_map
+    global apparatus, synoptic_map, project_files_cache
     try:
         if apparatus is None:
             return jsonify({'error': 'No apparatus loaded. Call /apparatus/parse first.'}), 400
-        
+
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         leiths_path = data.get('leiths_path')
         apparatus_filepath = data.get('apparatus_filepath')
-        project_files = data.get('project_files', {})
+        # project_files doesn't change within a single project-open sequence -
+        # reuse the cache populated by /apparatus/parse instead of requiring
+        # the (potentially very large) payload to be re-sent here too.
+        project_files = data.get('project_files') or project_files_cache
+        if data.get('project_files'):
+            project_files_cache = project_files
         
         main_text_content = None
         if leiths_path:

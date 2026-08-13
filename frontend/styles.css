@@ -951,19 +951,41 @@ main {
     border: 1px solid rgba(255, 193, 7, 0.3);
 }
 
-/* Gap symbol column - fixed narrow width */
+/* Gap symbol - standalone (between two lines, e.g. verses missing from the
+   base text) renders inline so several of them sit side by side; when it's a
+   per-line child gap instead, the more specific .synoptic-unit rule below
+   re-asserts the original fixed-width flex-item sizing. */
 .tei-gap-synoptic {
-    flex: 0 0 20px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     font-weight: bold;
     color: #da8c39;
     font-size: 1.1em;
+    line-height: 1.1;
     cursor: pointer;
+    padding: 0 2px;
+    margin-right: 0.15rem;
+}
+
+/* Small verse-number label under a standalone gap's ◎ symbol */
+.tei-gap-synoptic-n {
+    font-size: 0.65em;
+    font-weight: 500;
+    color: gray;
 }
 
 /* Gap symbols with apparatus content - different color */
 .tei-gap-synoptic.has-content {
     color: #007bff; /* Blue color for entries with actual apparatus content */
+}
+
+/* Per-line child gap (inside .synoptic-unit's flex row) - unchanged sizing */
+.synoptic-unit .tei-gap-synoptic {
+    flex: 0 0 20px;
+    margin-right: 0;
 }
 
 /* Line number column in synoptic unit - fixed width */
@@ -1030,7 +1052,7 @@ main {
 }
 
 .syn-line-wit-base {
-    font-size: larger;
+    /* font-size: larger; */
 }
 
 .syn-line .syn-token {
@@ -1145,6 +1167,11 @@ main {
 
 .syn-line .synoptic-content-no-data {
     color: grey;
+}
+
+.syn-line .syn-gap-marker {
+    color: #999;
+    font-style: italic;
 }
 
 

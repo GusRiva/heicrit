@@ -828,6 +828,18 @@ def process_synoptic_token(el:et.Element) -> str:
             result += el.text.strip()
         for child in el:
             result += process_synoptic_token(child)
+    elif tag_name == 'gap':
+        star_count = 3
+        if el.get('unit') == 'character':
+            try:
+                parsed = int(el.get('quantity', ''))
+                if parsed > 0:
+                    star_count = parsed
+            except ValueError:
+                pass
+        result += f"<span class='syn-gap-marker'>{'*' * star_count}</span>"
+        if el.tail is not None and el.tail.strip() != '':
+            result += el.tail
     else:
         # Default: any other inline element (orig, sic, hi, initial, ex,
         # metamark, ...) is transparent pass-through content - include its own

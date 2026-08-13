@@ -329,7 +329,21 @@ class SynopticMap:
                 return False
 
             loci_map = {}
-            found_keys = set()
+            # Multiple <link>s can anchor to the exact same base-text position
+            # (e.g. several consecutive verses all absent from the base text,
+            # so none of them has its own base-text line to key on). Give the
+            # first one the plain anchor key (so anything already relying on
+            # that exact key, e.g. a real <app>@corresp, keeps matching) and
+            # every subsequent *genuinely different* collision its own
+            # "anchor#N" key, instead of merging them into one entry - a merge
+            # would concatenate their target lists together and silently drop
+            # every verse's @n except the first, making all but the first
+            # verse unreachable. A collision whose target list is an exact
+            # duplicate of one already recorded at that anchor (seen in real
+            # synoptic maps - the same <link> row present twice) is skipped
+            # rather than minted as its own locus, so it doesn't surface as a
+            # redundant, visually-identical extra gap marker.
+            anchor_seen_targets: dict[str, list[tuple[str, ...]]] = {}
             links_missing_base_text = []
             for link in link_elements:
                 n = link.get('n')
@@ -339,21 +353,26 @@ class SynopticMap:
                 corresp_in_leiths = [x for x in target_list if x.startswith(f"{leiths_prefix}:")]
                 if not corresp_in_leiths:
                     # Every locus in the synoptic map must anchor to the base
-                    # text; a link without one can't be keyed or merged, and
-                    # is a data error in the synoptic map rather than a
-                    # resolution problem - report it instead of guessing.
+                    # text; a link without one can't be keyed, and is a data
+                    # error in the synoptic map rather than a resolution
+                    # problem - report it instead of guessing.
                     links_missing_base_text.append(target)
                     continue
-                # Use the first corresp format as key
-                loci_map_key = corresp_in_leiths[0]
-                if loci_map_key in found_keys:
-                    loci_map[loci_map_key]['target'] += target_list
-                else:
-                    loci_map[loci_map_key] = {
-                        'n': n,
-                        'target': target_list
-                    }
-                    found_keys.add(loci_map_key)
+                # Use the first corresp format as the anchor
+                anchor_key = corresp_in_leiths[0]
+                seen_targets = anchor_seen_targets.setdefault(anchor_key, [])
+                target_tuple = tuple(target_list)
+                if target_tuple in seen_targets:
+                    continue
+                seen_targets.append(target_tuple)
+
+                index = len(seen_targets) - 1
+                loci_map_key = anchor_key if index == 0 else f"{anchor_key}#{index}"
+
+                loci_map[loci_map_key] = {
+                    'n': n,
+                    'target': target_list
+                }
 
             if links_missing_base_text:
                 print(f"ERROR: {len(links_missing_base_text)} <link> element(s) have no "
@@ -377,7 +396,10 @@ class SynopticMap:
             # ("b:right(l_71_46)") - the anchored id still resolves to a real <l>.
             for loci_key, info in loci_map.items():
                 if not info.get('n'):
-                    spec = parse_location_token(loci_key)
+                    # Strip a "#N" disambiguator (added above for multiple
+                    # verses sharing one anchor) before parsing - the anchor
+                    # itself, not the suffix, is what resolves to a real <l>.
+                    spec = parse_location_token(loci_key.split('#', 1)[0])
                     if not spec:
                         continue
                     anchor_id = spec['start'] if spec['kind'] == 'range' else spec.get('id')

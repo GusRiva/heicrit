@@ -86,6 +86,11 @@
             </xsl:choose>
             <xsl:attribute name="data-link" select="@corresp"/>
             <xsl:text>◎</xsl:text>
+            <xsl:if test="not($data-container-id) and @n">
+                <div class="tei-gap-synoptic-n">
+                    <xsl:value-of select="@n"/>
+                </div>
+            </xsl:if>
         </div>
     </xsl:template>
     

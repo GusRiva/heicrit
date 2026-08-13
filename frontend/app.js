@@ -1566,11 +1566,15 @@ class HeiCritApp {
     // back to the project's discovered synoptic candidates: auto-selects
     // when there's exactly one, prompts the user when there are several,
     // and otherwise proceeds with an empty synoptic map (visible via status).
-    async resolveSynopticMap(projectFiles, filepath, leithsPrefix) {
+    async resolveSynopticMap(filepath, leithsPrefix) {
+        // project_files isn't included here - /apparatus/parse already sent
+        // and cached the full set server-side (project_files_cache), and it
+        // doesn't change within a single project-open sequence, so re-sending
+        // the same (potentially very large) payload again would be wasted
+        // network/JSON work.
         const synopticResponse = await this.apiRequest('/synoptic/load', {
             method: 'POST',
             body: JSON.stringify({
-                project_files: projectFiles,
                 apparatus_filepath: filepath,
                 leiths_prefix: leithsPrefix
             })
@@ -1626,7 +1630,6 @@ class HeiCritApp {
         const retryResponse = await this.apiRequest('/synoptic/load', {
             method: 'POST',
             body: JSON.stringify({
-                project_files: projectFiles,
                 apparatus_filepath: filepath,
                 leiths_prefix: leithsPrefix,
                 synoptic_filepath: chosenPath
@@ -1687,7 +1690,7 @@ class HeiCritApp {
             this.updateLoadingStep('step-synoptic', 'active');
             this.updateStatus('Processing synoptic map...');
             
-            const synopticResponse = await this.resolveSynopticMap(projectFiles, filepath, witnessResponse.leiths_prefix);
+            const synopticResponse = await this.resolveSynopticMap(filepath, witnessResponse.leiths_prefix);
 
             if (synopticResponse.synoptic_error) {
                 // Make the invalid file available to the synoptic map editor
@@ -1713,12 +1716,13 @@ class HeiCritApp {
             this.updateLoadingStep('step-maintext', 'active');
             this.updateStatus('Generating main text...');
             
+            // project_files isn't included here either, for the same reason as
+            // the synoptic/load calls above - it's already cached server-side.
             const maintextResponse = await this.apiRequest('/maintext/generate', {
                 method: 'POST',
                 body: JSON.stringify({
                     leiths_path: witnessResponse.leiths_path,
-                    apparatus_filepath: filepath,
-                    project_files: projectFiles
+                    apparatus_filepath: filepath
                 })
             });
             
