@@ -1,3 +1,6 @@
+# Desktop (Electron) build pipeline for the GitHub mirror of this repo.
+# A matching pipeline lives in .gitlab-ci-template.yml for GitLab (the canonical
+# origin) — keep both in sync when changing the build matrix.
 name: Build and Release
 
 on:

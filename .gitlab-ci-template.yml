@@ -1,3 +1,7 @@
+# Desktop (Electron) build pipeline for GitLab.
+# A matching workflow lives in .github/workflows/build.yml for the GitHub mirror
+# of this repo — keep both in sync when changing the build matrix.
+
 stages:
   - build
 

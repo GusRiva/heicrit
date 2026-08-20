@@ -23,6 +23,7 @@
   "build": {
     "appId": "com.heicrit.app",
     "productName": "HeiCrit",
+    "icon": "electron/assets/icon.png",
     "directories": {
       "output": "dist"
     },
@@ -54,17 +55,20 @@
       "**/heipy/**/*"
     ],
     "mac": {
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "icon": "electron/assets/icon.png"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "electron/assets/icon.ico"
     },
     "linux": {
       "target": [
         "AppImage",
         "deb",
         "tar.xz"
-      ]
+      ],
+      "icon": "electron/assets/icon.png"
     }
   }
 }

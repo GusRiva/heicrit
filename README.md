@@ -8,7 +8,7 @@ HeiCrit is a web-based editor for creating and managing critical apparatus in sc
 - **Apparatus entry** — records a point of variation: a lemma (the reading in the base text) and one or more variant readings from other witnesses.
 - **Synoptic map** — an alignment table that maps every location in the base text to the corresponding element in every other witness, accounting for lacunae and different pagination.
 
-See [`docs/apparatus_editing.md`](docs/apparatus_editing.md) for a user guide to the main editing workflow, [`docs/synopse_editing.md`](docs/synopse_editing.md) for the Synoptic Map Editor, and [`docs/data.md`](docs/data.md) for a full description of the data model.
+See [`docs/apparatus_editing.md`](docs/apparatus_editing.md) for a user guide to the main editing workflow, [`docs/synopse_editing.md`](docs/synopse_editing.md) for the Synoptic Map Editor, [`docs/data.md`](docs/data.md) for a full description of the data model, and [`docs/deployment.md`](docs/deployment.md) for building/packaging the app.
 
 ## How to Run
 
@@ -30,13 +30,25 @@ cd backend && python app.py
 # apparatus/, texts/, and synopses/ subdirectories.
 ```
 
+## Build the desktop app
+
+HeiCrit also ships as a packaged desktop app (Windows/macOS/Linux) via Electron:
+
+```bash
+npm install
+npm run dev     # run from source, for development
+npm run dist    # build an installer under dist/ (for the OS you run it on — see docs/deployment.md)
+```
+
+See [`docs/deployment.md`](docs/deployment.md) for prerequisites, CI-based multi-platform builds, and troubleshooting. A website deployment (Docker-based, self-hosted) is planned but not yet implemented — see that same document for the intended design.
+
 ## Architecture
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | Backend | Flask (Python) | REST API; parses TEI/XML using the `heipy` library |
 | Frontend | HTML / CSS / vanilla JS | Three-panel UI: main text, apparatus, location details |
-| Desktop | Electron (optional) | Wraps the web app as a standalone desktop application |
+| Desktop | Electron, packaged via electron-builder | Wraps the web app as a standalone desktop application — see [`docs/deployment.md`](docs/deployment.md) |
 
 The backend runs on `http://127.0.0.1:5000`. The frontend communicates with it via `fetch` calls to `/api/…` endpoints.
 

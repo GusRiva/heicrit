@@ -15,12 +15,13 @@ App for creating critical apparatus for scholarly editions. Works as both web ap
 ✅ Apparatus entry creation with token selection
 ✅ Smart entry selection and visual token highlighting
 ⏳ Apparatus processing functions and display (ongoing)
-⏳ Electron wrapper (tested)
+✅ Electron wrapper (packaged via electron-builder for Windows/macOS/Linux, CI builds all three; see docs/deployment.md)
+⏳ Website deployment (Docker) — planned, not yet implemented; see docs/deployment.md
 
 ## Architecture
 - **Backend**: Flask API with heipy for TEI parsing (runs on localhost:5000)
 - **Frontend**: HTML/CSS/JS web interface with classical apparatus display
-- **Desktop**: Electron wrapper 
+- **Desktop**: Electron wrapper, packaged via electron-builder (see docs/deployment.md)
 
 ## How to Run
 1. Activate virtual environment: `source venv/bin/activate`
