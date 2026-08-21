@@ -26,8 +26,13 @@ jobs:
             arch: x64
 
     steps:
+      - name: Configure GitLab submodule access
+        run: git config --global url."https://${{ secrets.HEIPY_GITLAB_USER }}:${{ secrets.HEIPY_GITLAB_TOKEN }}@gitlab.ub.uni-heidelberg.de/".insteadOf "https://gitlab.ub.uni-heidelberg.de/"
+
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
