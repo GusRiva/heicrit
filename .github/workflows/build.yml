@@ -15,6 +15,7 @@ jobs:
   # .gitlab-ci-template.yml.
   build:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     permissions:
       contents: write
     strategy:

@@ -49,31 +49,69 @@ To produce installers for **all three platforms**, either:
 - run `npm run dist` natively on a Windows, macOS, and Linux machine each, or
 - use the CI pipeline (see below), which already does this correctly.
 
-### 1.4 CI builds (all platforms)
+### 1.4 Releasing a new version to end users
+
+There are two ways to get a new installer for all three platforms in front of users. Both end up in the same place — assets attached to a GitHub Release matching a `vX.Y.Z` tag — so they're freely mixable (e.g. let CI handle Windows/Linux and build macOS locally if CI can't reach a dependency, as in Option B below).
+
+Either way, start by bumping the version:
+
+1. Set `"version"` in `package.json` to the new release version (`X.Y.Z`, no `v` prefix).
+2. Commit that change.
+3. Tag it: `git tag vX.Y.Z` (must match the `package.json` version — electron-builder derives the release's tag from it).
+
+#### Option A: GitHub Actions (recommended)
 
 Two equivalent CI pipelines build installers for Windows, macOS, and Linux by creating a fresh `venv` on each target OS before packaging:
 
 - `.gitlab-ci-template.yml` — GitLab CI, runs on the canonical `gitlab.ub.uni-heidelberg.de` origin, triggered on tags/`main`.
 - `.github/workflows/build.yml` — GitHub Actions, intended for a GitHub mirror of this repo, triggered on `v*` tags or manual dispatch.
 
-Both are kept in sync intentionally (see the comment at the top of each file) rather than one being redundant — update both if you change the build matrix, Node/Python versions, or packaging steps. The GitHub workflow's `permissions: contents: write` and the publish step (§1.4a below) are GitHub-Releases-specific and are intentionally *not* mirrored into `.gitlab-ci-template.yml`.
+Both are kept in sync intentionally (see the comment at the top of each file) rather than one being redundant — update both if you change the build matrix, Node/Python versions, or packaging steps. The GitHub workflow's `permissions: contents: write` and its 30-minute `timeout-minutes` are GitHub-Releases-specific and are intentionally *not* mirrored into `.gitlab-ci-template.yml`.
 
-Build artifacts (`.exe`/`.dmg`/`.AppImage`/`.deb`/`.tar.xz`) are uploaded as pipeline artifacts on each run (useful for debugging a build without publishing it).
+`build.yml` publishes installers straight to GitHub Releases when triggered by a version tag — but only as a **draft** release (electron-builder's default), so nothing is visible to the public until a maintainer manually reviews and publishes it. A `workflow_dispatch` (manual, no-tag) run intentionally skips publishing; it only produces workflow-run debug artifacts (`.exe`/`.dmg`/`.AppImage`/`.deb`/`.tar.xz`), useful for testing the build itself without publishing anything.
 
-### 1.4a Releasing a new version to end users
+Steps:
 
-`.github/workflows/build.yml` publishes installers straight to GitHub Releases when it's triggered by a version tag (`git push` of a `v*` tag) — but only as a **draft** release (electron-builder's default), so nothing is visible to the public until a maintainer manually reviews and publishes it. A `workflow_dispatch` (manual, no-tag) run intentionally skips publishing — it only produces the pipeline debug artifacts from §1.4, for testing the build itself.
-
-Release checklist:
-
-1. Bump `"version"` in `package.json` to the new release version.
-2. Commit that change.
-3. Tag it: `git tag vX.Y.Z` (must match the `package.json` version).
 4. Push the tag to the GitHub remote: `git push github vX.Y.Z` (adjust the remote name to whatever your GitHub mirror is called).
 5. Wait for all three matrix jobs (`ubuntu-latest`/`windows-latest`/`macos-latest`) to finish.
 6. Open `https://github.com/GusRiva/heicrit/releases`, review the new **draft** release and its five attached assets (`HeiCrit-Setup.exe`, `HeiCrit.dmg`, `HeiCrit.AppImage`, `HeiCrit.deb`, `HeiCrit.tar.xz`), and click **Publish release**.
 
 As soon as it's published, the download page (§2) starts serving it immediately — its links never need to change.
+
+#### Option B: Build locally and publish (per OS)
+
+Use this if you don't want to wait on CI, or need to work around an environment CI can't reach (see the network-block entry in §1.6). Builds aren't cross-platform (§1.3), so this must be repeated natively on a Windows, macOS, and Linux machine to cover all three — there's no way to produce every platform's installer from one computer.
+
+On each machine, after tagging (steps 1–3 above):
+
+1. Clone (or `git pull`) and check out the exact tag being released:
+   ```bash
+   git clone https://github.com/GusRiva/heicrit.git
+   cd heicrit
+   git checkout vX.Y.Z
+   git submodule update --init --recursive   # uses your own GitLab credentials, not the CI deploy token
+   ```
+2. Set up the build environment (§1.1):
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # venv\Scripts\activate on Windows
+   pip install -r requirements.txt
+   deactivate
+   npm install
+   ```
+3. Create a GitHub personal access token scoped to `contents: write` on this repo (GitHub → Settings → Developer settings → Personal access tokens), then export it:
+   ```bash
+   export GH_TOKEN=<your-token>        # macOS/Linux
+   $env:GH_TOKEN = "<your-token>"      # Windows PowerShell
+   ```
+4. Build and publish:
+   ```bash
+   npm run dist:publish
+   ```
+   electron-builder defaults to building for the host OS, so this uploads that platform's installer(s) — `HeiCrit-Setup.exe` on Windows, `HeiCrit.dmg` on macOS, `HeiCrit.AppImage`/`HeiCrit.deb`/`HeiCrit.tar.xz` on Linux — directly to the GitHub Release matching the checked-out tag. It finds the release by tag (draft or already-published) and adds the asset; if no release exists yet for that tag, it creates one as a draft, same as CI.
+5. Once every platform you're covering has published to it, if the release is still a draft, go to `https://github.com/GusRiva/heicrit/releases` and click **Publish release** (same as Option A step 6). The download page then serves it immediately.
+
+Caveat: this produces a single-architecture build matching whatever machine you build on (e.g. Apple Silicon *or* Intel, not a universal binary) — same limitation as the CI job.
 
 ### 1.5 App icon
 
@@ -91,6 +129,7 @@ Replace `electron/assets/icon.png` (ideally ≥1024×1024, square) with real Hei
 | Packaged app fails to start / backend errors about missing binary extensions | The `venv/` bundled into the installer was built on a different OS than the one running it — rebuild on the target OS or use CI (§1.4) |
 | electron-builder warns or fails about the app icon | Confirm `electron/assets/icon.png` (and `icon.ico` for Windows) exist and are valid image files |
 | Electron window opens but shows a blank page / can't reach the backend | Check the Electron console (`npm run dev` opens DevTools) for the Flask child-process log lines; confirm nothing else is already listening on port 5000 |
+| GitHub Actions job returns `503`, or hangs indefinitely while cloning the `heipy` submodule (seen on `macos-latest` specifically) | The institutional GitLab firewall may be rejecting or silently dropping connections from GitHub's runner IP range — this can affect one OS's runner and not others, since GitHub hosts macOS runners on separate infrastructure from Linux/Windows. `build.yml`'s `timeout-minutes: 30` fails the job fast instead of hanging for hours; ask your GitLab/network admin to check firewall logs, or fall back to Option B (§1.4) for the affected platform |
 
 ---
 
@@ -98,7 +137,7 @@ Replace `electron/assets/icon.png` (ideally ≥1024×1024, square) with real Hei
 
 Non-technical end users shouldn't have to navigate GitHub's Releases UI (version tags, changelogs, a raw file list). Instead, `site/index.html` is a single self-contained static page with plain-language framing and one big "Download for &lt;OS&gt;" button per platform, deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to `main` that touches `site/`.
 
-Each button links directly to a **fixed** URL of the form `https://github.com/GusRiva/heicrit/releases/latest/download/<artifact-name>` (e.g. `HeiCrit-Setup.exe`). GitHub's `/latest/` alias always resolves to the newest **published** (non-draft) release, so once a release is published (§1.4a), the download page immediately serves it — the page itself never needs editing for a routine release.
+Each button links directly to a **fixed** URL of the form `https://github.com/GusRiva/heicrit/releases/latest/download/<artifact-name>` (e.g. `HeiCrit-Setup.exe`). GitHub's `/latest/` alias always resolves to the newest **published** (non-draft) release, so once a release is published (§1.4), the download page immediately serves it — the page itself never needs editing for a routine release.
 
 **Coupling to watch**: the fixed artifact names come from `artifactName` in `package.json`'s `build.win`/`build.mac`/`build.linux` blocks. If any of those (or `productName`) ever change, `site/index.html`'s three `<a href>`s must be updated to match, or the buttons will 404.
 
