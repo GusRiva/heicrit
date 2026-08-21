@@ -1,9 +1,10 @@
 # Deployment
 
-This document describes how to build and distribute HeiCrit. Two deployment targets are planned:
+This document describes how to build and distribute HeiCrit. Deployment targets:
 
 - **Desktop app** (Windows / macOS / Linux) — via Electron. Documented below.
-- **Website** (self-hosted, single-tenant) — via Docker. **Not implemented yet** — see [Website deployment (planned)](#website-deployment-planned) for the intended design.
+- **Public download page** — a static site pointing non-technical end users at the latest published installers. Documented below.
+- **Website** (self-hosted, single-tenant) — via Docker. **Not implemented yet** — see [Website deployment (planned)](#3-website-deployment-planned) for the intended design.
 
 ---
 
@@ -14,7 +15,7 @@ HeiCrit's desktop build wraps the Flask backend and static frontend in an [Elect
 ### 1.1 Prerequisites
 
 - Node.js 18+ and npm
-- Python 3.9, with a virtual environment at `venv/` in the project root containing the packages from `requirements.txt` (including the `heipy` submodule — run `git submodule update --init --recursive` first if you haven't already)
+- Python 3.12 (≥3.11 required — `heipy`'s `networkx~=3.5` dependency needs it), with a virtual environment at `venv/` in the project root containing the packages from `requirements.txt` (including the `heipy` submodule — run `git submodule update --init --recursive` first if you haven't already)
 
 ```bash
 git submodule update --init --recursive
@@ -55,9 +56,24 @@ Two equivalent CI pipelines build installers for Windows, macOS, and Linux by cr
 - `.gitlab-ci-template.yml` — GitLab CI, runs on the canonical `gitlab.ub.uni-heidelberg.de` origin, triggered on tags/`main`.
 - `.github/workflows/build.yml` — GitHub Actions, intended for a GitHub mirror of this repo, triggered on `v*` tags or manual dispatch.
 
-Both are kept in sync intentionally (see the comment at the top of each file) rather than one being redundant — update both if you change the build matrix, Node/Python versions, or packaging steps.
+Both are kept in sync intentionally (see the comment at the top of each file) rather than one being redundant — update both if you change the build matrix, Node/Python versions, or packaging steps. The GitHub workflow's `permissions: contents: write` and the publish step (§1.4a below) are GitHub-Releases-specific and are intentionally *not* mirrored into `.gitlab-ci-template.yml`.
 
-Build artifacts (`.exe`/`.dmg`/`.AppImage`/`.deb`/`.tar.xz`) are uploaded as pipeline artifacts on each run.
+Build artifacts (`.exe`/`.dmg`/`.AppImage`/`.deb`/`.tar.xz`) are uploaded as pipeline artifacts on each run (useful for debugging a build without publishing it).
+
+### 1.4a Releasing a new version to end users
+
+`.github/workflows/build.yml` publishes installers straight to GitHub Releases when it's triggered by a version tag (`git push` of a `v*` tag) — but only as a **draft** release (electron-builder's default), so nothing is visible to the public until a maintainer manually reviews and publishes it. A `workflow_dispatch` (manual, no-tag) run intentionally skips publishing — it only produces the pipeline debug artifacts from §1.4, for testing the build itself.
+
+Release checklist:
+
+1. Bump `"version"` in `package.json` to the new release version.
+2. Commit that change.
+3. Tag it: `git tag vX.Y.Z` (must match the `package.json` version).
+4. Push the tag to the GitHub remote: `git push github vX.Y.Z` (adjust the remote name to whatever your GitHub mirror is called).
+5. Wait for all three matrix jobs (`ubuntu-latest`/`windows-latest`/`macos-latest`) to finish.
+6. Open `https://github.com/GusRiva/heicrit/releases`, review the new **draft** release and its five attached assets (`HeiCrit-Setup.exe`, `HeiCrit.dmg`, `HeiCrit.AppImage`, `HeiCrit.deb`, `HeiCrit.tar.xz`), and click **Publish release**.
+
+As soon as it's published, the download page (§2) starts serving it immediately — its links never need to change.
 
 ### 1.5 App icon
 
@@ -78,7 +94,21 @@ Replace `electron/assets/icon.png` (ideally ≥1024×1024, square) with real Hei
 
 ---
 
-## 2. Website deployment (planned)
+## 2. Public download page
+
+Non-technical end users shouldn't have to navigate GitHub's Releases UI (version tags, changelogs, a raw file list). Instead, `site/index.html` is a single self-contained static page with plain-language framing and one big "Download for &lt;OS&gt;" button per platform, deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to `main` that touches `site/`.
+
+Each button links directly to a **fixed** URL of the form `https://github.com/GusRiva/heicrit/releases/latest/download/<artifact-name>` (e.g. `HeiCrit-Setup.exe`). GitHub's `/latest/` alias always resolves to the newest **published** (non-draft) release, so once a release is published (§1.4a), the download page immediately serves it — the page itself never needs editing for a routine release.
+
+**Coupling to watch**: the fixed artifact names come from `artifactName` in `package.json`'s `build.win`/`build.mac`/`build.linux` blocks. If any of those (or `productName`) ever change, `site/index.html`'s three `<a href>`s must be updated to match, or the buttons will 404.
+
+**One-time setup (can't be done via code)**: in the GitHub repo, go to **Settings → Pages → Build and deployment** and set **Source** to **"GitHub Actions"** (not "Deploy from a branch"). After that, `pages.yml` handles every future deploy automatically. Resulting URL: `https://gusriva.github.io/heicrit/`.
+
+Both Windows and macOS builds are currently unsigned, so end users will see a SmartScreen (Windows) or Gatekeeper (macOS) warning on first run — the download page includes a one-line workaround for each. Code signing is out of scope for now.
+
+---
+
+## 3. Website deployment (planned)
 
 **This is not implemented yet.** The design below is the intended approach for a future self-hosted web deployment, kept here so it doesn't need to be re-derived:
 

@@ -10,8 +10,13 @@ on:
   workflow_dispatch:
 
 jobs:
+  # permissions.contents:write below is needed for electron-builder to publish
+  # GitHub Releases — GitHub-specific, intentionally not mirrored into
+  # .gitlab-ci-template.yml.
   build:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       matrix:
         include:
@@ -30,18 +35,18 @@ jobs:
         run: git config --global url."https://${{ secrets.HEIPY_GITLAB_USER }}:${{ secrets.HEIPY_GITLAB_TOKEN }}@gitlab.ub.uni-heidelberg.de/".insteadOf "https://gitlab.ub.uni-heidelberg.de/"
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '18'
           cache: 'npm'
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -64,13 +69,20 @@ jobs:
           venv\Scripts\activate
           pip install -r requirements.txt
 
-      - name: Build Electron app
+      - name: Build and publish Electron app (tag push)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: npm run dist:publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron app (manual run, no publish)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: npm run dist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
           path: |

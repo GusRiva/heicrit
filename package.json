@@ -8,13 +8,18 @@
     "dev": "electron . --dev --no-sandbox",
     "build": "electron-builder",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --publish=never"
+    "dist": "electron-builder --publish=never",
+    "dist:publish": "electron-builder --publish=always"
   },
   "author": {
     "name": "HeiCrit Team",
     "email": "contact@heicrit.org"
   },
-  "homepage": "https://github.com/heicrit/heicrit",
+  "homepage": "https://github.com/GusRiva/heicrit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GusRiva/heicrit.git"
+  },
   "license": "MIT",
   "devDependencies": {
     "electron": "^32.0.0",
@@ -54,13 +59,20 @@
       "**/venv/**/*",
       "**/heipy/**/*"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "GusRiva",
+      "repo": "heicrit"
+    },
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "electron/assets/icon.png"
+      "icon": "electron/assets/icon.png",
+      "artifactName": "HeiCrit.${ext}"
     },
     "win": {
       "target": "nsis",
-      "icon": "electron/assets/icon.ico"
+      "icon": "electron/assets/icon.ico",
+      "artifactName": "HeiCrit-Setup.${ext}"
     },
     "linux": {
       "target": [
@@ -68,7 +80,8 @@
         "deb",
         "tar.xz"
       ],
-      "icon": "electron/assets/icon.png"
+      "icon": "electron/assets/icon.png",
+      "artifactName": "HeiCrit.${ext}"
     }
   }
 }

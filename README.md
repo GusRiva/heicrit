@@ -42,6 +42,8 @@ npm run dist    # build an installer under dist/ (for the OS you run it on — s
 
 See [`docs/deployment.md`](docs/deployment.md) for prerequisites, CI-based multi-platform builds, and troubleshooting. A website deployment (Docker-based, self-hosted) is planned but not yet implemented — see that same document for the intended design.
 
+Non-technical users can just download a ready-made installer from **https://gusriva.github.io/heicrit/** — no build required.
+
 ## Architecture
 
 | Layer | Technology | Purpose |
