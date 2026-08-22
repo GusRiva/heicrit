@@ -58,7 +58,29 @@ class HeiCritApp {
 
     init() {
         this.bindEvents();
+        this.setupElectronMenu();
         this.updateStatus('Ready');
+    }
+
+    // When running inside Electron, main.js installs a native File/Edit menu
+    // (see electron/main.js's createMenu) that duplicates the HTML
+    // navbar dropdown below - hide the HTML one and route native menu
+    // clicks (relayed through electron/preload.js) to the same methods the
+    // HTML buttons already call. The plain-browser/web deployment has no
+    // window.electronAPI, so it keeps the HTML dropdown as its only menu.
+    setupElectronMenu() {
+        if (!window.electronAPI?.isElectron) return;
+
+        document.querySelector('.navbar-left')?.style.setProperty('display', 'none');
+
+        const menuActions = {
+            'open-project-directory': () => this.openProjectDirectory(),
+            'switch-apparatus-file': () => this.switchApparatusFile(),
+            'open-file': () => this.openFile(),
+            'save-as-file': () => this.saveAsFile(),
+            'save-file': () => this.saveFile()
+        };
+        window.electronAPI.onMenuAction((action) => menuActions[action]?.());
     }
 
     // Tab Management Methods
@@ -1214,6 +1236,28 @@ class HeiCritApp {
     }
 
     openFile() {
+        if (window.electronAPI?.isElectron) {
+            // Native dialog - browser input.click() doesn't work when triggered
+            // via a menu action (see electron/main.js's dialog:open-file).
+            this.showFileLoadingPopup();
+            this.updateStatus('Opening file...');
+            window.electronAPI.openFileDialog()
+                .then(result => {
+                    this.hideFileLoadingPopup();
+                    if (!result) return; // user cancelled
+                    this.createTab('file', result.name, result.content, {
+                        filename: result.name,
+                        filepath: result.name
+                    });
+                    this.updateStatus(`Opened: ${result.name}`);
+                })
+                .catch(() => {
+                    this.hideFileLoadingPopup();
+                    this.updateStatus('Failed to open file', 'error');
+                });
+            return;
+        }
+
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.xml,.tei,.txt';
@@ -1251,14 +1295,25 @@ class HeiCritApp {
     }
 
     openProjectDirectory() {
+        if (window.electronAPI?.isElectron) {
+            // Native dialog - browser input.click() doesn't work when triggered
+            // via a menu action (see electron/main.js's dialog:open-project-directory).
+            window.electronAPI.openDirectoryDialog().then(files => {
+                if (files && files.length > 0) {
+                    this.processProjectDirectory(files);
+                }
+            });
+            return;
+        }
+
         const input = document.createElement('input');
         input.type = 'file';
         input.webkitdirectory = true; // Allow directory selection
         input.multiple = true;
-        
+
         // Clear the input value to ensure change event fires even for same directory
         input.value = '';
-        
+
         input.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
             if (files.length > 0) {
@@ -1294,9 +1349,15 @@ class HeiCritApp {
         // Store all files in the project
         this.projectFiles.clear();
 
+        // files is either real browser File objects (webkitdirectory picker,
+        // web deployment) with .webkitRelativePath, or - in Electron -
+        // {relativePath, content} objects pre-read by main.js's native
+        // directory dialog (see openProjectDirectory).
+        const pathOf = (file) => file.webkitRelativePath || file.relativePath || file.name;
+
         // Extract and store project directory path
-        if (files.length > 0 && files[0].webkitRelativePath) {
-            const firstFilePath = files[0].webkitRelativePath;
+        if (files.length > 0) {
+            const firstFilePath = pathOf(files[0]);
             // Extract the root directory name (first part of the path)
             this.currentProjectDirectory = firstFilePath.split('/')[0];
         }
@@ -1304,8 +1365,7 @@ class HeiCritApp {
         // Filter files to only process relevant folders: apparatus, synopses, texts
         const relevantFolders = ['apparatus', 'synopses', 'texts'];
         const filteredFiles = files.filter(file => {
-            const relativePath = file.webkitRelativePath || file.name;
-            const pathParts = relativePath.split('/');
+            const pathParts = pathOf(file).split('/');
 
             // Skip files in root directory or irrelevant folders
             if (pathParts.length < 2) return false;
@@ -1317,11 +1377,21 @@ class HeiCritApp {
 
         // Read filtered files and store them
         const fileReadPromises = filteredFiles.map(file => {
+            const relativePath = pathOf(file);
+
+            if (typeof file.content === 'string') {
+                // Already read by Electron's native dialog handler
+                this.projectFiles.set(relativePath, {
+                    content: file.content,
+                    file: file,
+                    path: relativePath
+                });
+                return Promise.resolve();
+            }
+
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    // Use the webkitRelativePath to preserve directory structure
-                    const relativePath = file.webkitRelativePath || file.name;
                     this.projectFiles.set(relativePath, {
                         content: e.target.result,
                         file: file,
@@ -2356,6 +2426,18 @@ class HeiCritApp {
         }
         
         try {
+            if (window.electronAPI?.isElectron) {
+                // Native dialog - showSaveFilePicker() doesn't work when
+                // triggered via a menu action (see electron/main.js's
+                // dialog:save-file).
+                const savedName = await window.electronAPI.saveFileDialog({ defaultFilename, content });
+                if (savedName) {
+                    this.currentFile = savedName;
+                    this.updateStatus(`File saved as: ${savedName}`);
+                }
+                return;
+            }
+
             // Try to use the modern File System Access API
             if ('showSaveFilePicker' in window) {
                 const fileHandle = await window.showSaveFilePicker({

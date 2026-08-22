@@ -22,8 +22,8 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "electron": "^32.0.0",
-    "electron-builder": "^24.0.0"
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "com.heicrit.app",
