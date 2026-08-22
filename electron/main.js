@@ -193,6 +193,25 @@ ipcMain.handle('dialog:save-file', async (_event, { defaultFilename, content }) 
     return path.basename(result.filePath);
 });
 
+// A local-dev venv (python -m venv venv, per docs/deployment.md #1.1) puts
+// python.exe at Scripts\python.exe on Windows, alongside a pyvenv.cfg that
+// locates the stdlib/DLLs via an absolute "home" path back to whatever
+// Python installation created it. That's fine on a dev machine but not
+// relocatable - the GitHub Actions Windows build instead vendors a whole
+// self-contained Python installation directly into venv/ (python.exe at the
+// venv root, no pyvenv.cfg dependency - see .github/workflows/build.yml),
+// so check for that layout too.
+function resolvePythonPath(venvPath) {
+    if (process.platform !== 'win32') {
+        return path.join(venvPath, 'bin', 'python');
+    }
+    const devVenvPython = path.join(venvPath, 'Scripts', 'python.exe');
+    if (fs.existsSync(devVenvPython)) {
+        return devVenvPython;
+    }
+    return path.join(venvPath, 'python.exe');
+}
+
 function startFlaskBackend() {
     return new Promise((resolve, reject) => {
         console.log('Starting Flask backend...');
@@ -205,9 +224,7 @@ function startFlaskBackend() {
             
         // Path to Python virtual environment
         const venvPath = path.join(resourcesPath, 'venv');
-        const pythonPath = process.platform === 'win32' 
-            ? path.join(venvPath, 'Scripts', 'python.exe')
-            : path.join(venvPath, 'bin', 'python');
+        const pythonPath = resolvePythonPath(venvPath);
         
         const backendPath = path.join(resourcesPath, 'backend', 'app.py');
         const projectRoot = resourcesPath;

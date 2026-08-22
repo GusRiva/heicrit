@@ -36,6 +36,14 @@ build:linux:
     - linux
 
 # Windows build
+# NOT kept in sync with .github/workflows/build.yml's Windows job fix for
+# venv relocatability (see electron/main.js's resolvePythonPath) - this job
+# cross-compiles via Wine inside a Linux container, so `python -m venv venv`
+# here creates a Linux-layout venv (bin/, not Scripts/) while the very next
+# line references venv/Scripts/activate.bat (a Windows-only file that won't
+# exist), which looks broken independent of the relocatability issue. Needs
+# its own fix (e.g. installing a real Windows Python under Wine) - flagged
+# here rather than silently guessed at.
 build:windows:
   stage: build
   image: electronuserland/builder:wine

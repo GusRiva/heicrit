@@ -54,21 +54,35 @@ jobs:
       - name: Install Node.js dependencies
         run: npm ci
 
-      - name: Create Python virtual environment
-        run: |
-          python -m venv venv
-          
+      - name: Create Python virtual environment (Linux/macOS)
+        if: matrix.platform != 'win'
+        run: python -m venv venv
+
       - name: Activate venv and install Python dependencies (Linux/macOS)
         if: matrix.platform != 'win'
         run: |
           source venv/bin/activate
           pip install -r requirements.txt
 
-      - name: Activate venv and install Python dependencies (Windows)
+      # Windows: a normal `python -m venv venv` isn't relocatable off this
+      # runner - Scripts/python.exe finds its stdlib/DLLs via pyvenv.cfg's
+      # "home", an absolute path to actions/setup-python's install under
+      # C:\hostedtoolcache\..., which won't exist on an end user's PC (the
+      # backend would silently fail to start in the packaged app). Instead,
+      # copy that whole self-contained Python installation (setup-python
+      # exposes its root as $env:pythonLocation) directly into venv/, and
+      # install deps with `-m pip` rather than Scripts\pip.exe, whose
+      # generated launcher also bakes in a build-time absolute path. See
+      # electron/main.js's resolvePythonPath for the matching runtime lookup.
+      - name: Vendor a self-contained Python (Windows)
         if: matrix.platform == 'win'
-        run: |
-          venv\Scripts\activate
-          pip install -r requirements.txt
+        shell: pwsh
+        run: Copy-Item -Path $env:pythonLocation -Destination venv -Recurse
+
+      - name: Install Python dependencies (Windows)
+        if: matrix.platform == 'win'
+        shell: pwsh
+        run: venv\python.exe -m pip install -r requirements.txt
 
       - name: Build and publish Electron app (tag push)
         if: startsWith(github.ref, 'refs/tags/')
