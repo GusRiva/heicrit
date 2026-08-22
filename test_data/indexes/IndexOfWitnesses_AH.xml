@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?><?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<!DOCTYPE TEI SYSTEM "https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/heieditions-entities.txt">
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title ana="hc:MainTitle">Textzeugenverzeichnis</title>
+            </titleStmt>
+            <publicationStmt>
+                <p/>
+            </publicationStmt>
+            <sourceDesc>
+                <p>Born Digital</p>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <listPrefixDef>
+                <prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"/>
+                <prefixDef ident="char" matchPattern="(.+)" replacementPattern="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/chars.xml#$1"/>
+            </listPrefixDef>
+        </encodingDesc>
+    </teiHeader>
+
+    <text ana="hc:CompleteExpression">
+        <body>
+            <listWit>
+                <witness xml:id="a"> 
+                    <msDesc>
+                        <msIdentifier>
+                            <idno ana="hc:EditorialSiglum">A</idno>
+                        </msIdentifier>
+                    </msDesc> 
+                </witness>
+                <witness xml:id="bb">
+                    <msDesc><msIdentifier>
+                        <idno ana="hc:EditorialSiglum">Bb</idno>
+                    </msIdentifier></msDesc>
+                </witness>
+                <witness xml:id="ba">
+                    <msDesc><msIdentifier>
+                        <idno ana="hc:EditorialSiglum">Ba</idno>
+                    </msIdentifier></msDesc>
+                </witness>
+                <witness xml:id="c">
+                    <msDesc><msIdentifier>
+                        <idno ana="hc:EditorialSiglum">C</idno>
+                    </msIdentifier></msDesc>
+                </witness>
+                <witness xml:id="d">
+                    <msDesc><msIdentifier>
+                        <idno ana="hc:EditorialSiglum">D</idno>
+                    </msIdentifier></msDesc>
+                </witness>
+                <witness xml:id="e">
+                    <msDesc><msIdentifier>
+                        <idno ana="hc:EditorialSiglum">E</idno>
+                    </msIdentifier></msDesc>
+                </witness>
+                <witness xml:id="f">
+                    <msDesc><msIdentifier>
+                        <idno ana="hc:EditorialSiglum">F</idno>
+                    </msIdentifier></msDesc>
+                </witness>
+            </listWit>
+        </body>
+    </text>
+</TEI>

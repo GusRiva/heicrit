@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title ana="hc:MainTitle">Edelstein B71 Varianten</title>
+            </titleStmt>
+            <publicationStmt>
+                <p/>
+            </publicationStmt>
+            <sourceDesc>
+                <listWit>
+                    <witness xml:id="b" ana="hc:BaseText">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#b"/>
+                    </witness>
+                    <witness xml:id="b1">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#b1"/>
+                    </witness>
+                    <witness xml:id="bl">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#bl"/>
+                    </witness>
+                    <witness xml:id="bn">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#bn"/>
+                    </witness>
+                    <witness xml:id="h3">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#h3"/>
+                    </witness>
+                    <witness xml:id="k1">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#k1"/>
+                    </witness>
+                    <witness xml:id="k2">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#k2"/>
+                    </witness>
+                    <witness xml:id="pfeiffer">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#pfeiffer"/>
+                    </witness>
+                    <witness xml:id="s2">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#s2"/>
+                    </witness>
+                    <witness xml:id="w1">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#w1"/>
+                    </witness>
+                    <witness xml:id="z1">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#z1"/>
+                    </witness>
+                    <witness xml:id="z2">
+                        <ptr target="../indexes/IndexOfWitnesses_Edelstein.xml#z2"/>
+                    </witness>
+                </listWit>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <listPrefixDef>
+                <prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"/>
+                <prefixDef ident="char" matchPattern="(.+)" replacementPattern="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/chars.xml#$1"/>
+
+                <prefixDef matchPattern="(.+)" ident="b" replacementPattern="../texts/B/B_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="b1" replacementPattern="../texts/b1/b1_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="bl" replacementPattern="../texts/Bl/Bl_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="bn" replacementPattern="../texts/Bn/Bn_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="h3" replacementPattern="../texts/H3/H3_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="k1" replacementPattern="../texts/K1/K1_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="k2" replacementPattern="../texts/K2/K2_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="s2" replacementPattern="../texts/S2/S2_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="w1" replacementPattern="../texts/W1/W1_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="z1" replacementPattern="../texts/Z1/Z1_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef matchPattern="(.+)" ident="z2" replacementPattern="../texts/Z2/Z2_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+            </listPrefixDef>
+        </encodingDesc>
+    </teiHeader>
+
+    <!-- 
+    mögliche Typen für rdg (erweiterbar):
+    - hc:AdditionVariant
+    - hc:OmissionVariant
+    - hc:SubstitutionVariant
+    - hc:TranspositionVariant
+    -->
+
+    <text ana="hc:CompleteExpression">
+        <body>
+            <listApp corresp="../synopses/71/synoptic.xml">
+                <!-- V. 2 -->
+                <!-- gieng Bn -->
+                <app target="b:w_71_2_4">
+                    <rdg wit="#bn" ana="hc:SubstitutionVariant"><ptr target="bn:w_71_2_4"/></rdg></app>
+
+                <!-- V. 3 -->
+                <!-- Dâ] Do nK2, H3, n2W1 -->
+                <!-- V. 4 -->
+                <!-- hircz H3 -->
+                <app target="b:range(w_71_4_1,w_71_4_4)">
+                    <rdg wit="#w1" ana="hc:SubstitutionVariant">
+                        <ptr target="w1:range(w_71_4_1,w_71_4_3)"/>
+                        <note><mentioned>schlange</mentioned> ebd. i. d. F. immer weibl.</note>
+                    </rdg>
+                </app>
+
+                <app target="b:w_71_4_4">
+                    <rdg wit="#h3" ana="hc:SubstitutionVariant">
+                        <ptr target="h3:w_71_4_4"/>
+                    </rdg>
+                </app>
+
+
+                <!-- V. 4 -->
+                <!--Die was hertt g. n2W1 (schlange ebd. i. d. F. immer weibl.)-->
+                <!-- V.6 -->
+                <!-- möchte k. dannen H3 -->
+                <app>
+                    <rdg wit="#h3" ana="hc:TranspositionVariant">
+                        <link target="b:w_71_6_4 h3:w_71_6_6"/>
+                        <link target="b:w_71_6_5 h3:w_71_6_4"/>
+                        <link target="b:w_71_6_6 h3:w_71_6_5"/>
+                    </rdg>
+                </app>
+
+
+                <!-- V. 7 -->
+                <!-- vil fehlt H3, Bl -->
+                <!-- V. 11 -->
+                <!-- Vnd do H3, nK2, -Z1 -->
+                <app target="b:left(w_71_11_1)">
+                    <rdg wit="#h3 #k2 #z1" ana="hc:AdditionVariant">
+                        <ptr target="h3:w_71_11_1"/>
+                        <ptr target="k2:w_71_11_1"/>
+                        <ptr target="z1:w_71_11_1"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 18 -->
+                <!-- V. fehlt Bn -->
+                <app target="b:l_71_18">
+                    <rdg wit="#bn" ana="hc:OmissionVariant">
+                        <ptr target="bn:right(l_71_17)"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 19 -->
+                <app target="b:w_71_19_6">
+                    <rdg wit="#bl" ana="hc:SubstitutionVariant">
+                        <ptr target="bl:w_71_19_6"/>
+                    </rdg>
+                    <rdg wit="#w1" ana="hc:SubstitutionVariant">
+                        <ptr target="w1:w_71_19_6"/>
+                    </rdg>
+
+                </app>
+
+                <!-- V. 39 -->
+                <!-- Dem m. gefiel es (das n2W1) wol Bl, n2W1; Daz] es nK2, H3, Bn -->
+                <app target="b:l_71_39">
+                    <rdg wit="#bl #w1" ana="hc:SubstitutionVariant">
+                        <ptr target="bl:l_71_39"/>
+                        <ptr target="w1:l_71_39"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 51 -->
+                <!-- zuo rel., fehlt B -->
+                <app target="b:w_71_51_3a">
+                    <lem wit="#h3 #bn" ana="hc:AdditionVariant">
+                        <ptr target="h3:w_71_51_4"/>
+                        <ptr target="bn:w_71_51_4"/>
+                        <!-- und alle restlichen Textzeugen -->
+                    </lem>
+                    <!--<rdg ana="hc:OmissionVariant">
+                        <ptr target="b:right(w_71_51_3)"/>
+                    </rdg>-->
+                </app>
+
+
+
+
+                <app target="b:w_71_8_1">
+                    <rdg wit="#bl" ana="hc:SubstitutionVariant">
+                        <ptr target="bl:w_71_8_1"/>
+                    </rdg>
+                    <rdg wit="#h3" ana="hc:SubstitutionVariant">
+                        <ptr target="h3:w_71_8_1"/>
+                    </rdg>
+                    <rdg wit="#k2 #w1" ana="hc:SubstitutionVariant">
+                        <ptr target="k2:w_71_8_1"/>
+                        <ptr target="w1:w_71_8_1"/>
+                    </rdg>
+                </app>
+
+                <app target="b:range(w_71_27_2, w_71_27_3)">
+                    <rdg wit="#k1" ana="hc:SubstitutionVariant">
+                        <ptr target="k1:w_71_27_2"/>
+                    </rdg>
+                </app>
+
+                <app target="b:range(w_71_28_1, w_71_28_2)">
+                    <rdg wit="#bl" ana="hc:SubstitutionVariant">
+                        <ptr target="bl:range(w_71_28_1, w_71_28_2)"/>
+                    </rdg>
+                </app>
+
+                <app target="b:left(w_71_29_7)">
+                    <rdg wit="#h3" ana="hc:AdditionVariant">
+                        <ptr target="h3:range(w_71_29_7, w_71_29_9)"/>
+                    </rdg>
+                </app>
+                <app target="b:w_71_12_2">
+                    <rdg wit="#bl" ana="hc:SubstitutionVariant">
+                        <ptr target="bl:w_71_12_2"/>
+                    </rdg>
+                    <rdg wit="#h3" ana="hc:SubstitutionVariant">
+                        <ptr target="h3:w_71_12_2"/>
+                    </rdg>
+                </app>
+                <app target="b:w_71_12_5">
+                    <rdg wit="#w1" ana="hc:SubstitutionVariant">
+                        <ptr target="w1:w_71_12_5"/>
+                        <note>Was ist richtig?</note>
+                    </rdg>
+                </app>
+                <app target="b:range(w_71_12_4, w_71_12_5)">
+                    <rdg wit="#h3" ana="hc:SubstitutionVariant">
+                        <ptr target="h3:w_71_12_4"/>
+                    </rdg>
+                </app>
+                <app target="b:w_71_47_3">
+                    <rdg wit="#bn #h3 #k1 #k2 #w1" ana="hc:OmissionVariant">
+                        <ptr target="bn:left(w_71_47_3)"/>
+                        <ptr target="h3:left(w_71_47_3)"/>
+                        <ptr target="k1:left(w_71_47_3)"/>
+                        <ptr target="k2:left(w_71_47_3)"/>
+                        <ptr target="w1:left(w_71_47_3)"/>
+                    </rdg>
+                </app>
+                <app target="b:w_71_47_2">
+                    <rdg wit="#k1" ana="hc:SubstitutionVariant">
+                        <ptr target="k1:w_71_47_2"/>
+                    </rdg>
+                </app>
+                <app target="b:left(w_71_49_1)">
+                    <rdg wit="#bl" ana="hc:AdditionVariant">
+                        <ptr target="bl:w_71_49_1"/>
+                    </rdg>
+                </app>
+                <app target="b:w_71_67_5">
+                    <rdg wit="#bl #bn" ana="hc:OmissionVariant"><ptr target="bl:left(w_71_67_5)"/><ptr target="bn:left(w_71_67_6)"/></rdg><rdg wit="#h3" ana="hc:OmissionVariant"><ptr target="h3:left(w_71_67_6)"/></rdg></app>
+                <app target="b:w_71_68_2">
+                    <rdg wit="#bn" ana="hc:SubstitutionVariant"><ptr target="bn:range(w_71_68_2, w_71_68_1)"/></rdg></app>
+                <app>
+                    <rdg wit="#k1" ana="hc:TranspositionVariant">
+                        <link target="b:w_71_8_1 k1:w_71_8_4"/>
+                        <link target="b:w_71_8_3 k1:w_71_8_1"/>
+                        <link target="b:w_71_8_4 k1:w_71_8_2"/>
+                    </rdg>
+                </app>
+            <app target="b:w_71_8_5"><rdg wit="#bn" ana="hc:SubstitutionVariant"><ptr target="bn:range(w_71_8_5, w_71_8_4)"/></rdg></app><app target="b:range(w_71_14_5, w_71_14_4)"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:range(w_71_14_5, w_71_14_4)"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_69_2"><rdg wit="#bn" ana="hc:SubstitutionVariant"><ptr target="bn:range(w_71_69_2, w_71_69_1)"/></rdg></app><app target="b:None"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_69_3"/></rdg></app><app target="b:w_71_74_2"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_74_2"/></rdg></app><app target="b:w_71_75_4"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_75_4, w_71_75_5)"/></rdg></app><app target="b:w_71_10_2"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_10_2, w_71_10_5)"/></rdg><rdg wit="#h3 #k1" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_10_1, w_71_10_3)"/><ptr target="k1:w_71_10_2"/></rdg></app><app target="b:w_71_54_5"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_54_6"/></rdg></app><app target="b:range(w_71_5_2, w_71_5_5)"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_5_2, w_71_5_5)"/></rdg></app><app target="b:w_71_7_3"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:w_71_7_3"/></rdg></app><app target="b:w_71_7_6"><rdg wit="#bl #h3 #w1" ana="hc:OmissionVariant"><ptr target="bl:left(w_71_7_6)"/><ptr target="h3:left(w_71_7_6)"/><ptr target="w1:left(w_71_7_6)"/></rdg></app></listApp>
+        </body>
+    </text>
+</TEI>

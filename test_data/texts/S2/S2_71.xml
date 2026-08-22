@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<!DOCTYPE TEI SYSTEM "https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/heieditions-entities.txt">
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>S2 - Fabel 71</title>
+      </titleStmt>
+      <publicationStmt>
+        <p>Part file</p>
+      </publicationStmt>
+      <sourceDesc>
+        <p>Part file</p>
+      </sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text ana="hc:ExpressionPart">
+    <body>
+      <div ana="hc:Fable" n="71" xml:id="div_71">
+      <lb n="4" facs="#_22_a_4"/>
+        <head ana="hc:PrimaryHeading" xml:id="head_71_1">
+        <w xml:id="w_head_71_1_1">Von</w>
+        <c> </c>
+        <w xml:id="w_head_71_1_2">eim</w>
+        <c> </c>
+        <w xml:id="w_head_71_1_3">ſlangen</w>
+        <c> </c>
+        <w xml:id="w_head_71_1_4">was</w>
+        <c> </c>
+        <w xml:id="w_head_71_1_5">gebunden</w>
+        <pc>.</pc>
+        </head>
+      <lb n="5" facs="#_22_a_5"/>
+        <head ana="hc:SecondaryHeading" xml:id="head_71_2">
+        <w xml:id="w_head_71_2_1">Von</w>
+        <c> </c>
+        <w xml:id="w_head_71_2_2">dem</w>
+        <c> </c>
+        <w xml:id="w_head_71_2_3">der</w>
+        <c> </c>
+        <w xml:id="w_head_71_2_4">guotz</w>
+        <c> </c>
+        <w xml:id="w_head_71_2_5">mit</w>
+        <c> </c>
+        <w xml:id="w_head_71_2_6">boeſem</w>
+        <c> </c>
+        <w xml:id="w_head_71_2_7">giltet</w>
+        <pc>.</pc>
+      </head></div>
+    </body>
+  </text>
+</TEI>

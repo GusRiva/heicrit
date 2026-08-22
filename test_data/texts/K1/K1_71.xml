@@ -1,0 +1,1049 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<!DOCTYPE TEI SYSTEM "https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/heieditions-entities.txt">
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>K1 - Fabel 71</title>
+      </titleStmt>
+      <publicationStmt>
+        <p>Part file</p>
+      </publicationStmt>
+      <sourceDesc>
+        <p>Part file</p>
+      </sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text ana="hc:ExpressionPart">
+    <body>
+      <div ana="hc:Fable" n="71" xml:id="div_71">
+        <head ana="hc:PrimaryHeading" xml:id="head_71_1">
+          <lb n="11" facs="#_75ra_11"/>
+          <hi hei:color="Red">
+            <w xml:id="w_head_71_1_1">Das</w>
+            <c> </c>
+            <w xml:id="w_head_71_1_2">lxviii</w>
+            <c> </c>
+            <w xml:id="w_head_71_1_3">Wie</w>
+            <c> </c>
+            <w xml:id="w_head_71_1_4">ein</w>
+            <c> </c>
+            <w xml:id="w_head_71_1_5">hirt</w>
+            <c> </c>
+            <w xml:id="w_head_71_1_6">ein</w>
+            <c> </c>
+            <w xml:id="w_head_71_1_7">ſlang</w>
+            <c> </c>
+            <w xml:id="w_head_71_1_8">gefange<ex>n</ex></w>
+            <c> </c>
+            <w xml:id="w_head_71_1_9">hett</w>
+          </hi>
+        </head>
+        <space facs="#_75r_space_1" unit="line" extent="unknown">
+          <desc>Aussparung für Abbildung ohne Schreiberanweisung</desc>
+        </space>
+        <cb facs="#_75rb"/>
+        <lb n="1" facs="#_75rb_1"/>
+        <!-- Beginn Pfeiffer 71#-->
+        <l n="1" xml:id="l_71_1">
+          <w xml:id="w_71_1_1"><hei:initial hei:color="Red" hei:heightLines="3" facs="#_75r_init_12">M</hei:initial><hi rendition="hc:RedStroke">A</hi>n</w>
+          <c> </c>
+          <w xml:id="w_71_1_2">liſt</w>
+          <c> </c>
+          <w xml:id="w_71_1_3">ein</w>
+          <c> </c>
+          <w xml:id="w_71_1_4">biſpel</w>
+          <c> </c>
+          <w xml:id="w_71_1_5">das</w>
+          <c> </c>
+          <w xml:id="w_71_1_6">ein</w>
+          <c> </c>
+          <w xml:id="w_71_1_7">man</w>
+        </l>
+        <lb n="2" facs="#_75rb_2"/>
+        <l n="2" xml:id="l_71_2">
+          <w xml:id="w_71_2_1"><hi rendition="hc:RedStroke">D</hi>urch</w>
+          <c> </c>
+          <w xml:id="w_71_2_2">einen</w>
+          <c> </c>
+          <w xml:id="w_71_2_3">walt</w>
+          <c> </c>
+          <w xml:id="w_71_2_4">gegangen</w>
+          <c> </c>
+          <w xml:id="w_71_2_5">kam</w>
+        </l>
+        <lb n="3" facs="#_75rb_3"/>
+        <l n="3" xml:id="l_71_3">
+          <w xml:id="w_71_3_1"><hi rendition="hc:RedStroke">D</hi>o</w>
+          <c> </c>
+          <w xml:id="w_71_3_2">vant</w>
+          <c> </c>
+          <w xml:id="w_71_3_3">er</w>
+          <c> </c>
+          <w xml:id="w_71_3_4">einen</w>
+          <c> </c>
+          <w xml:id="w_71_3_5">ſchlangen</w>
+        </l>
+        <lb n="4" facs="#_75rb_4"/>
+        <l n="4" xml:id="l_71_4">
+          <w xml:id="w_71_4_1"><hi rendition="hc:RedStroke">D</hi>en</w>
+          <c> </c>
+          <w xml:id="w_71_4_2">hett</w>
+          <c> </c>
+          <w xml:id="w_71_4_3">ein</w>
+          <c> </c>
+          <w xml:id="w_71_4_4">hirt</w>
+          <c> </c>
+          <w xml:id="w_71_4_5">gefangen</w>
+        </l>
+        <lb n="5" facs="#_75rb_5"/>
+        <l n="5" xml:id="l_71_5">
+          <w xml:id="w_71_5_1"><hi rendition="hc:RedStroke">V</hi>n<ex>d</ex></w>
+          <c> </c>
+          <w xml:id="w_71_5_2">gebunden</w>
+          <c> </c>
+          <w xml:id="w_71_5_3">faſt</w>
+          <c> </c>
+          <w xml:id="w_71_5_4">zu&osup;</w>
+          <c> </c>
+          <w xml:id="w_71_5_5">fromen</w>
+        </l>
+        <lb n="6" facs="#_75rb_6"/>
+        <l n="6" xml:id="l_71_6">
+          <w xml:id="w_71_6_1"><hi rendition="hc:RedStroke">D</hi>as</w>
+          <c> </c>
+          <w xml:id="w_71_6_2">er</w>
+          <c> </c>
+          <w xml:id="w_71_6_3">nit</w>
+          <c> </c>
+          <w xml:id="w_71_6_4">von</w>
+          <c> </c>
+          <w xml:id="w_71_6_5">dan</w>
+          <c> </c>
+          <w xml:id="w_71_6_6">mo&esup;ht</w>
+          <c> </c>
+          <w xml:id="w_71_6_7">komen</w>
+        </l>
+        <lb n="7" facs="#_75rb_7"/>
+        <l n="7" xml:id="l_71_7">
+          <w xml:id="w_71_7_1"><hi rendition="hc:RedStroke">A</hi>n</w>
+          <c> </c>
+          <w xml:id="w_71_7_2">einen</w>
+          <c> </c>
+          <w xml:id="w_71_7_3">pfa&usup;l</w>
+          <c> </c>
+          <w xml:id="w_71_7_4">der</w>
+          <c> </c>
+          <w xml:id="w_71_7_5">was</w>
+          <c> </c>
+          <w xml:id="w_71_7_6">vil</w>
+          <c> </c>
+          <w xml:id="w_71_7_7">gros</w>
+        </l>
+        <lb n="8" facs="#_75rb_8"/>
+        <l n="8" xml:id="l_71_8">
+          <w xml:id="w_71_8_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_8_2">ſchlang</w>
+          <c> </c>
+          <w xml:id="w_71_8_3">ſtu&osup;nt</w>
+          <c> </c>
+          <w xml:id="w_71_8_4">da</w>
+          <c> </c>
+          <w xml:id="w_71_8_5">ſigelos</w>
+        </l>
+        <lb n="9" facs="#_75rb_9"/>
+        <l n="9" xml:id="l_71_9">
+          <w xml:id="w_71_9_1"><hi rendition="hc:RedStroke">A</hi>n</w>
+          <c> </c>
+          <w xml:id="w_71_9_2">einem</w>
+          <c> </c>
+          <w xml:id="w_71_9_3">ſeil</w>
+          <c> </c>
+          <w xml:id="w_71_9_4">zerten<ex>n</ex>et</w>
+          <c> </c>
+          <w xml:id="w_71_9_5">wol</w>
+        </l>
+        <lb n="10" facs="#_75rb_10"/>
+        <l n="10" xml:id="l_71_10">
+          <w xml:id="w_71_10_1"><hi rendition="hc:RedStroke">A</hi>lles</w>
+          <c> </c>
+          <w xml:id="w_71_10_2">ſu&iuml;fczen</w>
+          <c> </c>
+          <w xml:id="w_71_10_3">was</w>
+          <c> </c>
+          <w xml:id="w_71_10_4">er</w>
+          <c> </c>
+          <w xml:id="w_71_10_5">vol</w>
+        </l>
+        <pb n="75v" facs="#_75v"/>
+        <cb facs="#_75va"/>
+        <lb n="1" facs="#_75va_1"/>
+        <l n="11" xml:id="l_71_11">
+          <w xml:id="w_71_11_1"><hi rendition="hc:RedStroke">D</hi>o</w>
+          <c> </c>
+          <w xml:id="w_71_11_2">der</w>
+          <c> </c>
+          <w xml:id="w_71_11_3">ma<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_11_4">d<del rendition="hc:Strikethrough">i</del>en</w>
+          <c> </c>
+          <w xml:id="w_71_11_5">ſchlangen</w>
+          <c> </c>
+          <w xml:id="w_71_11_6">erſach</w>
+        </l>
+        <lb n="2" facs="#_75va_2"/>
+        <l n="12" xml:id="l_71_12">
+          <w xml:id="w_71_12_1"><hi rendition="hc:RedStroke">V</hi>on</w>
+          <c> </c>
+          <w xml:id="w_71_12_2">miltekeit</w>
+          <c> </c>
+          <w xml:id="w_71_12_3">er</w>
+          <c> </c>
+          <w xml:id="w_71_12_4">zu&osup;</w>
+          <c> </c>
+          <w xml:id="w_71_12_5">im</w>
+          <c> </c>
+          <w xml:id="w_71_12_6">ſprach</w>
+        </l>
+        <lb n="3" facs="#_75va_3"/>
+        <l n="13" xml:id="l_71_13">
+          <w xml:id="w_71_13_1"><hi rendition="hc:RedStroke">I</hi>ch</w>
+          <c> </c>
+          <w xml:id="w_71_13_2">wil</w>
+          <c> </c>
+          <w xml:id="w_71_13_3">dir</w>
+          <c> </c>
+          <w xml:id="w_71_13_4">helffen</w>
+          <c> </c>
+          <w xml:id="w_71_13_5">vſſer</w>
+          <c> </c>
+          <w xml:id="w_71_13_6">not</w>
+        </l>
+        <lb n="4" facs="#_75va_4"/>
+        <l n="14" xml:id="l_71_14">
+          <w xml:id="w_71_14_1"><hi rendition="hc:RedStroke">D</hi>as</w>
+          <c> </c>
+          <w xml:id="w_71_14_2">du</w>
+          <c> </c>
+          <w xml:id="w_71_14_3">hie</w>
+          <c> </c>
+          <w xml:id="w_71_14_4">nit</w>
+          <c> </c>
+          <w xml:id="w_71_14_5">geligeſt</w>
+          <c> </c>
+          <w xml:id="w_71_14_6">tod</w>
+        </l>
+        <lb n="5" facs="#_75va_5"/>
+        <l n="15" xml:id="l_71_15">
+          <w xml:id="w_71_15_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_15_2">ſchlang</w>
+          <c> </c>
+          <w xml:id="w_71_15_3">na&usup;ch</w>
+          <c> </c>
+          <w xml:id="w_71_15_4">v<ex>er</ex>dorben</w>
+          <c> </c>
+          <w xml:id="w_71_15_5">was</w>
+        </l>
+        <lb n="6" facs="#_75va_6"/>
+        <l n="16" xml:id="l_71_16">
+          <w xml:id="w_71_16_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_16_2">man</w>
+          <c> </c>
+          <w xml:id="w_71_16_3">in</w>
+          <c> </c>
+          <w xml:id="w_71_16_4">enbant</w>
+          <c> </c>
+          <w xml:id="w_71_16_5">vm<ex>b</ex></w>
+          <c> </c>
+          <w xml:id="w_71_16_6">das</w>
+        </l>
+        <lb n="7" facs="#_75va_7"/>
+        <l n="17" xml:id="l_71_17">
+          <w xml:id="w_71_17_1"><hi rendition="hc:RedStroke">E</hi>r</w>
+          <c> </c>
+          <w xml:id="w_71_17_2">warmde</w>
+          <c> </c>
+          <w xml:id="w_71_17_3">in</w>
+          <c> </c>
+          <w xml:id="w_71_17_4">vil</w>
+          <c> </c>
+          <w xml:id="w_71_17_5">wol</w>
+          <c> </c>
+          <w xml:id="w_71_17_6">vn<ex>d</ex></w>
+          <c> </c>
+          <w xml:id="w_71_17_7">halff</w>
+          <c> </c>
+          <w xml:id="w_71_17_8">im</w>
+          <c> </c>
+          <w xml:id="w_71_17_9">wid<ex>er</ex></w>
+        </l>
+        <lb n="8" facs="#_75va_8"/>
+        <l n="18" xml:id="l_71_18">
+          <w xml:id="w_71_18_1"><hi rendition="hc:RedStroke">D</hi>o</w>
+          <c> </c>
+          <w xml:id="w_71_18_2">lonet</w>
+          <c> </c>
+          <w xml:id="w_71_18_3">im</w>
+          <c> </c>
+          <w xml:id="w_71_18_4">der</w>
+          <c> </c>
+          <w xml:id="w_71_18_5">ſchlang</w>
+          <c> </c>
+          <w xml:id="w_71_18_6">ſider</w>
+        </l>
+        <lb n="9" facs="#_75va_9"/>
+        <l n="19" xml:id="l_71_19">
+          <w xml:id="w_71_19_1"><hi rendition="hc:RedStroke">D</hi>o</w>
+          <c> </c>
+          <w xml:id="w_71_19_2">er</w>
+          <c> </c>
+          <w xml:id="w_71_19_3">geſunt</w>
+          <c> </c>
+          <w xml:id="w_71_19_4">ward</w>
+          <c> </c>
+          <w xml:id="w_71_19_5">vn<ex>d</ex></w>
+          <c> </c>
+          <w xml:id="w_71_19_6">ſchnell</w>
+        </l>
+        <lb n="10" facs="#_75va_10"/>
+        <l n="20" xml:id="l_71_20">
+          <w xml:id="w_71_20_1"><hi rendition="hc:RedStroke">E</hi>r</w>
+          <c> </c>
+          <w xml:id="w_71_20_2">ſtrickt</w>
+          <c> </c>
+          <w xml:id="w_71_20_3">ſich</w>
+          <c> </c>
+          <w xml:id="w_71_20_4">vm<ex>b</ex></w>
+          <c> </c>
+          <w xml:id="w_71_20_5">des</w>
+          <c> </c>
+          <w xml:id="w_71_20_6">ma<ex>n</ex>nel</w>
+          <c> </c>
+          <w xml:id="w_71_20_7">kel</w>
+        </l>
+        <lb n="11" facs="#_75va_11"/>
+        <l n="21" xml:id="l_71_21">
+          <w xml:id="w_71_21_1"><hi rendition="hc:RedStroke">V</hi>n<ex>d</ex></w>
+          <c> </c>
+          <w xml:id="w_71_21_2">ſchu&osup;ff</w>
+          <c> </c>
+          <w xml:id="w_71_21_3">im</w>
+          <c> </c>
+          <w xml:id="w_71_21_4">liden</w>
+          <c> </c>
+          <w xml:id="w_71_21_5">vn<ex>d</ex></w>
+          <c> </c>
+          <w xml:id="w_71_21_6">leit</w>
+        </l>
+        <lb n="12" facs="#_75va_12"/>
+        <l n="22" xml:id="l_71_22">
+          <w xml:id="w_71_22_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_22_2">ma<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_22_3">ſprach</w>
+          <c> </c>
+          <w xml:id="w_71_22_4">owe</w>
+          <c> </c>
+          <w xml:id="w_71_22_5">miner</w>
+          <c> </c>
+          <w xml:id="w_71_22_6">getru&iuml;wekeit</w>
+        </l>
+        <lb n="13" facs="#_75va_13"/>
+        <l n="23" xml:id="l_71_23">
+          <w xml:id="w_71_23_1"><hi rendition="hc:RedStroke">D</hi>u</w>
+          <c> </c>
+          <w xml:id="w_71_23_2">heiſt</w>
+          <c> </c>
+          <w xml:id="w_71_23_3">mir</w>
+          <c> </c>
+          <w xml:id="w_71_23_4">betru&esup;bt</w>
+          <c> </c>
+          <w xml:id="w_71_23_5">mine<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_23_6">mu&osup;t</w>
+        </l>
+        <lb n="14" facs="#_75va_14"/>
+        <l n="24" xml:id="l_71_24">
+          <w xml:id="w_71_24_1"><hi rendition="hc:RedStroke">D</hi>u</w>
+          <c> </c>
+          <w xml:id="w_71_24_2">gilteſt</w>
+          <c> </c>
+          <w xml:id="w_71_24_3">mir</w>
+          <c> </c>
+          <w xml:id="w_71_24_4">mit</w>
+          <c> </c>
+          <w xml:id="w_71_24_5">u&iuml;bel</w>
+          <c> </c>
+          <w xml:id="w_71_24_6">gu&osup;t</w>
+        </l>
+        <lb n="15" facs="#_75va_15"/>
+        <l n="25" xml:id="l_71_25">
+          <w xml:id="w_71_25_1"><hi rendition="hc:RedStroke">D</hi>ie</w>
+          <c> </c>
+          <w xml:id="w_71_25_2">ſchlang</w>
+          <c> </c>
+          <w xml:id="w_71_25_3">ſprach</w>
+          <c> </c>
+          <w xml:id="w_71_25_4">ich</w>
+          <c> </c>
+          <w xml:id="w_71_25_5">tu&osup;</w>
+          <c> </c>
+          <w xml:id="w_71_25_6">dir</w>
+          <c> </c>
+          <w xml:id="w_71_25_7">reht</w>
+        </l>
+        <lb n="16" facs="#_75va_16"/>
+        <l n="26" xml:id="l_71_26">
+          <w xml:id="w_71_26_1"><hi rendition="hc:RedStroke">I</hi>ch</w>
+          <c> </c>
+          <w xml:id="w_71_26_2">tu&osup;</w>
+          <c> </c>
+          <w xml:id="w_71_26_3">als</w>
+          <c> </c>
+          <w xml:id="w_71_26_4">ander</w>
+          <c> </c>
+          <w xml:id="w_71_26_5">min</w>
+          <c> </c>
+          <w xml:id="w_71_26_6">geſchleht</w>
+        </l>
+        <lb n="17" facs="#_75va_17"/>
+        <l n="27" xml:id="l_71_27">
+          <w xml:id="w_71_27_1"><hi rendition="hc:RedStroke">M</hi>in</w>
+          <c> </c>
+          <w xml:id="w_71_27_2">giftikeit</w>
+          <c> </c>
+          <w xml:id="w_71_27_3">ich</w>
+          <c> </c>
+          <w xml:id="w_71_27_4">nit</w>
+          <c> </c>
+          <w xml:id="w_71_27_5">abela&usup;n</w>
+        </l>
+        <lb n="18" facs="#_75va_18"/>
+        <l n="28" xml:id="l_71_28">
+          <w xml:id="w_71_28_1"><hi rendition="hc:RedStroke">S</hi>chlanglich</w>
+          <c> </c>
+          <w xml:id="w_71_28_2">geberde</w>
+          <c> </c>
+          <w xml:id="w_71_28_3">mu&osup;s</w>
+          <c> </c>
+          <w xml:id="w_71_28_4">ich</w>
+          <c> </c>
+          <w xml:id="w_71_28_5">ha&usup;n</w>
+        </l>
+        <lb n="19" facs="#_75va_19"/>
+        <l n="30" xml:id="l_71_30">
+          <w xml:id="w_71_30_1"><hi rendition="hc:RedStroke">S</hi>id</w>
+          <c> </c>
+          <w xml:id="w_71_30_2">ich</w>
+          <c> </c>
+          <w xml:id="w_71_30_3">din</w>
+          <c> </c>
+          <w xml:id="w_71_30_4">red</w>
+          <c> </c>
+          <w xml:id="w_71_30_5">hab</w>
+          <c> </c>
+          <w xml:id="w_71_30_6">v<ex>er</ex>nome<ex>n</ex></w>
+        </l>
+        <lb n="20" facs="#_75va_20"/>
+        <l n="29" xml:id="l_71_29">
+          <w xml:id="w_71_29_1"><hi rendition="hc:RedStroke">S</hi>prach</w>
+          <c> </c>
+          <w xml:id="w_71_29_2">er</w>
+          <c> </c>
+          <pc>//</pc>
+          <c> </c>
+          <w xml:id="w_71_29_3">ſo</w>
+          <c> </c>
+          <w xml:id="w_71_29_4">wil</w>
+          <c> </c>
+          <w xml:id="w_71_29_5">ich</w>
+          <c> </c>
+          <w xml:id="w_71_29_6">komen</w>
+        </l>
+        <lb n="21" facs="#_75va_21"/>
+        <l n="31" xml:id="l_71_31">
+          <w xml:id="w_71_31_1"><hi rendition="hc:RedStroke">F</hi>u&iuml;r</w>
+          <c> </c>
+          <w xml:id="w_71_31_2">einen</w>
+          <c> </c>
+          <w xml:id="w_71_31_3">rihter</w>
+          <c> </c>
+          <w xml:id="w_71_31_4">der</w>
+          <c> </c>
+          <w xml:id="w_71_31_5">gemein</w>
+        </l>
+        <lb n="22" facs="#_75va_22"/>
+        <l n="32" xml:id="l_71_32">
+          <w xml:id="w_71_32_1"><hi rendition="hc:RedStroke">S</hi>y</w>
+          <c> </c>
+          <w xml:id="w_71_32_2">des</w>
+          <c> </c>
+          <w xml:id="w_71_32_3">komens</w>
+          <c> </c>
+          <w xml:id="w_71_32_4">u&iuml;ber</w>
+          <c> </c>
+          <w xml:id="w_71_32_5">ein</w>
+        </l>
+        <lb n="23" facs="#_75va_23"/>
+        <l n="33" xml:id="l_71_33">
+          <w xml:id="w_71_33_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_33_2">ber</w>
+          <c> </c>
+          <w xml:id="w_71_33_3">ir</w>
+          <c> </c>
+          <w xml:id="w_71_33_4">beider</w>
+          <c> </c>
+          <w xml:id="w_71_33_5">rihter</w>
+          <c> </c>
+          <w xml:id="w_71_33_6">ward</w>
+        </l>
+        <lb n="24" facs="#_75va_24"/>
+        <l n="34" xml:id="l_71_34">
+          <w xml:id="w_71_34_1"><hi rendition="hc:RedStroke">E</hi>r</w>
+          <c> </c>
+          <w xml:id="w_71_34_2">ſprach</w>
+          <c> </c>
+          <w xml:id="w_71_34_3">na&usup;ch</w>
+          <c> </c>
+          <w xml:id="w_71_34_4">ſiner</w>
+          <c> </c>
+          <w xml:id="w_71_34_5">wilde</w>
+          <c> </c>
+          <w xml:id="w_71_34_6">art</w>
+        </l>
+        <lb n="25" facs="#_75va_25"/>
+        <l n="35" xml:id="l_71_35">
+          <w xml:id="w_71_35_1"><hi rendition="hc:RedStroke">I</hi>ch</w>
+          <c> </c>
+          <w xml:id="w_71_35_2">kan</w>
+          <c> </c>
+          <w xml:id="w_71_35_3">die</w>
+          <c> </c>
+          <w xml:id="w_71_35_4">ſach</w>
+          <c> </c>
+          <w xml:id="w_71_35_5">berihten</w>
+          <c> </c>
+          <w xml:id="w_71_35_6">nit</w>
+        </l>
+        <lb n="26" facs="#_75va_26"/>
+        <l n="36" xml:id="l_71_36">
+          <w xml:id="w_71_36_1"><hi rendition="hc:RedStroke">N</hi>a&usup;ch</w>
+          <c> </c>
+          <w xml:id="w_71_36_2">w&iuml;wer</w>
+          <c> </c>
+          <w xml:id="w_71_36_3">red</w>
+          <c> </c>
+          <w xml:id="w_71_36_4">we<ex>n</ex>n</w>
+          <c> </c>
+          <w xml:id="w_71_36_5">na&usup;ch</w>
+          <c> </c>
+          <w xml:id="w_71_36_6">geſiht</w>
+        </l>
+        <lb n="27" facs="#_75va_27"/>
+        <l n="37" xml:id="l_71_37">
+          <w xml:id="w_71_37_1"><hi rendition="hc:RedStroke">I</hi>r</w>
+          <c> </c>
+          <w xml:id="w_71_37_2">ſolt</w>
+          <c> </c>
+          <w xml:id="w_71_37_3">mich</w>
+          <c> </c>
+          <w xml:id="w_71_37_4">beide</w>
+          <c> </c>
+          <w xml:id="w_71_37_5">la&usup;ſſen</w>
+          <c> </c>
+          <w xml:id="w_71_37_6">ſenhen</w>
+        </l>
+        <lb n="28" facs="#_75va_28"/>
+        <l n="38" xml:id="l_71_38">
+          <w xml:id="w_71_38_1"><hi rendition="hc:RedStroke">W</hi>ie</w>
+          <c> </c>
+          <w xml:id="w_71_38_2">u&iuml;ch</w>
+          <c> </c>
+          <w xml:id="w_71_38_3">in</w>
+          <c> </c>
+          <w xml:id="w_71_38_4">diſer</w>
+          <c> </c>
+          <w xml:id="w_71_38_5">ſach</w>
+          <c> </c>
+          <w xml:id="w_71_38_6">ſy</w>
+          <c> </c>
+          <w xml:id="w_71_38_7">beſchenhen</w>
+        </l>
+        <lb n="29" facs="#_75va_29"/>
+        <l n="39" xml:id="l_71_39">
+          <w xml:id="w_71_39_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_39_2">ma<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_39_3">ſprach</w>
+          <c> </c>
+          <w xml:id="w_71_39_4">das</w>
+          <c> </c>
+          <w xml:id="w_71_39_5">gefelt</w>
+          <c> </c>
+          <w xml:id="w_71_39_6">mir</w>
+          <c> </c>
+          <w xml:id="w_71_39_7">wol</w>
+        </l>
+        <lb n="30" facs="#_75va_30"/>
+        <l n="40" xml:id="l_71_40">
+          <w xml:id="w_71_40_1"><hi rendition="hc:RedStroke">D</hi>en</w>
+          <c> </c>
+          <w xml:id="w_71_40_2">ſchlangen</w>
+          <c> </c>
+          <w xml:id="w_71_40_3">ma<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_40_4">faſte</w>
+          <c> </c>
+          <w xml:id="w_71_40_5">binden</w>
+          <c> </c>
+          <w xml:id="w_71_40_6">ſol</w>
+        </l>
+        <lb n="31" facs="#_75va_31"/>
+        <l n="41" xml:id="l_71_41">
+          <w xml:id="w_71_41_1"><hi rendition="hc:RedStroke">W</hi>ider</w>
+          <c> </c>
+          <w xml:id="w_71_41_2">an</w>
+          <c> </c>
+          <w xml:id="w_71_41_3">die</w>
+          <c> </c>
+          <w xml:id="w_71_41_4">ſelbe</w>
+          <c> </c>
+          <w xml:id="w_71_41_5">ſtat</w>
+        </l>
+        <lb n="32" facs="#_75va_32"/>
+        <l n="42" xml:id="l_71_42">
+          <w xml:id="w_71_42_1"><hi rendition="hc:RedStroke">D</hi>ar</w>
+          <c> </c>
+          <w xml:id="w_71_42_2">in</w>
+          <c> </c>
+          <w xml:id="w_71_42_3">der</w>
+          <c> </c>
+          <w xml:id="w_71_42_4">hirt</w>
+          <c> </c>
+          <w xml:id="w_71_42_5">in</w>
+          <c> </c>
+          <w xml:id="w_71_42_6">gebunden</w>
+          <c> </c>
+          <w xml:id="w_71_42_7">hatt</w>
+        </l>
+        <pb n="76r" facs="#_76r"/>
+
+
+
+
+        <cb facs="#_76ra"/>
+        <lb n="1" facs="#_76ra_1"/>
+        <l n="43" xml:id="l_71_43">
+          <w xml:id="w_71_43_1"><hi rendition="hc:RedStroke">S</hi>o</w>
+          <c> </c>
+          <w xml:id="w_71_43_2">machſtu</w>
+          <c> </c>
+          <w xml:id="w_71_43_3">rihten</w>
+          <c> </c>
+          <w xml:id="w_71_43_4">na&usup;ch</w>
+          <c> </c>
+          <w xml:id="w_71_43_5">geſiht</w>
+        </l>
+        <lb n="2" facs="#_76ra_2"/>
+        <l n="44" xml:id="l_71_44">
+          <w xml:id="w_71_44_1"><hi rendition="hc:RedStroke">V</hi>n<ex>d</ex></w>
+          <c> </c>
+          <w xml:id="w_71_44_2">was</w>
+          <c> </c>
+          <w xml:id="w_71_44_3">vns</w>
+          <c> </c>
+          <w xml:id="w_71_44_4">in</w>
+          <c> </c>
+          <w xml:id="w_71_44_5">dirr</w>
+          <c> </c>
+          <w xml:id="w_71_44_6">ſach</w>
+          <c> </c>
+          <w xml:id="w_71_44_7">beſchiht</w>
+        </l>
+        <lb n="3" facs="#_76ra_3"/>
+        <l n="45" xml:id="l_71_45">
+          <w xml:id="w_71_45_1"><hi rendition="hc:RedStroke">V</hi>il</w>
+          <c> </c>
+          <w xml:id="w_71_45_2">ſchier</w>
+          <c> </c>
+          <w xml:id="w_71_45_3">vff</w>
+          <c> </c>
+          <w xml:id="w_71_45_4">der</w>
+          <c> </c>
+          <w xml:id="w_71_45_5">ſelbe</w>
+          <c> </c>
+          <w xml:id="w_71_45_6">fart</w>
+        </l>
+        <lb n="4" facs="#_76ra_4"/>
+        <l n="46" xml:id="l_71_46">
+          <w xml:id="w_71_46_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_46_2">ſchlang</w>
+          <c> </c>
+          <w xml:id="w_71_46_3">wider</w>
+          <c> </c>
+          <w xml:id="w_71_46_4">gebunden</w>
+          <c> </c>
+          <w xml:id="w_71_46_5">wart</w>
+        </l>
+        <lb n="5" facs="#_76ra_5"/>
+        <l n="47" xml:id="l_71_47">
+          <w xml:id="w_71_47_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_47_2">ber</w>
+          <c> </c>
+          <w xml:id="w_71_47_3">zu&osup;</w>
+          <c> </c>
+          <w xml:id="w_71_47_4">dem</w>
+          <c> </c>
+          <w xml:id="w_71_47_5">ſchlangen</w>
+          <c> </c>
+          <w xml:id="w_71_47_6">ſprach</w>
+        </l>
+        <lb n="6" facs="#_76ra_6"/>
+        <l n="48" xml:id="l_71_48">
+          <w xml:id="w_71_48_1"><hi rendition="hc:RedStroke">D</hi>o</w>
+          <c> </c>
+          <w xml:id="w_71_48_2">er</w>
+          <c> </c>
+          <w xml:id="w_71_48_3">in</w>
+          <c> </c>
+          <w xml:id="w_71_48_4">alſo</w>
+          <c> </c>
+          <w xml:id="w_71_48_5">gebunden</w>
+          <c> </c>
+          <w xml:id="w_71_48_6">ſach</w>
+        </l>
+        <lb n="7" facs="#_76ra_7"/>
+        <l n="49" xml:id="l_71_49">
+          <w xml:id="w_71_49_1"><hi rendition="hc:RedStroke">E</hi>nbint</w>
+          <c> </c>
+          <w xml:id="w_71_49_2">dich</w>
+          <c> </c>
+          <w xml:id="w_71_49_3">ſelb</w>
+          <c> </c>
+          <pc>//</pc>
+          <c> </c>
+          <w xml:id="w_71_49_4">nit</w>
+          <c> </c>
+          <w xml:id="w_71_49_5">enbyt</w>
+        </l>
+        <lb n="8" facs="#_76ra_8"/>
+        <l n="50" xml:id="l_71_50">
+          <w xml:id="w_71_50_1"><hi rendition="hc:RedStroke">V</hi>n<ex>d</ex></w>
+          <c> </c>
+          <w xml:id="w_71_50_2">ſcheid</w>
+          <c> </c>
+          <w xml:id="w_71_50_3">von</w>
+          <c> </c>
+          <w xml:id="w_71_50_4">hinnen</w>
+          <c> </c>
+          <w xml:id="w_71_50_5">es</w>
+          <c> </c>
+          <w xml:id="w_71_50_6">iſt</w>
+          <c> </c>
+          <w xml:id="w_71_50_7">zyt</w>
+        </l>
+        <lb n="9" facs="#_76ra_9"/>
+        <l n="51" xml:id="l_71_51">
+          <w xml:id="w_71_51_1"><hi rendition="hc:RedStroke">G</hi>eſelle</w>
+          <c> </c>
+          <w xml:id="w_71_51_2">ſprach</w>
+          <c> </c>
+          <w xml:id="w_71_51_3">er</w>
+          <c> </c>
+          <w xml:id="w_71_51_4">zu&osup;</w>
+          <c> </c>
+          <w xml:id="w_71_51_5">dem</w>
+          <c> </c>
+          <w xml:id="w_71_51_6">man</w>
+        </l>
+        <lb n="10" facs="#_76ra_10"/>
+        <l n="52" xml:id="l_71_52">
+          <w xml:id="w_71_52_1"><hi rendition="hc:RedStroke">D</hi>u</w>
+          <c> </c>
+          <w xml:id="w_71_52_2">machſt</w>
+          <c> </c>
+          <w xml:id="w_71_52_3">wol</w>
+          <c> </c>
+          <w xml:id="w_71_52_4">ledig</w>
+          <c> </c>
+          <w xml:id="w_71_52_5">hinnan</w>
+          <c> </c>
+          <w xml:id="w_71_52_6">ga&usup;n</w>
+        </l>
+        <lb n="11" facs="#_76ra_11"/>
+        <l n="53" xml:id="l_71_53">
+          <w xml:id="w_71_53_1"><hi rendition="hc:RedStroke">W</hi>ilt</w>
+          <c> </c>
+          <w xml:id="w_71_53_2">aber</w>
+          <c> </c>
+          <w xml:id="w_71_53_3">du</w>
+          <c> </c>
+          <w xml:id="w_71_53_4">den</w>
+          <c> </c>
+          <w xml:id="w_71_53_5">vient</w>
+          <c> </c>
+          <w xml:id="w_71_53_6">din</w>
+        </l>
+        <lb n="12" facs="#_76ra_12"/>
+        <l n="54" xml:id="l_71_54">
+          <w xml:id="w_71_54_1"><hi rendition="hc:RedStroke">L</hi>o&esup;ſen</w>
+          <c> </c>
+          <w xml:id="w_71_54_2">das</w>
+          <c> </c>
+          <w xml:id="w_71_54_3">wu&iuml;rt</w>
+          <c> </c>
+          <w xml:id="w_71_54_4">din</w>
+          <c> </c>
+          <w xml:id="w_71_54_5">vngewin</w>
+        </l>
+        <lb n="13" facs="#_76ra_13"/>
+        <l n="55" xml:id="l_71_55">
+          <w xml:id="w_71_55_1"><hi rendition="hc:RedStroke">S</hi>uß</w>
+          <c> </c>
+          <w xml:id="w_71_55_2">kam</w>
+          <c> </c>
+          <w xml:id="w_71_55_3">der</w>
+          <c> </c>
+          <w xml:id="w_71_55_4">ma<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_55_5">vſſer</w>
+          <c> </c>
+          <w xml:id="w_71_55_6">not</w>
+        </l>
+        <lb n="14" facs="#_76ra_14"/>
+        <l n="56" xml:id="l_71_56">
+          <w xml:id="w_71_56_1"><hi rendition="hc:RedStroke">D</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_56_2">ſchlang</w>
+          <c> </c>
+          <w xml:id="w_71_56_3">mu&osup;ſte</w>
+          <c> </c>
+          <w xml:id="w_71_56_4">ligen</w>
+          <c> </c>
+          <w xml:id="w_71_56_5">tot</w>
+        </l>
+
+        <label ana="hc:DivisionMark" hei:placeRef="hc:ColumnMarginLeft" facs="#_76r_ml_1">
+          <lb n="1" facs="#_76r_ml_1_1"/>
+          <pc>&para;</pc>
+        </label>
+        <lb n="15" facs="#_76ra_15"/>
+        <l n="59" xml:id="l_71_59">
+          <w xml:id="w_71_59_1"><hi rendition="hc:RedStroke">M</hi>an</w>
+          <c> </c>
+          <w xml:id="w_71_59_2">ſpricht</w>
+          <c> </c>
+          <w xml:id="w_71_59_3">ein</w>
+          <c> </c>
+          <w xml:id="w_71_59_4">wort</w>
+          <c> </c>
+          <w xml:id="w_71_59_5">d<ex>a</ex>z</w>
+          <c> </c>
+          <w xml:id="w_71_59_6">mag</w>
+          <c> </c>
+          <w xml:id="w_71_59_7">wa&usup;r</w>
+          <c> </c>
+          <w xml:id="w_71_59_8">ſin</w>
+        </l>
+        <lb n="16" facs="#_76ra_16"/>
+        <l n="60" xml:id="l_71_60">
+          <w xml:id="w_71_60_1"><hi rendition="hc:RedStroke">A</hi>ls</w>
+          <c> </c>
+          <w xml:id="w_71_60_2">es</w>
+          <c> </c>
+          <w xml:id="w_71_60_3">hie</w>
+          <c> </c>
+          <w xml:id="w_71_60_4">iſt</w>
+          <c> </c>
+          <w xml:id="w_71_60_5">worden</w>
+          <c> </c>
+          <w xml:id="w_71_60_6">ſchin</w>
+        </l>
+        <lb n="17" facs="#_76ra_17"/>
+        <l n="61" xml:id="l_71_61">
+          <w xml:id="w_71_61_1"><hi rendition="hc:RedStroke">W</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_61_2">ab</w>
+          <c> </c>
+          <w xml:id="w_71_61_3">dem</w>
+          <c> </c>
+          <w xml:id="w_71_61_4">galgen</w>
+          <c> </c>
+          <w xml:id="w_71_61_5">lo&esup;ſt</w>
+          <c> </c>
+          <w xml:id="w_71_61_6">den</w>
+          <c> </c>
+          <w xml:id="w_71_61_7">diep</w>
+        </l>
+        <lb n="18" facs="#_76ra_18"/>
+        <l n="62" xml:id="l_71_62">
+          <w xml:id="w_71_62_1"><hi rendition="hc:RedStroke">D</hi>a&usup;r</w>
+          <c> </c>
+          <w xml:id="w_71_62_2">na&usup;ch</w>
+          <c> </c>
+          <w xml:id="w_71_62_3">het</w>
+          <c> </c>
+          <w xml:id="w_71_62_4">er</w>
+          <c> </c>
+          <w xml:id="w_71_62_5">in</w>
+          <c> </c>
+          <w xml:id="w_71_62_6">nimer</w>
+          <c> </c>
+          <w xml:id="w_71_62_7">liep</w>
+        </l>
+        <lb n="19" facs="#_76ra_19"/>
+        <l n="63" xml:id="l_71_63">
+          <w xml:id="w_71_63_1"><hi rendition="hc:RedStroke">W</hi>as</w>
+          <c> </c>
+          <w xml:id="w_71_63_2">gift</w>
+          <c> </c>
+          <w xml:id="w_71_63_3">iſt</w>
+          <c> </c>
+          <pc>//</pc>
+          <c> </c>
+          <w xml:id="w_71_63_4">wol</w>
+          <c> </c>
+          <w xml:id="w_71_63_5">nu&iuml;mer</w>
+          <c> </c>
+          <w xml:id="w_71_63_6">getu&osup;t</w>
+        </l>
+        <lb n="20" facs="#_76ra_20"/>
+        <l n="64" xml:id="l_71_64">
+          <w xml:id="w_71_64_1"><hi rendition="hc:RedStroke">E</hi>s</w>
+          <c> </c>
+          <w xml:id="w_71_64_2">giltet</w>
+          <c> </c>
+          <w xml:id="w_71_64_3">u&iuml;bel</w>
+          <c> </c>
+          <w xml:id="w_71_64_4">vm<ex>b</ex></w>
+          <c> </c>
+          <w xml:id="w_71_64_5">gu&osup;t</w>
+        </l>
+        <lb n="21" facs="#_76ra_21"/>
+        <l n="65" xml:id="l_71_65">
+          <w xml:id="w_71_65_1"><hi rendition="hc:RedStroke">S</hi>iner</w>
+          <c> </c>
+          <w xml:id="w_71_65_2">art</w>
+          <c> </c>
+          <add facs="#_76r_ml_2" hei:placeRef="hc:ColumnMarginLeft">
+            <lb n="1" facs="#_76r_ml_2_1"/>
+            <w>mag</w>
+          </add>
+          <w xml:id="w_71_65_3">es</w>
+          <c> </c>
+          <w xml:id="w_71_65_4">nit</w>
+          <c> </c>
+          <w xml:id="w_71_65_5">vnderſta&usup;n</w>
+        </l>
+        <lb n="22" facs="#_76ra_22"/>
+        <l n="66" xml:id="l_71_66">
+          <w xml:id="w_71_66_1"><hi rendition="hc:RedStroke">N</hi>och</w>
+          <c> </c>
+          <w xml:id="w_71_66_2">ſin</w>
+          <c> </c>
+          <w xml:id="w_71_66_3">boßheit</w>
+          <c> </c>
+          <w xml:id="w_71_66_4">nit</w>
+          <c> </c>
+          <w xml:id="w_71_66_5">gela&usup;n</w>
+        </l>
+        <lb n="23" facs="#_76ra_23"/>
+        <l n="67" xml:id="l_71_67">
+          <w xml:id="w_71_67_1"><hi rendition="hc:RedStroke">E</hi>s</w>
+          <c> </c>
+          <w xml:id="w_71_67_2">ſta&usup;t</w>
+          <c> </c>
+          <w xml:id="w_71_67_3">dick</w>
+          <c> </c>
+          <w xml:id="w_71_67_4">vff</w>
+          <c> </c>
+          <w xml:id="w_71_67_5">vo<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_67_6">miltekeit</w>
+        </l>
+        <lb n="24" facs="#_76ra_24"/>
+        <l n="68" xml:id="l_71_68">
+          <w xml:id="w_71_68_1"><hi rendition="hc:RedStroke">D</hi>em</w>
+          <c> </c>
+          <w xml:id="w_71_68_2">me<ex>n</ex>ſchen</w>
+          <c> </c>
+          <w xml:id="w_71_68_3">not</w>
+          <c> </c>
+          <w xml:id="w_71_68_4">vn<ex>d</ex></w>
+          <c> </c>
+          <w xml:id="w_71_68_5">arbeit</w>
+        </l>
+        <lb n="25" facs="#_76ra_25"/>
+        <l n="69" xml:id="l_71_69">
+          <w xml:id="w_71_69_1"><hi rendition="hc:RedStroke">A</hi>ls</w>
+          <c> </c>
+          <w xml:id="w_71_69_2">diſem</w>
+          <c> </c>
+          <w xml:id="w_71_69_3">ma<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_69_4">hie</w>
+          <c> </c>
+          <w xml:id="w_71_69_5">was</w>
+          <c> </c>
+          <w xml:id="w_71_69_6">beſchenhen</w>
+        </l>
+        <lb n="26" facs="#_76ra_26"/>
+        <l n="70" xml:id="l_71_70">
+          <w xml:id="w_71_70_1"><hi rendition="hc:RedStroke">I</hi>ch</w>
+          <c> </c>
+          <w xml:id="w_71_70_2">mu&osup;ß</w>
+          <c> </c>
+          <w xml:id="w_71_70_3">er</w>
+          <c> </c>
+          <w xml:id="w_71_70_4">i<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_70_5">der</w>
+          <c> </c>
+          <w xml:id="w_71_70_6">wa&usup;rheit</w>
+          <c> </c>
+          <w xml:id="w_71_70_7">ienhen</w>
+        </l>
+        <lb n="27" facs="#_76ra_27"/>
+        <l n="75" xml:id="l_71_75">
+          <w xml:id="w_71_75_1"><hi rendition="hc:RedStroke">W</hi>er</w>
+          <c> </c>
+          <w xml:id="w_71_75_2">der</w>
+          <c> </c>
+          <w xml:id="w_71_75_3">ber</w>
+          <c> </c>
+          <w xml:id="w_71_75_4">rihter</w>
+          <c> </c>
+          <w xml:id="w_71_75_5">nit</w>
+          <c> </c>
+          <w xml:id="w_71_75_6">geweſen</w>
+        </l>
+        <lb n="28" facs="#_76ra_28"/>
+        <l n="76" xml:id="l_71_76">
+          <w xml:id="w_71_76_1"><hi rendition="hc:RedStroke">S</hi>o</w>
+          <c> </c>
+          <w xml:id="w_71_76_2">mo&esup;ht</w>
+          <c> </c>
+          <w xml:id="w_71_76_3">der</w>
+          <c> </c>
+          <w xml:id="w_71_76_4">ma<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_76_5">nit</w>
+          <c> </c>
+          <w xml:id="w_71_76_6">ſin</w>
+          <c> </c>
+          <w xml:id="w_71_76_7">geneſe<ex>n</ex>n</w>
+        </l>
+      </div>
+    </body>
+  </text>
+</TEI>

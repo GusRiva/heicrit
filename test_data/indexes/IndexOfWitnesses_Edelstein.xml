@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?><?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<!DOCTYPE TEI SYSTEM "https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/heieditions-entities.txt">
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title ana="hc:MainTitle">Textzeugenverzeichnis</title>
+            </titleStmt>
+            <publicationStmt>
+                <p/>
+            </publicationStmt>
+            <sourceDesc>
+                <p>Born Digital</p>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <listPrefixDef>
+                <prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"/>
+                <prefixDef ident="char" matchPattern="(.+)" replacementPattern="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/chars.xml#$1"/>
+            </listPrefixDef>
+        </encodingDesc>
+    </teiHeader>
+
+    <text ana="hc:CompleteExpression">
+        <body>
+            <listWit>
+                <witness xml:id="b">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Basel</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Universitätsbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">AN III 17</idno>
+                            <idno ana="hc:EditorialSiglum">B</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate>um 1410-1420</origDate>
+                                <origPlace>Bodenseegebiet</origPlace>
+                            </origin>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="b1">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Wolfenbüttel</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Herzog August Bibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">16.1 Eth. 2° (1)</idno>
+                            <idno ana="hc:EditorialSiglum">b1</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate when="1461-02-14">14.02.1461</origDate>
+                                <origPlace>Bamberg</origPlace>
+                            </origin>
+                            <provenance>Inkunabel, Druck von Albrecht Pfister</provenance>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="bl">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Berlin</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Staatsbibliothek zu Berlin – Preußischer Kulturbesitz</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">Ms. germ. fol. 579</idno>
+                            <idno ana="hc:EditorialSiglum">Bl</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate>2. Hälfte 15. Jh.</origDate>
+                                <origPlace>Straßburg ?, Saarbrücken ?</origPlace>
+                            </origin>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="bn">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Bern</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Burgerbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">Mss. h.h.X.49</idno>
+                            <idno ana="hc:EditorialSiglum">Bn</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate>um 1466-1473 ?</origDate>
+                                <origPlace>Kanton Bern ?</origPlace>
+                            </origin>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="h3">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Heidelberg</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Universitätsbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">Cod. Pal. germ. 400</idno>
+                            <idno ana="hc:EditorialSiglum">H3</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate when="1432">1432</origDate>
+                                <origPlace>niederalemannischer Raum</origPlace>
+                            </origin>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="k1">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Karlsruhe</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Badische Landesbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">Cod. Ettenheimmünster 30</idno>
+                            <idno ana="hc:EditorialSiglum">K1</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate>2. Hälfte 15. Jh.</origDate>
+                                <origPlace>Südwestdeutschland</origPlace>
+                            </origin>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="k2">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Karlsruhe</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Badische Landesbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">Cod. Ettenheimmünster 37</idno>
+                            <idno ana="hc:EditorialSiglum">K2</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate when="1482">1482</origDate>
+                                <origPlace>Raum Konstanz ?</origPlace>
+                            </origin>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="pfeiffer">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Heidelberg</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Universitätsbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">Haeusser 270::4</idno>
+                            <idno ana="hc:EditorialSiglum">Pfeiffer</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate when="1844">1844</origDate>
+                                <origPlace>Leipzig</origPlace>
+                            </origin>
+                            <provenance>Druckausgabe Franz Pfeiffer, Der Edelstein (Dichtungen des deutschen Mittelalters 4), Leipzig 1844</provenance>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="s2">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Heidelberg</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Universitätsbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:EditorialSiglum">S2</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate when="1782">1782</origDate>
+                                <origPlace>Argentorati (Straßburg)</origPlace>
+                            </origin>
+                            <provenance>Druckausgabe Jeremias Jakob Oberlin, Bonerii Gemma sive Boners Edelstein, Argentorati 1782 (überliefert den heute verlorenen Straßburger Johanniterkodex)</provenance>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="w1">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Wolfenbüttel</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Herzog August Bibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">Cod. Guelf. 2.4 Aug. 2°</idno>
+                            <idno ana="hc:EditorialSiglum">W1</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate>um 1450-1480</origDate>
+                                <origPlace>nordbairisch/ostfränkischer Raum, Nürnberg ?</origPlace>
+                            </origin>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="z1">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Heidelberg</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Universitätsbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">G 4870 RES</idno>
+                            <idno ana="hc:EditorialSiglum">Z1</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate when="1757">1757</origDate>
+                                <origPlace>Zürich</origPlace>
+                            </origin>
+                            <provenance>Druckausgabe Johann Jakob Breitinger, Fabeln aus den Zeiten der Minnesinger, Zürich 1757 (überliefert die verschollene Handschrift aus Breitingers Privatbesitz)</provenance>
+                        </history>
+                    </msDesc>
+                </witness>
+                <witness xml:id="z2">
+                    <msDesc>
+                        <msIdentifier>
+                            <settlement>
+                                <placeName>Zürich</placeName>
+                            </settlement>
+                            <repository>
+                                <orgName>Zentralbibliothek</orgName>
+                            </repository>
+                            <idno ana="hc:Shelfmark">Ms. C 117</idno>
+                            <idno ana="hc:EditorialSiglum">Z2</idno>
+                        </msIdentifier>
+                        <history>
+                            <origin>
+                                <origDate when="1424">1424</origDate>
+                                <origPlace>alemannischer Raum</origPlace>
+                            </origin>
+                        </history>
+                    </msDesc>
+                </witness>
+            </listWit>
+        </body>
+    </text>
+</TEI>

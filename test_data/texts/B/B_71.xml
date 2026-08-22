@@ -1,0 +1,1579 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<!DOCTYPE TEI SYSTEM "https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/heieditions-entities.txt">
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>B - Fabel 71</title>
+      </titleStmt>
+      <publicationStmt>
+        <p>Part file</p>
+      </publicationStmt>
+      <sourceDesc>
+        <p>Part file</p>
+      </sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text ana="hc:ExpressionPart">
+    <body>
+      <div ana="hc:Fable" n="71" xml:id="div_71">
+        <!-- Beginn Pfeiffer 71 -->
+        <milestone facs="#_26r_cc_1" ana="hc:ZoneBeginning"/>
+        <lb n="1" facs="#_26r_cc_1_1"/>
+        <l n="1a" xml:id="l_71_1a">
+          <w xml:id="w_71_1a_1">Naturam</w>
+          <c> </c>
+          <w xml:id="w_71_1a_2">ſerpent<ex>is</ex></w>
+          <c> </c>
+          <w xml:id="w_71_1a_3">habet</w>
+          <c> </c>
+          <w xml:id="w_71_1a_4">q<ex>ui</ex></w>
+          <c> </c>
+          <w xml:id="w_71_1a_5">reddere</w>
+          <c> </c>
+          <w xml:id="w_71_1a_6">gaudet</w>
+        </l>
+        <lb n="2" facs="#_26r_cc_1_2"/>
+        <l n="1b" xml:id="l_71_1b">
+          <w xml:id="w_71_1b_1">Pro</w>
+          <c> </c>
+          <w xml:id="w_71_1b_2">pietate</w>
+          <c> </c>
+          <w xml:id="w_71_1b_3">dolum</w>
+          <c> </c>
+          <w xml:id="w_71_1b_4">dulce</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+          <c> </c>
+          <w xml:id="w_71_1b_5">p<ex>ro</ex></w>
+          <c> </c>
+          <w xml:id="w_71_1b_6">melle</w>
+          <c> </c>
+          <w xml:id="w_71_1b_7"><choice><orig>u</orig><reg>v</reg></choice>enen<ex>um</ex></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <figure facs="#_26r_img_1">
+          <figDesc>71. Schlange, an Pfahl gebunden</figDesc>
+        </figure>
+        <pb n="26v" facs="#_26v"/>
+        <milestone ana="hc:ZoneBeginning" facs="#_26va"/>
+        <lb n="1" facs="#_26va_1"/>
+        <l n="1" xml:id="l_71_1" hei:altN="1">
+          <w xml:id="w_71_1_1"><hei:initial hei:color="Red" hei:heightLines="6" facs="#_26v_init_1">M</hei:initial>an</w>
+          <c> </c>
+          <w xml:id="w_71_1_2">liſt</w>
+          <c> </c>
+          <w xml:id="w_71_1_3">ein</w>
+          <c> </c>
+          <w xml:id="w_71_1_4">b<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>ſchaft</w>
+          <lb n="2" facs="#_26va_2"/>
+          <w xml:id="w_71_1_5">da<choice><orig>s</orig><reg ana="hc:StandardMHGRegularization">z</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_1_6">ein</w>
+          <c> </c>
+          <w xml:id="w_71_1_7">man</w>
+        </l>
+        <lb n="3" facs="#_26va_3"/>
+        <l n="2" xml:id="l_71_2" hei:altN="2">
+          <w xml:id="w_71_2_1"><choice><orig>D</orig><reg>d</reg></choice>urch</w>
+          <c> </c>
+          <w xml:id="w_71_2_2">eine<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_2_3">walt</w>
+          <lb n="4" facs="#_26va_4"/>
+          <w xml:id="w_71_2_4">gegangen</w>
+          <c> </c>
+          <w xml:id="w_71_2_5">kan</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="5" facs="#_26va_5"/>
+        <l n="3" xml:id="l_71_3" hei:altN="3">
+          <w xml:id="w_71_3_1">D<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_3_2">vant</w>
+          <c> </c>
+          <w xml:id="w_71_3_3">er</w>
+          <c> </c>
+          <w xml:id="w_71_3_4">ei<choice><orig><metamark ana="hc:Hyphen">-</metamark></orig><reg/></choice><lb n="6" facs="#_26va_6"/>nen</w>
+          <c> </c>
+          <w xml:id="w_71_3_5"><choice><orig>ſch</orig><reg ana="hc:StandardMHGRegularization">ſ</reg></choice>lange<ex>n</ex></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="7" facs="#_26va_7"/>
+        <l n="4" xml:id="l_71_4" hei:altN="4">
+          <w xml:id="w_71_4_1"><choice><orig>D</orig><reg>d</reg></choice>en</w>
+          <c> </c>
+          <w xml:id="w_71_4_2">h<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_4_3">ein</w>
+          <c> </c>
+          <w xml:id="w_71_4_4">hirt</w>
+          <c> </c>
+          <w xml:id="w_71_4_5">ge<choice><orig>u</orig><reg>v</reg></choice>angen</w>
+        </l>
+        <lb n="8" facs="#_26va_8"/>
+        <l n="5" xml:id="l_71_5" hei:altN="5">
+          <w xml:id="w_71_5_1"><choice><orig>V</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_5_2">gebunden</w>
+          <c> </c>
+          <w xml:id="w_71_5_3">vaſt</w>
+          <c> </c>
+          <w xml:id="w_71_5_4">ze</w>
+          <c> </c>
+          <w xml:id="w_71_5_5"><choice><orig>f</orig><reg ana="hc:StandardMHGRegularization">v</reg></choice>romen</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="9" facs="#_26va_9"/>
+        <l n="6" xml:id="l_71_6" hei:altN="6">
+          <w xml:id="w_71_6_1"><choice><orig>D</orig><reg>d</reg></choice>az</w>
+          <c> </c>
+          <w xml:id="w_71_6_2">er</w>
+          <c> </c>
+          <w xml:id="w_71_6_3">n<choice><orig>u&iuml;</orig><reg>ü</reg><reg ana="hc:StandardMHGRegularization">ih</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_6_4">da<ex>n</ex>nen</w>
+          <c> </c>
+          <w xml:id="w_71_6_5">m<choice><orig>o&esup;</orig><reg>ö</reg></choice><choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>te</w><!-- Codierungsfrage: Zwei separate choice-Elemente hintereinander oder ch-Normalisierung mit in Schicht II (Diakritikanormalisierung) ziehen? -->
+          <c> </c>
+          <w xml:id="w_71_6_6">kome<ex>n</ex></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="10" facs="#_26va_10"/>
+        <l n="7" xml:id="l_71_7" hei:altN="7">
+          <w xml:id="w_71_7_1"><choice><orig>A</orig><reg>a</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_7_2">einen</w>
+          <c> </c>
+          <w xml:id="w_71_7_3">phal</w>
+          <choice><orig><c> </c><pc>/</pc></orig><reg><pc>,</pc></reg></choice>
+          <c> </c>
+          <w xml:id="w_71_7_4">der</w>
+          <c> </c>
+          <w xml:id="w_71_7_5">wa<choice><orig>z</orig><reg ana="hc:StandardMHGRegularization">s</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_7_6">vil</w>
+          <c> </c>
+          <w xml:id="w_71_7_7">gr<choice><orig>os</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;z</reg></choice></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="11" facs="#_26va_11"/>
+        <l n="8" xml:id="l_71_8" hei:altN="8">
+          <w xml:id="w_71_8_1">D<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_8_2">ſt<choice><orig>u&osup;</orig><reg>uo</reg></choice>n<choice><orig>d</orig><reg ana="hc:StandardMHGRegularization">t</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_8_3">der</w>
+          <c> </c>
+          <w xml:id="w_71_8_4">ſlange</w>
+          <c> </c>
+          <w xml:id="w_71_8_5">ſigel<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice>s</w>
+        </l>
+        <lb n="12" facs="#_26va_12"/>
+        <l n="9" xml:id="l_71_9" hei:altN="9">
+          <w xml:id="w_71_9_1"><choice><orig>M</orig><reg>m</reg></choice>it</w>
+          <c> </c>
+          <w xml:id="w_71_9_2">einem</w>
+          <c> </c>
+          <w xml:id="w_71_9_3">ſeil</w>
+          <c> </c>
+          <w xml:id="w_71_9_4">zer</w>
+          <choice><orig><c> </c></orig><reg/></choice>
+          <w xml:id="w_71_9_5"><choice><orig>t</orig><reg ana="hc:StandardMHGRegularization">d</reg></choice>ennet</w>
+          <c> </c>
+          <w xml:id="w_71_9_6">wol</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="13" facs="#_26va_13"/>
+        <l n="10" xml:id="l_71_10" hei:altN="10">
+          <w xml:id="w_71_10_1">Alle<choice><orig>z</orig><reg ana="hc:StandardMHGRegularization">s</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_10_2">ſmer<choice><orig>cz</orig><reg>z</reg></choice>en</w>
+          <c> </c>
+          <w xml:id="w_71_10_3">waz</w>
+          <c> </c>
+          <w xml:id="w_71_10_4">er</w>
+          <c> </c>
+          <w xml:id="w_71_10_5">vol</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="14" facs="#_26va_14"/>
+        <l n="11" xml:id="l_71_11" hei:altN="11">
+          <w xml:id="w_71_11_1">D<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_11_2">der</w>
+          <c> </c>
+          <w xml:id="w_71_11_3">man</w>
+          <c> </c>
+          <w xml:id="w_71_11_4">den</w>
+          <c> </c>
+          <w xml:id="w_71_11_5">ſlangen</w>
+          <c> </c>
+          <w xml:id="w_71_11_6">ſach</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="15" facs="#_26va_15"/>
+        <l n="12" xml:id="l_71_12" hei:altN="12">
+          <w xml:id="w_71_12_1"><choice><orig>V</orig><reg>v</reg></choice>il</w>
+          <c> </c>
+          <w xml:id="w_71_12_2">milte<choice><orig>k</orig><reg ana="hc:StandardMHGRegularization">c</reg></choice>l<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>ch</w>
+          <choice><orig><metamark ana="hc:WordDivider">|</metamark></orig><reg><c> </c></reg></choice>
+          <w xml:id="w_71_12_3">er</w>
+          <c> </c>
+          <w xml:id="w_71_12_4">z<choice><orig>u&osup;</orig><reg>uo</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_12_5">im</w>
+          <c> </c>
+          <w xml:id="w_71_12_6">ſprach</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>:</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="16" facs="#_26va_16"/>
+        <l n="13" xml:id="l_71_13" hei:altN="13">
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_13_1">Ich</w>
+          <c> </c>
+          <w xml:id="w_71_13_2">wil</w>
+          <c> </c>
+          <w xml:id="w_71_13_3">dir</w>
+          <c> </c>
+          <w xml:id="w_71_13_4">helfen</w>
+          <c> </c>
+          <w xml:id="w_71_13_5"><choice><orig>vſſ</orig><reg>uſſ</reg><reg ana="hc:StandardMHGRegularization">u&combcirc;z</reg></choice>er</w>
+          <c> </c>
+          <w xml:id="w_71_13_6">n<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="17" facs="#_26va_17"/>
+        <l n="14" xml:id="l_71_14" hei:altN="14">
+          <w xml:id="w_71_14_1"><choice><orig>D</orig><reg>d</reg></choice>az</w>
+          <c> </c>
+          <w xml:id="w_71_14_2">d<choice><orig>u</orig><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_14_3">n<choice><orig>u&iuml;</orig><reg>ü</reg><reg ana="hc:StandardMHGRegularization">ih</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_14_4">hie</w>
+          <c> </c>
+          <w xml:id="w_71_14_5">geligeſt</w>
+          <c> </c>
+          <w xml:id="w_71_14_6">t<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.‹</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="18" facs="#_26va_18"/>
+        <l n="15" xml:id="l_71_15" hei:altN="15">
+          <w xml:id="w_71_15_1">Der</w>
+          <c> </c>
+          <w xml:id="w_71_15_2">ſlange</w>
+          <c> </c>
+          <w xml:id="w_71_15_3">n<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>ch</w>
+          <c> </c>
+          <w xml:id="w_71_15_4">verdorben</w>
+          <c> </c>
+          <w xml:id="w_71_15_5">wa<choice><orig>z</orig><reg ana="hc:StandardMHGRegularization">s</reg></choice></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="19" facs="#_26va_19"/>
+        <l n="16" xml:id="l_71_16" hei:altN="16">
+          <w xml:id="w_71_16_1">Der</w>
+          <c> </c>
+          <w xml:id="w_71_16_2">man</w>
+          <c> </c>
+          <w xml:id="w_71_16_3">entban<choice><orig>d</orig><reg ana="hc:StandardMHGRegularization">t</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_16_4">in</w>
+          <c> </c>
+          <w xml:id="w_71_16_5"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_16_6">genas</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="20" facs="#_26va_20"/>
+        <l n="17" xml:id="l_71_17" hei:altN="17">
+          <w xml:id="w_71_17_1">Er</w>
+          <c> </c>
+          <w xml:id="w_71_17_2">ſp<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>ſt</w>
+          <c> </c>
+          <w xml:id="w_71_17_3">in</w>
+          <c> </c>
+          <w xml:id="w_71_17_4">wol</w>
+          <c> </c>
+          <w xml:id="w_71_17_5"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_17_6">half</w>
+          <c> </c>
+          <w xml:id="w_71_17_7">im</w>
+          <c> </c>
+          <w xml:id="w_71_17_8">wid<ex>er</ex></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>;</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="21" facs="#_26va_21"/>
+        <l n="18" xml:id="l_71_18" hei:altN="18">
+          <w xml:id="w_71_18_1"><choice><orig>D</orig><reg>d</reg></choice>es</w>
+          <c> </c>
+          <w xml:id="w_71_18_2">l<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice>net</w>
+          <c> </c>
+          <w xml:id="w_71_18_3">im</w>
+          <c> </c>
+          <w xml:id="w_71_18_4">der</w>
+          <c> </c>
+          <w xml:id="w_71_18_5">ſlange</w>
+          <c> </c>
+          <w xml:id="w_71_18_6">ſider</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="22" facs="#_26va_22"/>
+        <l n="19" xml:id="l_71_19" hei:altN="19">
+          <w xml:id="w_71_19_1">D<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_19_2">er</w>
+          <c> </c>
+          <w xml:id="w_71_19_3">geſunt</w>
+          <c> </c>
+          <w xml:id="w_71_19_4">wart</w>
+          <c> </c>
+          <w xml:id="w_71_19_5"><choice><orig>v</orig><reg>u</reg></choice>nde</w>
+          <c> </c>
+          <w xml:id="w_71_19_6">ſnell</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="23" facs="#_26va_23"/>
+        <l n="20" xml:id="l_71_20" hei:altN="20">
+          <w xml:id="w_71_20_1"><choice><orig>E</orig><reg>e</reg></choice>r</w>
+          <c> </c>
+          <w xml:id="w_71_20_2">ſtrickt</w>
+          <c> </c>
+          <w xml:id="w_71_20_3">ſich</w>
+          <c> </c>
+          <w xml:id="w_71_20_4"><choice><orig>v</orig><reg>u</reg></choice>mb</w>
+          <c> </c>
+          <w xml:id="w_71_20_5">des</w>
+          <c> </c>
+          <w xml:id="w_71_20_6">ma<ex>n</ex>nes</w>
+          <c> </c>
+          <w xml:id="w_71_20_7">kel</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="24" facs="#_26va_24"/>
+        <l n="21" xml:id="l_71_21" hei:altN="21">
+          <w xml:id="w_71_21_1">In</w>
+          <c> </c>
+          <w xml:id="w_71_21_2">l<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>den</w>
+          <c> </c>
+          <w xml:id="w_71_21_3">br<choice><orig>ach</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;h</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_21_4">er</w>
+          <c> </c>
+          <w xml:id="w_71_21_5">in</w>
+          <c> </c>
+          <w xml:id="w_71_21_6"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_21_7">in</w>
+          <c> </c>
+          <w xml:id="w_71_21_8">leit</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="25" facs="#_26va_25"/>
+        <l n="22" xml:id="l_71_22" hei:altN="22">
+          <w xml:id="w_71_22_1">Der</w>
+          <c> </c>
+          <w xml:id="w_71_22_2">man</w>
+          <c> </c>
+          <w xml:id="w_71_22_3">ſprach</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>:</pc>
+            </reg>
+          </choice>
+          <c> </c>
+          <choice>
+            <orig/>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_22_4"><choice><orig>w</orig><reg>W</reg></choice>az</w>
+          <c> </c>
+          <w xml:id="w_71_22_5">iſt</w>
+          <c> </c>
+          <w xml:id="w_71_22_6">dis</w>
+          <c> </c>
+          <w xml:id="w_71_22_7">geſeit</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>?</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="26" facs="#_26va_26"/>
+        <l n="23" xml:id="l_71_23" hei:altN="23">
+          <w xml:id="w_71_23_1">D<choice><orig>u</orig><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_23_2">haſt</w>
+          <c> </c>
+          <w xml:id="w_71_23_3">betr<choice><orig>u&esup;</orig><reg>üe</reg></choice>bet</w>
+          <c> </c>
+          <w xml:id="w_71_23_4">mir</w>
+          <c> </c>
+          <w xml:id="w_71_23_5">den</w>
+          <c> </c>
+          <w xml:id="w_71_23_6">m<choice><orig>u&osup;</orig><reg>uo</reg></choice>t</w>
+        </l>
+        <lb n="27" facs="#_26va_27"/>
+        <l n="24" xml:id="l_71_24" hei:altN="24">
+          <w xml:id="w_71_24_1"><choice><orig>V</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_24_2">gilteſt</w>
+          <c> </c>
+          <w xml:id="w_71_24_3">mir</w>
+          <c> </c>
+          <w xml:id="w_71_24_4">mit</w>
+          <c> </c>
+          <w xml:id="w_71_24_5"><choice><orig>v&iuml;</orig><reg>ü</reg></choice>bel</w>
+          <c> </c>
+          <w xml:id="w_71_24_6">g<choice><orig>u&osup;</orig><reg>uo</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.‹</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="28" facs="#_26va_28"/>
+        <l n="25" xml:id="l_71_25" hei:altN="25">
+          <w xml:id="w_71_25_1">Der</w>
+          <c> </c>
+          <w xml:id="w_71_25_2">ſla<ex>n</ex>ge</w>
+          <c> </c>
+          <w xml:id="w_71_25_3">ſprach</w>
+          <choice><orig><c> </c><pc>/</pc></orig><reg><pc>:</pc></reg></choice>
+          <c> </c>
+          <choice>
+            <orig/>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_25_4"><choice><orig>i</orig><reg>I</reg></choice>ch</w>
+          <c> </c>
+          <w xml:id="w_71_25_5">t<choice><orig>u&osup;</orig><reg>uo</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_25_6">dir</w>
+          <c> </c>
+          <w xml:id="w_71_25_7">re<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>!</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="29" facs="#_26va_29"/>
+        <l n="26" xml:id="l_71_26" hei:altN="26">
+          <w xml:id="w_71_26_1">Ich</w>
+          <c> </c>
+          <w xml:id="w_71_26_2">t<choice><orig>u&osup;</orig><reg>uo</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_26_3">al<choice><orig>z</orig><reg ana="hc:StandardMHGRegularization">s</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_26_4">ander</w>
+          <c> </c>
+          <w xml:id="w_71_26_5">m<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_26_6">geſle<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="30" facs="#_26va_30"/>
+        <l n="27" xml:id="l_71_27" hei:altN="27">
+          <w xml:id="w_71_27_1">M<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_27_2">gift</w>
+          <c> </c>
+          <w xml:id="w_71_27_3">ma<choice><orig>g</orig><reg ana="hc:StandardMHGRegularization">c</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_27_4">ich</w>
+          <c> </c>
+          <w xml:id="w_71_27_5">n<choice><orig>u&iuml;</orig><reg>ü</reg><reg ana="hc:StandardMHGRegularization">ih</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_27_6">abe</w>
+          <choice><orig/><reg><c> </c></reg></choice>
+          <w xml:id="w_71_27_7">l<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>n</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="31" facs="#_26va_31"/>
+        <l n="28" xml:id="l_71_28" hei:altN="28">
+          <w xml:id="w_71_28_1"><choice><orig>Sch</orig><reg>sch</reg><reg ana="hc:StandardMHGRegularization">s</reg></choice>langlich</w>
+          <c> </c>
+          <w xml:id="w_71_28_2">geb<choice><orig>e</orig><reg ana="hc:StandardMHGRegularization">&aelig;</reg></choice>rde</w>
+          <c> </c>
+          <w xml:id="w_71_28_3">m<choice><orig>u&osup;</orig><reg>uo</reg></choice><choice><orig>s</orig><reg ana="hc:StandardMHGRegularization">z</reg></choice></w><!-- Codierungen prüfen: Die StandardMHGReg. von s zu z in eigenem choice angeschlossen, damit die Normalisierung der zweiten und dritten Schicht voneinander getrennt sind. -->
+          <c> </c>
+          <w xml:id="w_71_28_4">ich</w>
+          <c> </c>
+          <w xml:id="w_71_28_5">h<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>n</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.‹</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="32" facs="#_26va_32"/>
+        <l n="29" xml:id="l_71_29" hei:altN="29">
+          <w xml:id="w_71_29_1">Der</w>
+          <c> </c>
+          <w xml:id="w_71_29_2">ma<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_29_3">ſprach</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>:</pc>
+            </reg>
+          </choice>
+          <c> </c>
+          <choice>
+            <orig/>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_29_4"><choice><orig>i</orig><reg>I</reg></choice>ch</w>
+          <c> </c>
+          <w xml:id="w_71_29_5">wil</w>
+          <c> </c>
+          <w xml:id="w_71_29_6">gerne</w>
+          <c> </c>
+          <w xml:id="w_71_29_7">kome<ex>n</ex></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="33" facs="#_26va_33"/>
+        <l n="30" xml:id="l_71_30" hei:altN="30">
+          <w xml:id="w_71_30_1"><choice><orig>S</orig><reg>s</reg></choice><choice><orig>id</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;t</reg></choice></w><!-- Codierung prüfen: Zwei choice-Elemente, um Normalisierung Schicht II und III zu trennen. Schicht I: Sid, Schicht II: sid, Schicht III: si&combcirc;t -->
+          <c> </c>
+          <w xml:id="w_71_30_2">ich</w>
+          <c> </c>
+          <w xml:id="w_71_30_3">d<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_30_4">rede</w>
+          <c> </c>
+          <w xml:id="w_71_30_5">hab</w>
+          <c> </c>
+          <w xml:id="w_71_30_6">vernomen</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="34" facs="#_26va_34"/>
+        <l n="31" xml:id="l_71_31" hei:altN="31">
+          <w xml:id="w_71_31_1"><choice><orig>F</orig><reg>f</reg><reg ana="hc:StandardMHGRegularization">v</reg></choice><choice><orig>u&iuml;</orig><reg>ü</reg></choice>r</w>
+          <c> </c>
+          <w xml:id="w_71_31_2">einen</w>
+          <c> </c>
+          <w xml:id="w_71_31_3">ri<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>ter</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+          <c> </c>
+          <w xml:id="w_71_31_4">der</w>
+          <c> </c>
+          <w xml:id="w_71_31_5">gemein</w>
+        </l>
+        <lb n="35" facs="#_26va_35"/>
+        <l n="32" xml:id="l_71_32" hei:altN="32">
+          <w xml:id="w_71_32_1"><choice><orig>S</orig><reg>s</reg></choice><choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.‹</pc>
+            </reg>
+          </choice>
+          <choice><orig><c> </c><pc>/</pc></orig><reg></reg></choice>
+          <c> </c>
+          <w xml:id="w_71_32_2"><choice><orig>d</orig><reg>D</reg></choice>es</w>
+          <c> </c>
+          <w xml:id="w_71_32_3">k<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>men</w>
+          <w xml:id="w_71_32_4">s</w>
+          <c> </c>
+          <w xml:id="w_71_32_5"><choice><orig>v</orig><reg>u</reg><reg ana="hc:StandardMHGRegularization">ü</reg></choice>ber</w>
+          <c> </c>
+          <w xml:id="w_71_32_6">ein</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="36" facs="#_26va_36"/>
+        <l n="33" xml:id="l_71_33" hei:altN="33">
+          <w xml:id="w_71_33_1">Der</w>
+          <c> </c>
+          <w xml:id="w_71_33_2"><choice><orig>f</orig><reg ana="hc:StandardMHGRegularization">v</reg></choice>u<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>s</w>
+          <c> </c>
+          <w xml:id="w_71_33_3">ir</w>
+          <c> </c>
+          <w xml:id="w_71_33_4">beider</w>
+          <c> </c>
+          <w xml:id="w_71_33_5">ri<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t<ex>er</ex></w>
+          <c> </c>
+          <w xml:id="w_71_33_6">wart</w>
+        </l>
+        <lb n="37" facs="#_26va_37"/>
+        <l n="34" xml:id="l_71_34" hei:altN="34">
+          <w xml:id="w_71_34_1"><choice><orig>V</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_34_2">ſprach</w>
+          <c> </c>
+          <w xml:id="w_71_34_3">n<choice><orig>a</orig><reg>a&combcirc;</reg></choice>ch</w>
+          <c> </c>
+          <w xml:id="w_71_34_4"><choice><orig>f</orig><reg ana="hc:StandardMHGRegularization">v</reg></choice><choice><orig>u&iuml;</orig><reg>ü</reg></choice><choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>ſlicher</w>
+          <c> </c>
+          <w xml:id="w_71_34_5">art</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>:</pc>
+            </reg>
+          </choice>
+        </l>
+        <milestone ana="hc:ZoneBeginning" facs="#_26vb"/>
+        <lb n="1" facs="#_26vb_1"/>
+        <l n="35" xml:id="l_71_35" hei:altN="35">
+          <choice>
+            <orig/>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_35_1">Ich</w>
+          <c> </c>
+          <w xml:id="w_71_35_2">kan</w>
+          <c> </c>
+          <w xml:id="w_71_35_3">dis</w>
+          <c> </c>
+          <w xml:id="w_71_35_4">ſach</w>
+          <c> </c>
+          <w xml:id="w_71_35_5">geri<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>ten</w>
+          <c> </c>
+          <w xml:id="w_71_35_6">ni<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t</w>
+        </l>
+        <lb n="2" facs="#_26vb_2"/>
+        <l n="36" xml:id="l_71_36" hei:altN="36">
+          <w xml:id="w_71_36_1"><choice><orig>N</orig><reg>n</reg></choice><choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>ch</w>
+          <c> </c>
+          <w xml:id="w_71_36_2"><choice><orig>u&iuml;</orig><reg>ü</reg><reg ana="hc:StandardMHGRegularization">iu</reg></choice>wer</w>
+          <c> </c>
+          <w xml:id="w_71_36_3">rede</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+          <c> </c>
+          <w xml:id="w_71_36_4">wan</w>
+          <c> </c>
+          <w xml:id="w_71_36_5">n<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>ch</w>
+          <c> </c>
+          <w xml:id="w_71_36_6">geſi<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="3" facs="#_26vb_3"/>
+        <l n="37" xml:id="l_71_37" hei:altN="37">
+          <w xml:id="w_71_37_1">Ir</w>
+          <c> </c>
+          <w xml:id="w_71_37_2">ſ<choice><orig>o&esup;</orig><reg>ö</reg><reg ana="hc:StandardMHGRegularization">o</reg></choice>lt</w>
+          <c> </c>
+          <w xml:id="w_71_37_3">mich</w>
+          <c> </c>
+          <w xml:id="w_71_37_4">beide</w>
+          <c> </c>
+          <w xml:id="w_71_37_5">l<choice><orig>aſſ</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;z</reg></choice>en</w>
+          <c> </c>
+          <w xml:id="w_71_37_6">ſe<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>en</w>
+        </l>
+        <lb n="4" facs="#_26vb_4"/>
+        <l n="38" xml:id="l_71_38" hei:altN="38">
+          <w xml:id="w_71_38_1"><choice><orig>W</orig><reg>w</reg></choice>ie</w>
+          <c> </c>
+          <w xml:id="w_71_38_2">die</w>
+          <c> </c>
+          <w xml:id="w_71_38_3">ſache</w>
+          <c> </c>
+          <w xml:id="w_71_38_4">ſ<choice><orig>y</orig><reg>i</reg><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_38_5">beſche<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>en</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.‹</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="5" facs="#_26vb_5"/>
+        <l n="39" xml:id="l_71_39" hei:altN="39">
+          <w xml:id="w_71_39_1">Der</w>
+          <c> </c>
+          <w xml:id="w_71_39_2">man</w>
+          <c> </c>
+          <w xml:id="w_71_39_3">ſprach</w>
+          <choice><orig><c> </c><pc>/</pc></orig><reg><pc>:</pc></reg></choice>
+          <c> </c>
+          <choice>
+            <orig/>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_39_4"><choice><orig>d</orig><reg>D</reg></choice>az</w>
+          <c> </c>
+          <w xml:id="w_71_39_5">ge<choice><orig>u</orig><reg>v</reg></choice><choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">e</reg></choice>lt</w><!-- Codierung prüfen: Die Normalisierungsschichten II und III stehen nebeneinander, um eine Überschneidung der beiden Schichten zu vermeiden. Oder die normalmhd. Normalisierung von a zu e mit in die u/v-Normalisierung ziehen? -->
+          <c> </c>
+          <w xml:id="w_71_39_6">mir</w>
+          <c> </c>
+          <w xml:id="w_71_39_7">wol</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="6" facs="#_26vb_6"/>
+        <l n="40" xml:id="l_71_40" hei:altN="40">
+          <w xml:id="w_71_40_1">Den</w>
+          <c> </c>
+          <w xml:id="w_71_40_2">ſlangen</w>
+          <c> </c>
+          <w xml:id="w_71_40_3">man</w>
+          <c> </c>
+          <w xml:id="w_71_40_4">vaſte</w>
+          <c> </c>
+          <w xml:id="w_71_40_5">binden</w>
+          <c> </c>
+          <w xml:id="w_71_40_6">ſol</w>
+        </l>
+        <lb n="7" facs="#_26vb_7"/>
+        <l n="41" xml:id="l_71_41" hei:altN="41">
+          <w xml:id="w_71_41_1"><choice><orig>W</orig><reg>w</reg></choice>ider</w>
+          <c> </c>
+          <w xml:id="w_71_41_2">an</w>
+          <c> </c>
+          <w xml:id="w_71_41_3">die</w>
+          <c> </c>
+          <w xml:id="w_71_41_4">ſelben</w>
+          <c> </c>
+          <w xml:id="w_71_41_5">ſtat</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="8" facs="#_26vb_8"/>
+        <l n="42" xml:id="l_71_42" hei:altN="42">
+          <w xml:id="w_71_42_1"><choice><orig>D</orig><reg>d</reg></choice><choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_42_2">in</w>
+          <c> </c>
+          <w xml:id="w_71_42_3">der</w>
+          <c> </c>
+          <w xml:id="w_71_42_4">hirt</w>
+          <c> </c>
+          <w xml:id="w_71_42_5">gebunden</w>
+          <c> </c>
+          <w xml:id="w_71_42_6">h<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="9" facs="#_26vb_9"/>
+        <l n="43" xml:id="l_71_43" hei:altN="43">
+          <w xml:id="w_71_43_1">S<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_43_2">macht</w>
+          <c> </c>
+          <w xml:id="w_71_43_3">d<choice><orig>u</orig><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_43_4">ri<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>ten</w>
+          <c> </c>
+          <w xml:id="w_71_43_5">vo<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_43_6">geſi<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t</w>
+        </l>
+        <lb n="10" facs="#_26vb_10"/>
+        <l n="44" xml:id="l_71_44" hei:altN="44">
+          <w xml:id="w_71_44_1"><choice><orig>W</orig><reg>w</reg></choice>a<choice><orig>s</orig><reg ana="hc:StandardMHGRegularization">z</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_44_2"><choice><orig>v</orig><reg>u</reg></choice>ns</w>
+          <c> </c>
+          <w xml:id="w_71_44_3">in</w>
+          <c> </c>
+          <w xml:id="w_71_44_4">dirre</w>
+          <c> </c>
+          <w xml:id="w_71_44_5">ſach</w>
+          <c> </c>
+          <w xml:id="w_71_44_6">beſchi<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.‹</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="11" facs="#_26vb_11"/>
+        <l n="45" xml:id="l_71_45" hei:altN="45">
+          <w xml:id="w_71_45_1">Vil</w>
+          <c> </c>
+          <w xml:id="w_71_45_2">ſchiere</w>
+          <c> </c>
+          <w xml:id="w_71_45_3"><choice><orig>v</orig><reg>u</reg><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice>f</w>
+          <c> </c>
+          <w xml:id="w_71_45_4">der</w>
+          <c> </c>
+          <w xml:id="w_71_45_5">ſelben</w>
+          <c> </c>
+          <w xml:id="w_71_45_6">vart</w>
+        </l>
+        <lb n="12" facs="#_26vb_12"/>
+        <l n="46" xml:id="l_71_46" hei:altN="46">
+          <w xml:id="w_71_46_1"><choice><orig>D</orig><reg>d</reg></choice>er</w>
+          <c> </c>
+          <w xml:id="w_71_46_2">ſlange</w>
+          <c> </c>
+          <w xml:id="w_71_46_3">wider</w>
+          <c> </c>
+          <w xml:id="w_71_46_4">gebunden</w>
+          <c> </c>
+          <w xml:id="w_71_46_5">wart</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="13" facs="#_26vb_13"/>
+        <l n="47" xml:id="l_71_47" hei:altN="47">
+          <w xml:id="w_71_47_1">Der</w>
+          <c> </c>
+          <w xml:id="w_71_47_2"><choice><orig>f</orig><reg ana="hc:StandardMHGRegularization">v</reg></choice>u<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>s</w>
+          <c> </c>
+          <w xml:id="w_71_47_3">d<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_47_4">z<choice><orig>u&osup;</orig><reg>uo</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_47_5">dem</w>
+          <c> </c>
+          <w xml:id="w_71_47_6">ſlange<ex>n</ex></w>
+          <c> </c>
+          <w xml:id="w_71_47_7">ſprach</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="14" facs="#_26vb_14"/>
+        <l n="48" xml:id="l_71_48" hei:altN="48">
+          <w xml:id="w_71_48_1"><choice><orig>D</orig><reg>d</reg></choice><choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_48_2">er</w>
+          <c> </c>
+          <w xml:id="w_71_48_3">in</w>
+          <c> </c>
+          <w xml:id="w_71_48_4">als</w>
+          <c> </c>
+          <w xml:id="w_71_48_5">gebunden</w>
+          <c> </c>
+          <w xml:id="w_71_48_6">ſach</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>:</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="15" facs="#_26vb_15"/>
+        <l n="49" xml:id="l_71_49" hei:altN="49">
+          <choice>
+            <orig/>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_49_1">Entbint</w>
+          <c> </c>
+          <w xml:id="w_71_49_2">dich</w>
+          <c> </c>
+          <!-- Codierung supplied püfen: ſelber nit enbitt nK2,-Z1, H3. Bl, fehlt B, Bn -->
+          <supplied>
+            <w xml:id="w_71_49_3">ſelber</w>
+            <choice>
+              <orig></orig>
+              <reg>
+                <pc>,</pc>
+              </reg>
+            </choice>
+            <c> </c>
+            <w xml:id="w_71_49_4">nit</w>
+            <c> </c>
+            <w xml:id="w_71_49_5">en</w>
+            <w xml:id="w_71_49_6">b<choice><orig>it</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>t</w>
+          </supplied>
+        </l>
+        <lb n="16" facs="#_26vb_16"/>
+        <l n="50" xml:id="l_71_50" hei:altN="50">
+          <w xml:id="w_71_50_1"><choice><orig>V</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_50_2">ſcheid</w>
+          <c> </c>
+          <w xml:id="w_71_50_3">von</w>
+          <c> </c>
+          <w xml:id="w_71_50_4">hinnen</w>
+          <choice><orig><c> </c><pc>/</pc></orig><reg><pc>;</pc></reg></choice>
+          <c> </c>
+          <w xml:id="w_71_50_5">ez</w>
+          <c> </c>
+          <w xml:id="w_71_50_6">iſt</w>
+          <c> </c>
+          <w xml:id="w_71_50_7">zit</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>!‹</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="17" facs="#_26vb_17"/>
+        <l n="51" xml:id="l_71_51" hei:altN="51">
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_51_1">Geſelle</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>‹,</pc>
+            </reg>
+          </choice>
+          <c> </c>
+          <w xml:id="w_71_51_2">ſprach</w>
+          <c> </c>
+          <w xml:id="w_71_51_3">er</w>
+          <c> </c>
+          <!-- zuo rel. -->
+          <supplied>
+            <w xml:id="w_71_51_3a">zuo</w>
+          </supplied>
+          <c> </c>          
+          <w xml:id="w_71_51_4">dem</w>
+          <c> </c>
+          <w xml:id="w_71_51_5">man</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="18" facs="#_26vb_18"/>
+        <l n="52" xml:id="l_71_52" hei:altN="52">
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>›</pc>
+            </reg>
+          </choice>
+          <w xml:id="w_71_52_1"><choice><orig>D</orig><reg>d</reg></choice><choice><orig>u</orig><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_52_2">macht</w>
+          <c> </c>
+          <w xml:id="w_71_52_3">wol</w>
+          <c> </c>
+          <w xml:id="w_71_52_4">l<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>di<choice><orig>g</orig><reg ana="hc:StandardMHGRegularization">c</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_52_5">hinnen</w>
+          <c> </c>
+          <w xml:id="w_71_52_6">g<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>n</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="19" facs="#_26vb_19"/>
+        <l n="53" xml:id="l_71_53" hei:altN="53">
+          <w xml:id="w_71_53_1">Wilt</w>
+          <c> </c>
+          <w xml:id="w_71_53_2">aber</w>
+          <c> </c>
+          <w xml:id="w_71_53_3">d<choice><orig>u</orig><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_53_4">den</w>
+          <c> </c>
+          <w xml:id="w_71_53_5">v<choice><orig>ige</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;a</reg></choice>nt</w>
+          <c> </c>
+          <w xml:id="w_71_53_6">d<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+        </l>
+        <lb n="20" facs="#_26vb_20"/>
+        <l n="54" xml:id="l_71_54" hei:altN="54">
+          <w xml:id="w_71_54_1"><choice><orig>L</orig><reg>l</reg></choice><choice><orig>o&esup;</orig><reg>ö</reg><reg ana="hc:StandardMHGRegularization">&oelig;</reg></choice>ſen</w>
+          <choice><orig><c> </c><pc>/</pc></orig><reg></reg></choice>
+          <c> </c>
+          <w xml:id="w_71_54_2">daz</w>
+          <c> </c>
+          <w xml:id="w_71_54_3">wirt</w>
+          <c> </c>
+          <w xml:id="w_71_54_4">d<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_54_5"><choice><orig>v</orig><reg>u</reg></choice>ngewin</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.‹</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="21" facs="#_26vb_21"/>
+        <l n="55" xml:id="l_71_55" hei:altN="55">
+          <w xml:id="w_71_55_1">Sus</w>
+          <c> </c>
+          <w xml:id="w_71_55_2">kam</w>
+          <c> </c>
+          <w xml:id="w_71_55_3">der</w>
+          <c> </c>
+          <w xml:id="w_71_55_4">man</w>
+          <c> </c>
+          <w xml:id="w_71_55_5"><choice><orig>vs</orig><reg>us</reg><reg ana="hc:StandardMHGRegularization">u&combcirc;z</reg></choice></w><!-- Codierung unbedingt prüfen: Normalmhd. Normalisierung (s zu z) UND u/v-Ausgleich in einem Verbund! Vgl. usser/uzer -->
+          <c> </c>
+          <w xml:id="w_71_55_6">gr<choice><orig>oſſ</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;z</reg></choice>er</w>
+          <c> </c>
+          <w xml:id="w_71_55_7">n<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>;</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="22" facs="#_26vb_22"/>
+        <l n="56" xml:id="l_71_56" hei:altN="56">
+          <w xml:id="w_71_56_1"><choice><orig>D</orig><reg>d</reg></choice>er</w>
+          <c> </c>
+          <w xml:id="w_71_56_2">ſlange</w>
+          <c> </c>
+          <w xml:id="w_71_56_3">m<choice><orig>u&osup;</orig><reg>uo</reg></choice>ſt</w>
+          <c> </c>
+          <w xml:id="w_71_56_4">geligen</w>
+          <c> </c>
+          <w xml:id="w_71_56_5">t<choice><orig>od</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;t</reg></choice></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="23" facs="#_26vb_23"/>
+        <l n="57" xml:id="l_71_57" hei:altN="57">
+          <w xml:id="w_71_57_1">Daz</w>
+          <c> </c>
+          <w xml:id="w_71_57_2">wa<choice><orig>z</orig><reg ana="hc:StandardMHGRegularization">s</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_57_3">bill<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>ch</w>
+          <c> </c>
+          <w xml:id="w_71_57_4"><choice><orig>v</orig><reg>u</reg></choice>nde</w>
+          <c> </c>
+          <w xml:id="w_71_57_5">re<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="24" facs="#_26vb_24"/>
+        <l n="58" xml:id="l_71_58" hei:altN="58">
+          <w xml:id="w_71_58_1">Daz</w>
+          <c> </c>
+          <w xml:id="w_71_58_2">krumb</w>
+          <c> </c>
+          <w xml:id="w_71_58_3">iſt</w>
+          <choice><orig><c> </c><pc>/</pc></orig><reg></reg></choice>
+          <c> </c>
+          <w xml:id="w_71_58_4">daz</w>
+          <c> </c>
+          <w xml:id="w_71_58_5">wirt</w>
+          <c> </c>
+          <w xml:id="w_71_58_6">k<choice><orig>u</orig><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice>m<choice><orig></orig><reg ana="hc:StandardMHGRegularization">e</reg></choice></w><!-- Codierung unbedingt prüfen: Hinzufügung des e sorgt für leeres orig. So korrekt oder alles in einem choice umsetzen (um zu ume)? -->
+          <c> </c>
+          <w xml:id="w_71_58_7">ſle<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <label ana="hc:DivisionMark" facs="#_26v__ml_1" hei:placeRef="hc:ColumnMarginLeft">
+          <lb n="1" facs="#_26v__ml_1_1"/>
+          <pc>&para;</pc>
+        </label>
+        <lb n="25" facs="#_26vb_25"/>
+        <l n="59" xml:id="l_71_59" hei:altN="59">
+          <w xml:id="w_71_59_1">Man</w>
+          <c> </c>
+          <w xml:id="w_71_59_2">ſpricht</w>
+          <c> </c>
+          <w xml:id="w_71_59_3">ein</w>
+          <c> </c>
+          <w xml:id="w_71_59_4">wort</w>
+          <c> </c>
+          <w xml:id="w_71_59_5"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_59_6">ma<choice><orig>g</orig><reg ana="hc:StandardMHGRegularization">c</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_59_7">w<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>r</w>
+          <c> </c>
+          <w xml:id="w_71_59_8">ſ<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="26" facs="#_26vb_26"/>
+        <l n="60" xml:id="l_71_60" hei:altN="60">
+          <w xml:id="w_71_60_1"><choice><orig>A</orig><reg>a</reg></choice>ls</w>
+          <c> </c>
+          <w xml:id="w_71_60_2">e<choice><orig>s</orig><reg ana="hc:StandardMHGRegularization">z</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_60_3">n<choice><orig>u</orig><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_60_4">hie</w>
+          <c> </c>
+          <w xml:id="w_71_60_5">iſt</w>
+          <c> </c>
+          <w xml:id="w_71_60_6">worden</w>
+          <c> </c>
+          <w xml:id="w_71_60_7">ſch<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>:</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="27" facs="#_26vb_27"/>
+        <l n="61" xml:id="l_71_61" hei:altN="61">
+         <w xml:id="w_71_61_1">Wer</w>
+          <c> </c>
+          <w xml:id="w_71_61_2">ab</w>
+          <c> </c>
+          <w xml:id="w_71_61_3">dem</w>
+          <c> </c>
+          <w xml:id="w_71_61_4">galgen</w>
+          <c> </c>
+          <w xml:id="w_71_61_5">l<choice><orig>o&esup;</orig><reg>ö</reg><reg ana="hc:StandardMHGRegularization">&oelig;</reg></choice>ſt</w>
+          <c> </c>
+          <w xml:id="w_71_61_6">den</w>
+          <c> </c>
+          <w xml:id="w_71_61_7"><choice><orig>t</orig><reg ana="hc:StandardMHGRegularization">d</reg></choice>iep</w>
+        </l>
+        <lb n="28" facs="#_26vb_28"/>
+        <l n="62" xml:id="l_71_62" hei:altN="62">
+          <w xml:id="w_71_62_1"><choice><orig>D</orig><reg>d</reg></choice>ar</w>
+          <c> </c>
+          <w xml:id="w_71_62_2">n<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>ch</w>
+          <c> </c>
+          <w xml:id="w_71_62_3">h<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_62_4">er</w>
+          <c> </c>
+          <w xml:id="w_71_62_5">in</w>
+          <c> </c>
+          <w xml:id="w_71_62_6">niemer</w>
+          <c> </c>
+          <w xml:id="w_71_62_7">liep</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="29" facs="#_26vb_29"/>
+        <l n="63" xml:id="l_71_63" hei:altN="63">
+          <w xml:id="w_71_63_1">Waz</w>
+          <c> </c>
+          <w xml:id="w_71_63_2">giftig</w>
+          <c> </c>
+          <w xml:id="w_71_63_3">iſt</w>
+          <c> </c>
+          <w xml:id="w_71_63_4">wol</w>
+          <c> </c>
+          <w xml:id="w_71_63_5">niemer</w>
+          <c> </c>
+          <w xml:id="w_71_63_6">t<choice><orig>u&osup;</orig><reg>uo</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="30" facs="#_26vb_30"/>
+        <l n="64" xml:id="l_71_64" hei:altN="64">
+          <w xml:id="w_71_64_1"><choice><orig>E</orig><reg>e</reg></choice><choice><orig>s</orig><reg ana="hc:StandardMHGRegularization">z</reg></choice></w><!-- Codierung prüfen: Zwei choices: Ersteres für die Normalisierung von Schicht II (Groß-/Kleinschreibung) und Letzteres für die Umsetzung von Schicht III (s zu z). -->
+          <c> </c>
+          <w xml:id="w_71_64_2">giltet</w>
+          <c> </c>
+          <w xml:id="w_71_64_3"><choice><orig>v&iuml;</orig><reg>ü</reg></choice>bel</w>
+          <c> </c>
+          <w xml:id="w_71_64_4"><choice><orig>v</orig><reg>u</reg></choice>mbe</w>
+          <c> </c>
+          <w xml:id="w_71_64_5">g<choice><orig>u&osup;</orig><reg>uo</reg></choice>t</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="31" facs="#_26vb_31"/>
+        <l n="65" xml:id="l_71_65" hei:altN="65">
+          <w xml:id="w_71_65_1">S<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>ner</w>
+          <c> </c>
+          <w xml:id="w_71_65_2">art</w>
+          <c> </c>
+          <w xml:id="w_71_65_3">ma<choice><orig>g</orig><reg ana="hc:StandardMHGRegularization">c</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_65_4">er</w>
+          <c> </c>
+          <w xml:id="w_71_65_5">n<choice><orig>u&iuml;</orig><reg>ü</reg><reg ana="hc:StandardMHGRegularization">ih</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_65_6">wider</w>
+          <c> </c>
+          <w xml:id="w_71_65_7">ſt<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>n</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="32" facs="#_26vb_32"/>
+        <l n="66" xml:id="l_71_66" hei:altN="66">
+          <w xml:id="w_71_66_1"><choice><orig>N</orig><reg>n</reg></choice>och</w>
+          <c> </c>
+          <w xml:id="w_71_66_2">ma<choice><orig>g</orig><reg ana="hc:StandardMHGRegularization">c</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_66_3">ſ<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_66_4">ſchalkeit</w>
+          <c> </c>
+          <w xml:id="w_71_66_5">abe</w>
+          <c> </c>
+          <w xml:id="w_71_66_6">l<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>n</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="33" facs="#_26vb_33"/>
+        <l n="67" xml:id="l_71_67" hei:altN="67">
+          <w xml:id="w_71_67_1">E<choice><orig>s</orig><reg ana="hc:StandardMHGRegularization">z</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_67_2">ſt<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_67_3">dick</w>
+          <c> </c>
+          <w xml:id="w_71_67_4"><choice><orig>v</orig><reg>u</reg><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice>f</w>
+          <c> </c>
+          <w xml:id="w_71_67_5">von</w>
+          <c> </c>
+          <w xml:id="w_71_67_6">miltekeit</w>
+        </l>
+        <lb n="34" facs="#_26vb_34"/>
+        <l n="68" xml:id="l_71_68" hei:altN="68">
+          <w xml:id="w_71_68_1"><choice><orig>D</orig><reg>d</reg></choice>em</w>
+          <c> </c>
+          <w xml:id="w_71_68_2">m<choice><orig>o&esup;</orig><reg>ö</reg><reg ana="hc:StandardMHGRegularization">e</reg></choice>nſchen</w>
+          <c> </c>
+          <w xml:id="w_71_68_3">n<choice><orig>o</orig><reg ana="hc:StandardMHGRegularization">o&combcirc;</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_68_4"><choice><orig>v</orig><reg>u</reg></choice>nd</w>
+          <c> </c>
+          <w xml:id="w_71_68_5"><choice><orig>a&esup;</orig><reg>ä</reg><reg ana="hc:StandardMHGRegularization">a</reg></choice>rbeit</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>,</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="35" facs="#_26vb_35"/>
+        <l n="69" xml:id="l_71_69" hei:altN="69">
+          <w xml:id="w_71_69_1"><choice><orig>A</orig><reg>a</reg></choice>ls</w>
+          <c> </c>
+          <w xml:id="w_71_69_2">diſem</w>
+          <c> </c>
+          <del rendition="hc:Strikethrough hc:Underdotted">
+            <w>man</w>
+          </del>
+          <c> </c>
+          <w xml:id="w_71_69_3">man</w>
+          <c> </c>
+          <w xml:id="w_71_69_4">hie</w>
+          <c> </c>
+          <w xml:id="w_71_69_5">wa<choice><orig>z</orig><reg ana="hc:StandardMHGRegularization">s</reg></choice></w>
+          <c> </c>
+          <w xml:id="w_71_69_6">beſche<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>e<ex>n</ex></w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="36" facs="#_26vb_36"/>
+        <l n="70" xml:id="l_71_70" hei:altN="70">
+          <w xml:id="w_71_70_1">Ich</w>
+          <c> </c>
+          <w xml:id="w_71_70_2">m<choice><orig>u&osup;</orig><reg>uo</reg></choice><choice><orig>s</orig><reg ana="hc:StandardMHGRegularization">z</reg></choice></w><!-- s zu z mit in die Normalisierung der zweiten Schicht ziehen oder in einem separaten choice, wie codiert, lassen? -->
+          <c> </c>
+          <w xml:id="w_71_70_3">ez</w>
+          <c> </c>
+          <w xml:id="w_71_70_4">in</w>
+          <c> </c>
+          <w xml:id="w_71_70_5">der</w>
+          <c> </c>
+          <w xml:id="w_71_70_6">w<choice><orig>a</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;</reg></choice>rheit</w>
+          <c> </c>
+          <w xml:id="w_71_70_7"><choice><orig>i</orig><reg>j</reg></choice>e<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>en</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>:</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="37" facs="#_26vb_37"/>
+        <l n="73" xml:id="l_71_73" hei:altN="71">
+          <w xml:id="w_71_73_1">Wer</w>
+          <c> </c>
+          <w xml:id="w_71_73_2"><choice><orig>f</orig><reg ana="hc:StandardMHGRegularization">v</reg></choice><choice><orig>u&iuml;</orig><reg>ü</reg></choice><choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>s</w>
+          <c> </c>
+          <w xml:id="w_71_73_3">mit</w>
+          <c> </c>
+          <w xml:id="w_71_73_4"><choice><orig>f</orig><reg ana="hc:StandardMHGRegularization">v</reg></choice><choice><orig>u&iuml;</orig><reg>ü</reg></choice><choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>ſen</w>
+          <c> </c>
+          <w xml:id="w_71_73_5">v<choice><orig>ach</orig><reg ana="hc:StandardMHGRegularization">a&combcirc;h</reg></choice>en</w>
+          <c> </c>
+          <w xml:id="w_71_73_6">ſol</w>
+        </l>
+        <pb n="27r" facs="#_27r"/>
+        <milestone ana="hc:ZoneBeginning" facs="#_27ra"/>
+        <lb n="1" facs="#_27ra_1"/>
+        <l n="74" xml:id="l_71_74" hei:altN="72">
+          <w xml:id="w_71_74_1"><choice><orig>D</orig><reg>d</reg></choice>er</w>
+          <c> </c>
+          <w xml:id="w_71_74_2">bedarf</w>
+          <c> </c>
+          <w xml:id="w_71_74_3">g<choice><orig>u&osup;</orig><reg>uo</reg></choice>ter</w>
+          <c> </c>
+          <w xml:id="w_71_74_4">liſten</w>
+          <c> </c>
+          <w xml:id="w_71_74_5">wol</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+        <lb n="2" facs="#_27ra_2"/>
+        <l n="75" xml:id="l_71_75" hei:altN="73">
+          <w xml:id="w_71_75_1">W<choice><orig>e</orig><reg ana="hc:StandardMHGRegularization">&aelig;</reg></choice>r</w>
+          <c> </c>
+          <w xml:id="w_71_75_2">der</w>
+          <c> </c>
+          <w xml:id="w_71_75_3"><choice><orig>f</orig><reg ana="hc:StandardMHGRegularization">v</reg></choice>u<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>s</w>
+          <c> </c>
+          <w xml:id="w_71_75_4">ri<choice><orig>ch</orig><reg ana="hc:StandardMHGRegularization">h</reg></choice>ter</w>
+          <c> </c>
+          <w xml:id="w_71_75_5">n<choice><orig>u&iuml;</orig><reg>ü</reg><reg ana="hc:StandardMHGRegularization">ih</reg></choice>t</w>
+          <c> </c>
+          <w xml:id="w_71_75_6">geweſen</w>
+        </l>
+        <milestone ana="hc:ZoneBeginning" facs="#_27rb"/>
+        <lb n="1" facs="#_27rb_1"/>
+        <l n="76" xml:id="l_71_76" hei:altN="74">
+          <w xml:id="w_71_76_1"><choice><orig>D</orig><reg>d</reg></choice>er</w>
+          <c> </c>
+          <w xml:id="w_71_76_2">man</w>
+          <c> </c>
+          <w xml:id="w_71_76_3">m<choice><orig>o&esup;</orig><reg>ö</reg></choice>cht</w>
+          <c> </c>
+          <w xml:id="w_71_76_4">k<choice><orig>u</orig><reg ana="hc:StandardMHGRegularization">u&combcirc;</reg></choice>me</w>
+          <c> </c>
+          <w xml:id="w_71_76_5">ſ<choice><orig>i</orig><reg ana="hc:StandardMHGRegularization">i&combcirc;</reg></choice>n</w>
+          <c> </c>
+          <w xml:id="w_71_76_6">geneſen</w>
+          <choice>
+            <orig></orig>
+            <reg>
+              <pc>.</pc>
+            </reg>
+          </choice>
+        </l>
+      </div>
+    </body>
+  </text>
+</TEI>

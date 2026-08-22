@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+	<teiHeader>
+		<fileDesc>
+			<titleStmt>
+				<title>Synoptische Karte</title>
+			</titleStmt>
+			<publicationStmt>
+				<p>Publication Information</p>
+			</publicationStmt>
+			<sourceDesc>
+				<p>Information about the source</p>
+			</sourceDesc>
+		</fileDesc>
+		<encodingDesc>
+			<listPrefixDef>
+				<prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"/>
+				<prefixDef matchPattern="(.+)" ident="b" replacementPattern="../texts/B/B_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="b1" replacementPattern="../texts/b1/b1_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="bl" replacementPattern="../texts/Bl/Bl_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="bn" replacementPattern="../texts/Bn/Bn_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="h3" replacementPattern="../texts/H3/H3_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="k1" replacementPattern="../texts/K1/K1_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="k2" replacementPattern="../texts/K2/K2_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="pfeiffer" replacementPattern="../texts/Pfeiffer/Pfeiffer_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="w1" replacementPattern="../texts/W1/W1_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+				<prefixDef matchPattern="(.+)" ident="z2" replacementPattern="../texts/Z2/Z2_71.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+			</listPrefixDef>
+		</encodingDesc>
+	</teiHeader>
+	<standOff>
+		<link target="b:l_71_73 bl:l_71_73 h3:l_71_73 k2:l_71_73 pfeiffer:l_71_73 w1:l_71_73 k1:right(l_71_70) bn:right(l_71_70)"/>
+		<link target="b:l_71_76 bl:l_71_76 bn:l_71_76 h3:l_71_76 k1:l_71_76 k2:l_71_76 pfeiffer:l_71_76 w1:l_71_76"/>
+		<link target="b:l_71_64 bl:l_71_64 bn:l_71_64 k1:l_71_64 k2:l_71_64 pfeiffer:l_71_64 w1:l_71_64 h3:right(l_71_63)"/>
+		<link target="b:l_71_30 bl:l_71_30 bn:l_71_30 h3:l_71_30 k1:l_71_30 k2:l_71_30 pfeiffer:l_71_30 w1:l_71_30"/>
+		<link target="b:l_71_63 bl:l_71_63 bn:l_71_63 h3:l_71_63 k1:l_71_63 k2:l_71_63 pfeiffer:l_71_63 w1:l_71_63"/>
+		<link target="b:l_71_23 bl:l_71_23 bn:l_71_23 h3:l_71_23 k1:l_71_23 k2:l_71_23 pfeiffer:l_71_23 w1:l_71_23"/>
+		<link target="b:l_71_66 bl:l_71_66 bn:l_71_66 h3:l_71_66 k1:l_71_66 k2:l_71_66 pfeiffer:l_71_66 w1:l_71_66"/>
+		<link target="b:l_71_24 bl:l_71_24 bn:l_71_24 h3:l_71_24 k1:l_71_24 k2:l_71_24 pfeiffer:l_71_24 w1:l_71_24"/>
+		<link target="b:l_71_1 bl:l_71_1 bn:l_71_1 h3:l_71_1 k1:l_71_1 k2:l_71_1 pfeiffer:l_71_1 w1:l_71_1"/>
+		<link target="b:l_71_32 bl:l_71_32 bn:l_71_32 h3:l_71_32 k1:l_71_32 k2:l_71_32 pfeiffer:l_71_32 w1:l_71_32"/>
+		<link target="b:l_71_16 bl:l_71_16 bn:l_71_16 h3:l_71_16 k1:l_71_16 k2:l_71_16 pfeiffer:l_71_16 w1:l_71_16"/>
+		<link target="b:l_71_54 bl:l_71_54 bn:l_71_54 h3:l_71_54 k1:l_71_54 k2:l_71_54 pfeiffer:l_71_54 w1:l_71_54"/>
+		<link target="b:l_71_31 bl:l_71_31 bn:l_71_31 h3:l_71_31 k1:l_71_31 k2:l_71_31 pfeiffer:l_71_31 w1:l_71_31"/>
+		<link target="b:l_71_65 bl:l_71_65 bn:l_71_65 h3:l_71_65 k1:l_71_65 k2:l_71_65 pfeiffer:l_71_65 w1:l_71_65"/>
+		<link target="b:l_71_33 bl:l_71_33 bn:l_71_33 h3:l_71_33 k1:l_71_33 k2:l_71_33 pfeiffer:l_71_33 w1:l_71_33"/>
+		<link target="b:l_71_43 bn:l_71_43 h3:l_71_43 k1:l_71_43 k2:l_71_43 pfeiffer:l_71_43 w1:l_71_43 bl:right(l_71_42)"/>
+		<link target="b:l_71_49 bl:l_71_49 bn:l_71_49 h3:l_71_49 k1:l_71_49 k2:l_71_49 pfeiffer:l_71_49 w1:l_71_49"/>
+		<link target="b:l_71_35 bl:l_71_35 bn:l_71_35 h3:l_71_35 k1:l_71_35 k2:l_71_35 pfeiffer:l_71_35 w1:l_71_35"/>
+		<link target="b:l_71_25 bl:l_71_25 bn:l_71_25 h3:l_71_25 k1:l_71_25 k2:l_71_25 pfeiffer:l_71_25 w1:l_71_25"/>
+		<link target="b:l_71_68 bl:l_71_68 bn:l_71_68 h3:l_71_68 k1:l_71_68 k2:l_71_68 pfeiffer:l_71_68 w1:l_71_68"/>
+		<link target="b:l_71_39 bl:l_71_39 bn:l_71_39 h3:l_71_39 k1:l_71_39 k2:l_71_39 pfeiffer:l_71_39 w1:l_71_39"/>
+		<link target="b:l_71_59 bl:l_71_59 bn:l_71_59 h3:l_71_59 k1:l_71_59 k2:l_71_59 pfeiffer:l_71_59 w1:l_71_59"/>
+		<link target="b:l_71_21 bl:l_71_21 bn:l_71_21 h3:l_71_21 k1:l_71_21 k2:l_71_21 pfeiffer:l_71_21 w1:l_71_21"/>
+		<link target="b:l_71_27 bl:l_71_27 bn:l_71_27 h3:l_71_27 k1:l_71_27 k2:l_71_27 pfeiffer:l_71_27 w1:l_71_27"/>
+		<link target="b:l_71_50 bl:l_71_50 bn:l_71_50 h3:l_71_50 k1:l_71_50 k2:l_71_50 pfeiffer:l_71_50 w1:l_71_50"/>
+		<link target="b:l_71_36 bl:l_71_36 bn:l_71_36 h3:l_71_36 k1:l_71_36 k2:l_71_36 pfeiffer:l_71_36 w1:l_71_36"/>
+		<link target="b:l_71_10 bl:l_71_10 bn:l_71_10 h3:l_71_10 k1:l_71_10 k2:l_71_10 pfeiffer:l_71_10 w1:l_71_10"/>
+		<link target="b:l_71_14 bl:l_71_14 bn:l_71_14 h3:l_71_14 k1:l_71_14 k2:l_71_14 pfeiffer:l_71_14 w1:l_71_14"/>
+		<link target="b:l_71_8 bl:l_71_8 bn:l_71_8 h3:l_71_8 k1:l_71_8 k2:l_71_8 pfeiffer:l_71_8 w1:l_71_8"/>
+		<link target="b:l_71_15 bl:l_71_15 bn:l_71_15 h3:l_71_15 k1:l_71_15 k2:l_71_15 pfeiffer:l_71_15 w1:l_71_15"/>
+		<link target="b:l_71_9 bl:l_71_9 bn:l_71_9 h3:l_71_9 k1:l_71_9 k2:l_71_9 pfeiffer:l_71_9 w1:l_71_9"/>
+		<link target="b:l_71_53 bl:l_71_53 bn:l_71_53 h3:l_71_53 k1:l_71_53 k2:l_71_53 pfeiffer:l_71_53 w1:l_71_53"/>
+		<link target="b:l_71_70 bl:l_71_70 bn:l_71_70 h3:l_71_70 k1:l_71_70 k2:l_71_70 pfeiffer:l_71_70 w1:l_71_70"/>
+		<link target="b:l_71_3 bl:l_71_3 bn:l_71_3 h3:l_71_3 k1:l_71_3 k2:l_71_3 pfeiffer:l_71_3 w1:l_71_3"/>
+		<link target="b:l_71_5 bl:l_71_5 bn:l_71_5 h3:l_71_5 k1:l_71_5 k2:l_71_5 pfeiffer:l_71_5 w1:l_71_5"/>
+		<link target="b:l_71_75 bl:l_71_75 bn:l_71_75 h3:l_71_75 k1:l_71_75 k2:l_71_75 pfeiffer:l_71_75 w1:l_71_75"/>
+		<link target="b:l_71_11 bl:l_71_11 bn:l_71_11 h3:l_71_11 k1:l_71_11 k2:l_71_11 pfeiffer:l_71_11 w1:l_71_11"/>
+		<link target="b:l_71_38 bl:l_71_38 bn:l_71_38 h3:l_71_38 k1:l_71_38 k2:l_71_38 pfeiffer:l_71_38 w1:l_71_38"/>
+		<link target="b:l_71_26 bl:l_71_26 bn:l_71_26 h3:l_71_26 k1:l_71_26 k2:l_71_26 pfeiffer:l_71_26 w1:l_71_26"/>
+		<link target="b:l_71_52 bl:l_71_52 bn:l_71_52 h3:l_71_52 k1:l_71_52 k2:l_71_52 pfeiffer:l_71_52 w1:l_71_52"/>
+		<link target="b:l_71_58 bl:l_71_58 bn:l_71_58 h3:l_71_58 k2:l_71_58 pfeiffer:l_71_58 w1:l_71_58 k1:right(l_71_56)"/>
+		<link target="b:l_71_56 bl:l_71_56 bn:l_71_56 h3:l_71_56 k1:l_71_56 pfeiffer:l_71_56 w1:l_71_56 k2:right(l_71_55)"/>
+		<link target="bl:l_71_72 bn:l_71_72 h3:l_71_72 k2:l_71_72 pfeiffer:l_71_72 w1:l_71_72 k1:right(l_71_70) b:right(l_71_70)"/>
+		<link target="b:l_71_20 bl:l_71_20 bn:l_71_20 h3:l_71_20 k1:l_71_20 k2:l_71_20 pfeiffer:l_71_20 w1:l_71_20"/>
+		<link target="b:l_71_47 bl:l_71_47 bn:l_71_47 h3:l_71_47 k1:l_71_47 k2:l_71_47 pfeiffer:l_71_47 w1:l_71_47"/>
+		<link target="b:l_71_13 bl:l_71_13 bn:l_71_13 h3:l_71_13 k1:l_71_13 k2:l_71_13 pfeiffer:l_71_13 w1:l_71_13"/>
+		<link target="bl:l_71_71 bn:l_71_71 h3:l_71_71 k2:l_71_71 pfeiffer:l_71_71 w1:l_71_71 k1:right(l_71_70) b:right(l_71_70)"/>
+		<link target="b:l_71_48 bl:l_71_48 bn:l_71_48 h3:l_71_48 k1:l_71_48 pfeiffer:l_71_48 w1:l_71_48 k2:right(l_71_47)"/>
+		<link target="b:l_71_29 bl:l_71_29 bn:l_71_29 h3:l_71_29 k1:l_71_29 k2:l_71_29 pfeiffer:l_71_29 w1:l_71_29"/>
+		<link target="b:l_71_7 bl:l_71_7 bn:l_71_7 h3:l_71_7 k1:l_71_7 k2:l_71_7 pfeiffer:l_71_7 w1:l_71_7"/>
+		<link target="b:l_71_37 bl:l_71_37 bn:l_71_37 h3:l_71_37 k1:l_71_37 k2:l_71_37 pfeiffer:l_71_37 w1:l_71_37"/>
+		<link target="b:l_71_74 bl:l_71_74 h3:l_71_74 k2:l_71_74 pfeiffer:l_71_74 w1:l_71_74 k1:right(l_71_70) bn:right(l_71_72)"/>
+		<link target="b:l_71_17 bl:l_71_17 bn:l_71_17 h3:l_71_17 k1:l_71_17 k2:l_71_17 pfeiffer:l_71_17 w1:l_71_17"/>
+		<link target="b:l_71_51 bl:l_71_51 bn:l_71_51 h3:l_71_51 k1:l_71_51 k2:l_71_51 pfeiffer:l_71_51 w1:l_71_51"/>
+		<link target="b:l_71_42 bl:l_71_42 bn:l_71_42 h3:l_71_42 k1:l_71_42 k2:l_71_42 pfeiffer:l_71_42 w1:l_71_42"/>
+		<link target="b:l_71_2 bl:l_71_2 bn:l_71_2 h3:l_71_2 k1:l_71_2 k2:l_71_2 pfeiffer:l_71_2 w1:l_71_2"/>
+		<link target="b:l_71_46 bl:l_71_46 bn:l_71_46 h3:l_71_46 k1:l_71_46 k2:l_71_46 pfeiffer:l_71_46 w1:l_71_46"/>
+		<link target="b:l_71_34 bl:l_71_34 bn:l_71_34 h3:l_71_34 k1:l_71_34 k2:l_71_34 pfeiffer:l_71_34 w1:l_71_34"/>
+		<link target="b:l_71_12 bl:l_71_12 bn:l_71_12 h3:l_71_12 k1:l_71_12 k2:l_71_12 pfeiffer:l_71_12 w1:l_71_12"/>
+		<link target="b:l_71_40 bl:l_71_40 bn:l_71_40 h3:l_71_40 k1:l_71_40 k2:l_71_40 pfeiffer:l_71_40 w1:l_71_40"/>
+		<link target="b:l_71_67 bl:l_71_67 bn:l_71_67 h3:l_71_67 k1:l_71_67 k2:l_71_67 pfeiffer:l_71_67 w1:l_71_67"/>
+		<link target="b:l_71_61 bl:l_71_61 bn:l_71_61 h3:l_71_61 k1:l_71_61 k2:l_71_61 pfeiffer:l_71_61 w1:l_71_61"/>
+		<link target="b:l_71_57 bl:l_71_57 bn:l_71_57 h3:l_71_57 k2:l_71_57 pfeiffer:l_71_57 w1:l_71_57 k1:right(l_71_56)"/>
+		<link target="b:l_71_45 bl:l_71_45 bn:l_71_45 h3:l_71_45 k1:l_71_45 k2:l_71_45 pfeiffer:l_71_45 w1:l_71_45"/>
+		<link target="b:l_71_60 bl:l_71_60 bn:l_71_60 h3:l_71_60 k1:l_71_60 k2:l_71_60 pfeiffer:l_71_60 w1:l_71_60"/>
+		<link target="b:l_71_69 bl:l_71_69 bn:l_71_69 h3:l_71_69 k1:l_71_69 k2:l_71_69 pfeiffer:l_71_69 w1:l_71_69"/>
+		<link target="b:l_71_55 bl:l_71_55 bn:l_71_55 h3:l_71_55 k1:l_71_55 k2:l_71_55 pfeiffer:l_71_55 w1:l_71_55"/>
+		<link target="b:l_71_44 bn:l_71_44 h3:l_71_44 k1:l_71_44 k2:l_71_44 pfeiffer:l_71_44 w1:l_71_44 bl:right(l_71_42)"/>
+		<link target="b:l_71_4 bl:l_71_4 bn:l_71_4 h3:l_71_4 k1:l_71_4 k2:l_71_4 pfeiffer:l_71_4 w1:l_71_4"/>
+		<link target="b:l_71_19 bl:l_71_19 bn:l_71_19 h3:l_71_19 k1:l_71_19 k2:l_71_19 pfeiffer:l_71_19 w1:l_71_19"/>
+		<link target="b:l_71_6 bl:l_71_6 bn:l_71_6 h3:l_71_6 k1:l_71_6 k2:l_71_6 pfeiffer:l_71_6 w1:l_71_6"/>
+		<link target="b:l_71_62 bl:l_71_62 bn:l_71_62 h3:l_71_62 k1:l_71_62 pfeiffer:l_71_62 w1:l_71_62 k2:right(l_71_61)"/>
+		<link target="b:l_71_22 bl:l_71_22 bn:l_71_22 h3:l_71_22 k1:l_71_22 k2:l_71_22 pfeiffer:l_71_22 w1:l_71_22"/>
+		<link target="b:l_71_18 bl:l_71_18 h3:l_71_18 k1:l_71_18 k2:l_71_18 pfeiffer:l_71_18 w1:l_71_18 bn:right(l_71_17)"/>
+		<link target="b:l_71_41 bl:l_71_41 bn:l_71_41 h3:l_71_41 k1:l_71_41 k2:l_71_41 pfeiffer:l_71_41 w1:l_71_41"/>
+		<link target="k2:l_71_46a h3:right(l_71_46) w1:right(l_71_46) k1:right(l_71_46) bn:right(l_71_46) pfeiffer:right(l_71_46) bl:right(l_71_46) b:right(l_71_46)"/>
+		<link target="b:l_71_28 bl:l_71_28 bn:l_71_28 h3:l_71_28 k1:l_71_28 k2:l_71_28 pfeiffer:l_71_28 w1:l_71_28"/>
+	</standOff>
+</TEI>

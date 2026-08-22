@@ -67,8 +67,83 @@
 	<text ana="hc:CompleteExpression">
 		<body>
 			<listApp corresp="../synopses/synoptic_map.xml">
-				<app/>
-			<app loc="5" corresp="a:l_5"><lem wit="#a" corresp="a:range(w_5_1, w_5_4)">Dienſtman was er zuͦ</lem><rdg wit="#bb #ba" corresp="bb:range(w_5_1, w_5_5) ba:range(w_5_1, w_5_5)">Vnde was ein dienſtman von</rdg></app></listApp>
+				<app target="a:w_6_1">
+					<rdg wit="#bb #ba" ana="hc:SubstitutionVariant">
+						<ptr target="bb:w_6_1"/>
+						<ptr target="ba:w_6_1"/>
+					</rdg>
+				</app>
+				<app target="a:w_6_4">
+					<rdg wit="#bb #ba" ana="hc:SubstitutionVariant">
+						<ptr target="bb:w_6_4"/>
+						<ptr target="ba:w_6_4"/>
+					</rdg>
+				</app>
+				<app target="a:w_7_2">
+					<rdg wit="#bb #ba" ana="hc:SubstitutionVariant">
+						<ptr target="bb:range(w_7_2, w_7_3)"/>
+						<ptr target="ba:range(w_7_2, w_7_3)"/>
+					</rdg>
+				</app>
+				<app>
+					<rdg wit="#bb #ba" ana="hc:TranspositionVariant">
+						<link target="a:w_11_1 bb:w_11_2 ba:w_11_2"/>
+						<link target="a:w_11_2 bb:w_11_1 ba:w_11_1"/>
+					</rdg>
+				</app>
+				<app target="a:range(w_12_1, w_12_4)">
+					<rdg wit="#bb #ba" ana="hc:SubstitutionVariant">
+						<ptr target="bb:range(w_12_1, w_12_3)"/>
+						<ptr target="ba:range(w_12_1, w_12_3)"/>
+					</rdg>
+				</app>
+				<app target="a:left(w_13_2)">
+					<rdg wit="#bb #ba" ana="hc:AdditionVariant">
+						<ptr target="bb:w_13_2"/>
+						<ptr target="ba:w_13_2"/>
+					</rdg>
+				</app>
+				<app target="a:w_14_1">
+					<rdg wit="#bb #ba" ana="hc:OmissionVariant">
+						<ptr target="bb:left(w_14_1)"/>
+						<ptr target="ba:left(w_14_1)"/>
+					</rdg>
+				</app>
+				<app target="a:w_16_1">
+					<rdg wit="#bb #ba" ana="hc:SubstitutionVariant">
+						<ptr target="bb:w_16_1"/>
+						<ptr target="ba:w_16_1"/>
+					</rdg>
+				</app>
+				<app target="a:w_16_4">
+					<rdg wit="#bb #ba" ana="hc:SubstitutionVariant">
+						<ptr target="bb:w_16_4"/>
+						<ptr target="ba:w_16_4"/>
+					</rdg>
+				</app>
+				<app target="a:w_17_3">
+					<rdg wit="#bb" ana="hc:SubstitutionVariant">
+						<ptr target="bb:range(w_17_3, w_17_4)"/>
+					</rdg>
+				</app>
+				<app target="a:left(w_17_4)">
+					<rdg wit="#ba" ana="hc:AdditionVariant">
+						<ptr target="ba:w_17_4"/>
+					</rdg>
+				</app>
+				<app target="a:range(w_20_3, w_20_4)">
+					<rdg wit="#bb #ba" ana="hc:SubstitutionVariant">
+						<ptr target="bb:range(w_20_3, w_20_5)"/>
+						<ptr target="ba:range(w_20_3, w_20_5)"/>
+					</rdg>
+				</app>
+				<app target="a:range(w_21_1, w_21_3)">
+					<rdg wit="#bb #ba" ana="hc:SubstitutionVariant">
+						<ptr target="bb:range(w_21_1, w_21_3)"/>
+						<ptr target="ba:range(w_21_1, w_21_3)"/>
+					</rdg>
+				</app>
+			</listApp>
 		</body>
 	</text>
 </TEI>
