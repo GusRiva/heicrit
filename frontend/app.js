@@ -1298,9 +1298,9 @@ class HeiCritApp {
         if (window.electronAPI?.isElectron) {
             // Native dialog - browser input.click() doesn't work when triggered
             // via a menu action (see electron/main.js's dialog:open-project-directory).
-            window.electronAPI.openDirectoryDialog().then(files => {
-                if (files && files.length > 0) {
-                    this.processProjectDirectory(files);
+            window.electronAPI.openDirectoryDialog().then(result => {
+                if (result && result.files.length > 0) {
+                    this.processProjectDirectory(result.files, result.directoryPath);
                 }
             });
             return;
@@ -1323,7 +1323,7 @@ class HeiCritApp {
         input.click();
     }
 
-    async processProjectDirectory(files) {
+    async processProjectDirectory(files, absoluteDirectoryPath = null) {
         try {
             // Fresh independent loading sequence - start from scratch, reading from disk.
             this.activeLoadingSteps = null;
@@ -1332,7 +1332,7 @@ class HeiCritApp {
             this.updateLoadingStep('step-reading', 'active');
             this.updateStatus('Processing project directory...');
 
-            await this.readFilesIntoProjectFiles(files);
+            await this.readFilesIntoProjectFiles(files, absoluteDirectoryPath);
 
             this.updateLoadingStep('step-reading', 'completed');
             this.updateStatus(`Loaded ${this.projectFiles.size} files from relevant folders (apparatus, synopses, texts)`);
@@ -1345,7 +1345,7 @@ class HeiCritApp {
         }
     }
 
-    async readFilesIntoProjectFiles(files) {
+    async readFilesIntoProjectFiles(files, absoluteDirectoryPath = null) {
         // Store all files in the project
         this.projectFiles.clear();
 
@@ -1355,8 +1355,15 @@ class HeiCritApp {
         // directory dialog (see openProjectDirectory).
         const pathOf = (file) => file.webkitRelativePath || file.relativePath || file.name;
 
-        // Extract and store project directory path
-        if (files.length > 0) {
+        // Extract and store project directory path. In Electron,
+        // absoluteDirectoryPath (from the native dialog) is used instead of
+        // just the directory's bare name, so the backend can resolve
+        // save/write requests against the real filesystem location - its cwd
+        // is always inside the app bundle, not wherever the project actually
+        // lives (see resolve_apparatus_file_on_disk in backend/routes.py).
+        if (absoluteDirectoryPath) {
+            this.currentProjectDirectory = absoluteDirectoryPath;
+        } else if (files.length > 0) {
             const firstFilePath = pathOf(files[0]);
             // Extract the root directory name (first part of the path)
             this.currentProjectDirectory = firstFilePath.split('/')[0];

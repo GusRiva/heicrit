@@ -672,6 +672,21 @@ def resolve_apparatus_file_on_disk(apparatus_file, project_directory):
     fallback the same way the apparatus write routes need to.
     Returns None if no such file can be found.
     """
+    if project_directory and os.path.isabs(project_directory):
+        # The Electron desktop app's native "Open Project" dialog sends the
+        # real absolute directory path here (backend/routes.py's cwd is
+        # always inside the app bundle, not wherever the project actually
+        # lives - see electron/main.js's dialog:open-project-directory).
+        # apparatus_file still carries the directory's own name as its
+        # leading segment (see frontend/app.js's readFilesIntoProjectFiles),
+        # so strip that before joining or it would be doubled.
+        dir_name = os.path.basename(project_directory.rstrip('/'))
+        relative = apparatus_file
+        if relative.startswith(dir_name + '/'):
+            relative = relative[len(dir_name) + 1:]
+        candidate = os.path.join(project_directory, relative)
+        return candidate if os.path.exists(candidate) else None
+
     if not os.path.isabs(apparatus_file):
         if apparatus_file.startswith(project_directory + '/'):
             # apparatus_file already contains project_directory, use as-is

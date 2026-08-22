@@ -151,14 +151,20 @@ ipcMain.handle('dialog:open-project-directory', async () => {
 
     const selectedDir = result.filePaths[0];
     const dirName = path.basename(selectedDir);
-    const results = [];
+    const files = [];
     for (const folder of RELEVANT_PROJECT_FOLDERS) {
         const folderPath = path.join(selectedDir, folder);
         if (fs.existsSync(folderPath) && fs.statSync(folderPath).isDirectory()) {
-            walkProjectFiles(`${dirName}/${folder}`, folderPath, results);
+            walkProjectFiles(`${dirName}/${folder}`, folderPath, files);
         }
     }
-    return results;
+    // directoryPath (absolute) lets the backend resolve save/write requests
+    // against the real filesystem location - the Flask child process's cwd
+    // is always inside the app bundle (see startFlaskBackend), not wherever
+    // the user's project actually lives, so a bare directory name isn't
+    // enough for it to find files to write to. See frontend/app.js's
+    // openProjectDirectory and backend/routes.py's resolve_apparatus_file_on_disk.
+    return { directoryPath: selectedDir, files };
 });
 
 ipcMain.handle('dialog:open-file', async () => {
