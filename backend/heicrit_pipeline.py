@@ -3,8 +3,8 @@ from lxml import etree as et
 
 from heipy.namespaces import prefix_format
 from heipy.heipipe.steps import Pipeline, DeleteStep, XsltStep
-from heipy.heipipe.step_library import container2milestone, whitespaces, move_layout_milestones, number_line_segment_beginnings, delete_comments
-from heipy.heipipe.step_library.append_synoptic_links import parse_target
+from heipy.heipipe.step_library import container2milestone, whitespaces, number_line_segment_beginnings, delete_comments
+from heipy.heipipe.step_library.synoptic import move_layout_milestones, append_synoptic_links
 from heipy.heipipe.pipeline_library.synoptic import milestone_element_map
 
 _xslt_dir = os.path.join(os.path.dirname(__file__), 'xslt')
@@ -70,7 +70,7 @@ def append_synoptic_links_funct(root, parameters):
         # Strip a "#N" disambiguator before resolving the insertion point -
         # it's not part of the prefix:pos(id) target syntax parse_target expects.
         anchor_key = key.split('#', 1)[0]
-        prefix, pos, xml_id = parse_target(anchor_key)
+        prefix, pos, xml_id = append_synoptic_links.parse_target(anchor_key)
         anchor = (prefix, pos, xml_id)
 
         element = elements_by_id.get(xml_id)
