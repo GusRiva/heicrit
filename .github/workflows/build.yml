@@ -46,13 +46,34 @@ jobs:
       matrix: ${{ fromJSON(needs.set-matrix.outputs.matrix) }}
 
     steps:
-      - name: Configure GitLab submodule access
-        run: git config --global url."https://${{ secrets.HEIPY_GITLAB_USER }}:${{ secrets.HEIPY_GITLAB_TOKEN }}@gitlab.ub.uni-heidelberg.de/".insteadOf "https://gitlab.ub.uni-heidelberg.de/"
+      # Redirect the heipy submodule to its public GitHub mirror instead of
+      # the university GitLab (unreliable/slow to reach from some GitHub
+      # runner regions - see git history for the stalls this caused). Exact
+      # URL match only, so .gitmodules and the GitLab CI pipeline are
+      # unaffected. http.lowSpeedLimit/Time is kept as a safety net so any
+      # future stalled transfer aborts instead of hanging forever.
+      - name: Redirect heipy submodule to its GitHub mirror
+        run: |
+          git config --global url."https://github.com/GusRiva/heipy.git".insteadOf "https://gitlab.ub.uni-heidelberg.de/editions/heipy.git"
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 60
 
       - name: Checkout code
         uses: actions/checkout@v5
         with:
-          submodules: recursive
+          submodules: false
+
+      - name: Fetch submodules (retry on stall)
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            git submodule sync --recursive && \
+              git submodule update --init --recursive --depth=1 && exit 0
+            echo "Submodule fetch attempt $attempt failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Submodule fetch failed after 3 attempts" >&2
+          exit 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
