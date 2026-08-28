@@ -16,27 +16,34 @@ on:
         default: all
 
 jobs:
+  # The matrix context isn't available in a job-level `if`, so filtering the
+  # matrix down to one platform for a manual dispatch has to happen here,
+  # before the build job's strategy is evaluated.
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - id: set
+        run: |
+          case "${{ inputs.platform || 'all' }}" in
+            linux) echo 'matrix={"include":[{"os":"ubuntu-latest","platform":"linux","arch":"x64"}]}' >> "$GITHUB_OUTPUT" ;;
+            win)   echo 'matrix={"include":[{"os":"windows-latest","platform":"win","arch":"x64"}]}' >> "$GITHUB_OUTPUT" ;;
+            mac)   echo 'matrix={"include":[{"os":"macos-latest","platform":"mac","arch":"x64"}]}' >> "$GITHUB_OUTPUT" ;;
+            *)     echo 'matrix={"include":[{"os":"ubuntu-latest","platform":"linux","arch":"x64"},{"os":"windows-latest","platform":"win","arch":"x64"},{"os":"macos-latest","platform":"mac","arch":"x64"}]}' >> "$GITHUB_OUTPUT" ;;
+          esac
+
   # permissions.contents:write below is needed for electron-builder to publish
   # GitHub Releases — GitHub-specific, intentionally not mirrored into
   # .gitlab-ci-template.yml.
   build:
-    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == matrix.platform
+    needs: set-matrix
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     permissions:
       contents: write
     strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
-          - os: windows-latest
-            platform: win
-            arch: x64
-          - os: macos-latest
-            platform: mac
-            arch: x64
+      matrix: ${{ fromJSON(needs.set-matrix.outputs.matrix) }}
 
     steps:
       - name: Configure GitLab submodule access
