@@ -8,12 +8,19 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build (manual runs only; tag pushes always build all)'
+        type: choice
+        options: [all, linux, win, mac]
+        default: all
 
 jobs:
   # permissions.contents:write below is needed for electron-builder to publish
   # GitHub Releases — GitHub-specific, intentionally not mirrored into
   # .gitlab-ci-template.yml.
   build:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == matrix.platform
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     permissions:
