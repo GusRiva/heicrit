@@ -430,6 +430,27 @@ class HeiCritApp {
                     const corresp = subentry.getAttribute('data-corresp');
                     this.setActiveSubentry(tabId, corresp, subentryIndex);
                 }
+
+                const noteMarker = e.target.closest('.syn-note-marker[data-note-text]');
+                if (noteMarker) {
+                    this.showNotePopup(noteMarker.getAttribute('data-note-text'));
+                }
+
+                const diplomaticToggle = e.target.closest('.syn-diplomatic-toggle');
+                if (diplomaticToggle) {
+                    this.toggleDiplomaticRow(diplomaticToggle, tabId);
+                }
+            });
+
+            // Keyboard activation (Enter/Space) for the same star markers -
+            // they're reachable via tabindex so clicking isn't the only way in.
+            tabPanel.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                const noteMarker = e.target.closest('.syn-note-marker[data-note-text]');
+                if (noteMarker) {
+                    e.preventDefault();
+                    this.showNotePopup(noteMarker.getAttribute('data-note-text'));
+                }
             });
         }
         
@@ -1181,11 +1202,24 @@ class HeiCritApp {
                 },
                 ...options
             });
-            
+
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                // The backend returns a JSON {error: "..."} body even on
+                // non-2xx responses (e.g. 404 "Apparatus file not found: X")
+                // - surface that instead of a bare, unhelpful HTTP status,
+                // falling back to the status line if the body isn't JSON.
+                let detail = response.statusText;
+                try {
+                    const errorBody = await response.json();
+                    if (errorBody && errorBody.error) {
+                        detail = errorBody.error;
+                    }
+                } catch (parseError) {
+                    // Body wasn't JSON (or was empty) - keep the status text.
+                }
+                throw new Error(`HTTP ${response.status}: ${detail}`);
             }
-            
+
             return await response.json();
         } catch (error) {
             this.updateStatus(`Error: ${error.message}`, 'error');
@@ -2391,15 +2425,77 @@ class HeiCritApp {
         return witnessId;
     }
 
-    createSynLine(siglum, data, isBaseText = false) {
-        const lineClass = isBaseText ? 'syn-line syn-line-base' : 'syn-line';
-        const witClass = isBaseText ? 'syn-line-wit syn-line-wit-base' : 'syn-line-wit';
-        return `<div class="${lineClass}">
-                    <div class="${witClass}" data-line-id="${this.escapeHtml(data.lineId)}">
-                        ${this.escapeHtml(siglum)}:
+    createSynLine(siglum, data, isBaseText = false, diplomaticVisible = false) {
+        const escapedSiglum = this.escapeHtml(siglum);
+        const escapedLineId = this.escapeHtml(data.lineId);
+
+        if (!isBaseText) {
+            return `<div class="syn-line">
+                        <div class="syn-line-wit" data-line-id="${escapedLineId}">
+                            ${escapedSiglum}:
+                        </div>
+                        <div class="syn-line-content">${data.text}</div>
+                    </div>`;
+        }
+
+        // Base text (Leithandschrift): show the regularized reading as the
+        // primary text, with the diplomatic reading available in a
+        // collapsed, non-interactive row right below via the toggle button -
+        // see createSynLine's caller (showLocationDetailsForTab) and
+        // toggleDiplomaticRow. The diplomatic row deliberately has NO
+        // data-line-id on its wit label and is a SIBLING (not nested inside)
+        // the base row - both required so the token click/highlight/
+        // selection logic (which resolves witness identity via
+        // getWitnessInfoFromLine's data-line-id lookup) ignores it entirely,
+        // despite it duplicating the same data-token-id values.
+        const regText = (data.regText !== undefined && data.regText !== null) ? data.regText : data.text;
+        // diplomaticVisible carries the user's last toggle choice across
+        // re-renders (e.g. moving to a different verse), so it doesn't reset
+        // to hidden every time showLocationDetailsForTab rebuilds this panel.
+        const hiddenAttr = diplomaticVisible ? '' : 'hidden';
+        const openClass = diplomaticVisible ? ' syn-diplomatic-toggle-open' : '';
+        return `<div class="syn-line-group syn-line-group-base">
+                    <div class="syn-line syn-line-base">
+                        <div class="syn-line-wit syn-line-wit-base" data-line-id="${escapedLineId}">
+                            ${escapedSiglum}:
+                            <button type="button" class="syn-diplomatic-toggle${openClass}" aria-expanded="${diplomaticVisible}"
+                                    aria-label="Diplomatische Lesart ein-/ausblenden"
+                                    title="Diplomatische Lesart ein-/ausblenden">
+                                <span aria-hidden="true">&#9656;</span>
+                            </button>
+                        </div>
+                        <div class="syn-line-content">${regText}</div>
                     </div>
-                    <div class="syn-line-content">${data.text}</div>
+                    <div class="syn-line syn-line-diplomatic" ${hiddenAttr}>
+                        <div class="syn-line-wit">${escapedSiglum}:</div>
+                        <div class="syn-line-content">${data.text}</div>
+                    </div>
                 </div>`;
+    }
+
+    toggleDiplomaticRow(button, tabId) {
+        const group = button.closest('.syn-line-group-base');
+        if (!group) return;
+        const diplomaticRow = group.querySelector('.syn-line-diplomatic');
+        if (!diplomaticRow) return;
+
+        const isHidden = diplomaticRow.hasAttribute('hidden');
+        if (isHidden) {
+            diplomaticRow.removeAttribute('hidden');
+        } else {
+            diplomaticRow.setAttribute('hidden', '');
+        }
+        button.setAttribute('aria-expanded', String(isHidden));
+        button.classList.toggle('syn-diplomatic-toggle-open', isHidden);
+
+        // Persist the new state (isHidden here is the PRE-toggle value, i.e.
+        // exactly the now-current visibility) on the tab so the next
+        // showLocationDetailsForTab re-render (e.g. after navigating to a
+        // different verse) restores it instead of resetting to hidden.
+        const tab = this.tabs.get(tabId);
+        if (tab) {
+            tab.diplomaticRowVisible = isHidden;
+        }
     }
 
     formatAttributes(attributes) {
@@ -2641,7 +2737,10 @@ class HeiCritApp {
 
         const list = document.createElement('div');
         list.className = 'picker-list';
-        candidates.forEach(candidate => {
+        const sortedCandidates = [...candidates].sort((a, b) =>
+            a.label.localeCompare(b.label, undefined, { sensitivity: 'base', numeric: true })
+        );
+        sortedCandidates.forEach(candidate => {
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'picker-item';
@@ -2817,6 +2916,63 @@ class HeiCritApp {
         this.updateStatus('XML parsing error - check document', 'error');
     }
 
+    // Shows the content of a witness text <note> (transcription/text-
+    // constitution remark) that's rendered inline as a ★ marker by
+    // process_synoptic_token/process_synoptic_unit_for_comparison - clicking
+    // the star pops this up rather than the note text appearing inline in
+    // the reading, which would corrupt the transcription being displayed.
+    showNotePopup(noteText) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        `;
+
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            max-width: 500px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+
+        dialog.innerHTML = `
+            <h3 style="margin: 0 0 1rem 0; color: #d4a017;">★ Anmerkung</h3>
+            <p style="white-space: pre-wrap; margin: 0 0 1rem 0;">${this.escapeHtml(noteText)}</p>
+            <button id="closeNotePopup" style="background: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">Close</button>
+        `;
+
+        modal.appendChild(dialog);
+        document.body.appendChild(modal);
+
+        const closeModal = () => {
+            document.body.removeChild(modal);
+            document.removeEventListener('keydown', onKeydown);
+        };
+        const onKeydown = (e) => {
+            if (e.key === 'Escape') closeModal();
+        };
+
+        document.getElementById('closeNotePopup').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', onKeydown);
+
+        document.getElementById('closeNotePopup').focus();
+    }
+
     // Shows a dedicated error for a synoptic map that was found but whose
     // content is invalid (e.g. <link> elements missing a base-text target),
     // listing the offending elements so the user can fix the file. Used
@@ -2890,18 +3046,22 @@ class HeiCritApp {
                         comparisonResponse.comparison_data.forEach(item => {
                             prefixToData[item.prefix] = {
                                 lineId: item.token,
-                                text: item.text
+                                text: item.text,
+                                regText: item.reg_text
                             };
                         });
                     } else if (comparisonResponse.comparison_texts) {
-                        // Fallback to old format (for backward compatibility)
+                        // Fallback to old format (for backward compatibility) -
+                        // no separate regularized rendering available here, so
+                        // the base-text row just shows the diplomatic text.
                         comparisonResponse.comparison_texts.forEach((text, index) => {
                             const lineId = synopticData.target[index] || `Witness ${index + 1}`;
                             const synopticPrefix = lineId.includes(':') ? lineId.split(':')[0] : lineId;
-                            
+
                             prefixToData[synopticPrefix] = {
                                 lineId: lineId,
-                                text: text
+                                text: text,
+                                regText: text
                             };
                         });
                     }
@@ -2937,8 +3097,10 @@ class HeiCritApp {
                     // Base text (Leithandschrift) always leads, everyone else
                     // keeps their existing relative order (stable sort).
                     synLineEntries.sort((a, b) => (b.isBaseText ? 1 : 0) - (a.isBaseText ? 1 : 0));
+                    const tabForToggleState = this.tabs.get(tabId);
+                    const diplomaticVisible = !!(tabForToggleState && tabForToggleState.diplomaticRowVisible);
                     synLineEntries.forEach(entry => {
-                        message += this.createSynLine(entry.siglum, entry.data, entry.isBaseText);
+                        message += this.createSynLine(entry.siglum, entry.data, entry.isBaseText, diplomaticVisible);
                     });
                 } else {
                     message += '<strong>Synoptic Comparison:</strong> Error loading comparison data<br>';

@@ -796,7 +796,29 @@ class Apparatus:
         return f"Apparatus(apparatus_filepath='{self._apparatus_filepath}', entries_count={self.get_entries_count()}, leiths_path='{self._leiths_path}')"
     
 
-def process_synoptic_token(el:et.Element) -> str:
+def _regularize_long_s(text: str | None, prefer_reg: bool) -> str | None:
+    """
+    In the regularized (prefer_reg) reading, replace the medial/long-s
+    character (ſ, U+017F) with a plain 's' - a manuscript typographic
+    variant with no meaning of its own, normalized away the same way
+    orig/reg <choice> alternatives are. Left untouched in the diplomatic
+    reading. text may be None (mirrors the .text/.tail attributes it wraps).
+    """
+    if prefer_reg and text:
+        return text.replace('ſ', 's')
+    return text
+
+
+def process_synoptic_token(el:et.Element, prefer_reg: bool = False) -> str:
+    """
+    prefer_reg selects, within a plain <choice><orig>.../<reg>...</choice>
+    alternation, which side wins: False (default) keeps the diplomatic
+    <orig> reading (today's behavior everywhere); True prefers the first
+    <reg> (regularized) reading instead - used for the base-text row, which
+    shows the regularized text with the diplomatic form available in a
+    separate toggleable row. Threaded through every recursive call so nested
+    <choice> elements resolve with the same preference as their ancestor.
+    """
     if not isinstance(el.tag, str):  # skip comments and processing instructions
         return ''
     tag_name = el.tag.split('}')[-1] if '}' in el.tag else el.tag
@@ -805,29 +827,60 @@ def process_synoptic_token(el:et.Element) -> str:
         xml_id = el.get(prefix_format('xml','id'))
         result += f"<span class='syn-token syn-token-pre' data-token-id='{xml_id}'> </span><span class='syn-token syn-tei-{tag_name}' data-token-id='{xml_id}'>"
         if el.text is not None:
-            result += el.text.strip()
+            result += _regularize_long_s(el.text.strip(), prefer_reg)
         for child in el:
-            result += process_synoptic_token(child)
+            result += process_synoptic_token(child, prefer_reg)
         result += "</span>"
     # elif tag_name in ['c']:
     #     result += "<span class='syn-tei-space'> </span>"
-    elif tag_name in ['choice', 'lg', 'l']:
-        for child in el:
-            result += process_synoptic_token(child)
+    elif tag_name == 'choice':
+        children = [c for c in el if isinstance(c.tag, str)]
+        child_tags = {c.tag.split('}')[-1] if '}' in c.tag else c.tag for c in children}
+        if children and child_tags <= {'orig', 'reg'}:
+            # A plain orig/reg alternation (possibly with more than one
+            # <reg>, e.g. Iwein_J_Wien.xml's <orig>w</orig><reg>w</reg>
+            # <reg>u</reg> - the first <reg> wins when preferred). Any other
+            # <choice> composition (am/ex abbreviation pairs, corr/sic, a
+            # nested <choice> sibling, ...) falls through to the pass-through
+            # branch below, unchanged.
+            origs = [c for c in children if (c.tag.split('}')[-1] if '}' in c.tag else c.tag) == 'orig']
+            regs = [c for c in children if (c.tag.split('}')[-1] if '}' in c.tag else c.tag) == 'reg']
+            chosen = None
+            if prefer_reg and regs:
+                chosen = regs[0]
+            elif origs:
+                chosen = origs[0]
+            # No fallback to regs[0] here when not prefer_reg and there's no
+            # <orig> at all (a single real case in AH_E.xml) - rendering
+            # nothing keeps the diplomatic reading's output unchanged from
+            # before this function gained the prefer_reg parameter.
+            if chosen is not None:
+                result += _render_choice_alternative(chosen, prefer_reg)
+        else:
+            for child in el:
+                result += process_synoptic_token(child, prefer_reg)
         if el.tail is not None and el.tail.strip() != '':
-            result += el.tail
+            result += _regularize_long_s(el.tail, prefer_reg)
+    elif tag_name in ['lg', 'l']:
+        for child in el:
+            result += process_synoptic_token(child, prefer_reg)
+        if el.tail is not None and el.tail.strip() != '':
+            result += _regularize_long_s(el.tail, prefer_reg)
     elif tag_name == 'reg':
         # Regularized/normalized form - suppressed; the diplomatic <orig> (or
         # plain text) sibling is preferred, matching the same convention used
         # to render apparatus reading text from these files (location_resolver).
         # Its tail is still part of the surrounding flow, so it isn't dropped.
+        # (Only reached for a <reg> that ISN'T the chosen alternative of a
+        # plain orig/reg <choice> - that case is handled, without hitting
+        # this branch, by _render_choice_alternative above.)
         if el.tail is not None and el.tail.strip() != '':
-            result += el.tail
+            result += _regularize_long_s(el.tail, prefer_reg)
     elif tag_name == 'titlePart':
         if el.text is not None:
-            result += el.text.strip()
+            result += _regularize_long_s(el.text.strip(), prefer_reg)
         for child in el:
-            result += process_synoptic_token(child)
+            result += process_synoptic_token(child, prefer_reg)
     elif tag_name == 'gap':
         star_count = 3
         if el.get('unit') == 'character':
@@ -839,7 +892,11 @@ def process_synoptic_token(el:et.Element) -> str:
                 pass
         result += f"<span class='syn-gap-marker'>{'*' * star_count}</span>"
         if el.tail is not None and el.tail.strip() != '':
-            result += el.tail
+            result += _regularize_long_s(el.tail, prefer_reg)
+    elif tag_name == 'note':
+        result += _render_note_marker(el)
+        if el.tail is not None and el.tail.strip() != '':
+            result += _regularize_long_s(el.tail, prefer_reg)
     else:
         # Default: any other inline element (orig, sic, hi, initial, ex,
         # metamark, ...) is transparent pass-through content - include its own
@@ -847,14 +904,71 @@ def process_synoptic_token(el:et.Element) -> str:
         # than a fixed whitelist avoids silently dropping real word content
         # (e.g. <ex>n</ex> abbreviation expansions) whenever markup not
         # anticipated by an explicit branch appears in the source.
-        if el.text is not None:
-            result += el.text.strip()
-        for child in el:
-            result += process_synoptic_token(child)
-            if child.tail is not None and child.tail.strip() != '':
-                result += child.tail
-        if el.tail is not None and el.tail.strip() != '':
-            result += el.tail
+        result += _render_choice_alternative(el, prefer_reg)
+    return result
+
+
+def _render_choice_alternative(el, prefer_reg: bool) -> str:
+    """
+    Render el's own content (text + children, recursively threading
+    prefer_reg + each child's tail, plus el's own tail) without dispatching
+    el itself through process_synoptic_token's tag-based branches.
+
+    Used for two purposes: (1) as process_synoptic_token's default
+    pass-through case, and (2) to render a <choice>'s chosen orig/reg
+    alternative - critically, when the chosen alternative is a <reg>, it
+    must NOT go through the normal tag switch, since the standalone
+    tag_name == 'reg' branch unconditionally suppresses reg content (that
+    branch exists to drop an UNCHOSEN stray <reg>, not the one just chosen).
+    """
+    result = ''
+    if el.text is not None:
+        result += _regularize_long_s(el.text.strip(), prefer_reg)
+    for child in el:
+        result += process_synoptic_token(child, prefer_reg)
+        if child.tail is not None and child.tail.strip() != '':
+            result += _regularize_long_s(child.tail, prefer_reg)
+    if el.tail is not None and el.tail.strip() != '':
+        result += _regularize_long_s(el.tail, prefer_reg)
+    return result
+
+
+def _render_note_marker(note_element) -> str:
+    """
+    Render an editorial/transcription <note> as a clickable star marker whose
+    full text is stashed in a data attribute - the frontend shows it in a
+    popup on click instead of dumping the note text inline into the witness
+    reading, which would otherwise corrupt the transcription being displayed.
+    """
+    note_text = ' '.join(''.join(note_element.itertext()).split())
+    return (
+        "<span class='syn-note-marker' tabindex='0' role='button' "
+        f"data-note-text=\"{html_escape(note_text)}\" title='Anmerkung anzeigen'>★</span>"
+    )
+
+
+def _render_line_notes(element) -> str:
+    """
+    Render any <note> elements associated with this line via @target.
+
+    Witness files place these as siblings of <l> inside <lg> (or similar
+    containers), pointing back at the line with @target="#<xml:id>" - not as
+    children of <l> itself - so process_synoptic_token's own 'note' branch
+    (which only sees actual children) never encounters them. Look them up
+    explicitly among element's siblings and append their star markers.
+    """
+    xml_id = element.get(prefix_format('xml', 'id'))
+    parent = element.getparent()
+    if not xml_id or parent is None:
+        return ''
+    target = f'#{xml_id}'
+    result = ''
+    for sibling in parent:
+        if not isinstance(sibling.tag, str):
+            continue
+        tag_name = sibling.tag.split('}')[-1] if '}' in sibling.tag else sibling.tag
+        if tag_name == 'note' and sibling.get('target') == target:
+            result += _render_note_marker(sibling)
     return result
 
 
@@ -872,12 +986,14 @@ def _last_token_id(element) -> str:
     return last_id
 
 
-def process_synoptic_unit_for_comparison(element:et.Element) -> str:
+def process_synoptic_unit_for_comparison(element:et.Element, prefer_reg: bool = False) -> str:
     """
     Process an XML synoptic unit and return a string representation for comparison.
 
     Args:
         element: The lxml etree Element to process
+        prefer_reg: see process_synoptic_token - False (default) renders the
+            diplomatic reading, True the regularized one.
 
     Returns:
         String representation of the element content
@@ -890,7 +1006,7 @@ def process_synoptic_unit_for_comparison(element:et.Element) -> str:
         # line_content = ''.join(element.itertext()).strip()
         line_content = ''
         for el in element:
-            line_content += process_synoptic_token(el)
+            line_content += process_synoptic_token(el, prefer_reg)
         if line_content:
             last_id = _last_token_id(element)
             post_attr = f" data-token-id='{last_id}'" if last_id else ''
@@ -901,7 +1017,8 @@ def process_synoptic_unit_for_comparison(element:et.Element) -> str:
             if tag_name == 'gap':
                 return "<div class='synoptic-content-om'>om.</div>"
             return f"[{tag_name} element - no text content]"
-        
+
+        line_content += _render_line_notes(element)
         return line_content
         
     except Exception as e:

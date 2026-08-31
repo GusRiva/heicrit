@@ -118,11 +118,13 @@ def get_synoptic_comparison():
                     continue
                 element = wit_elements.get(element_id)
                 text_repr = process_synoptic_unit_for_comparison(element)
-                
+                reg_text_repr = process_synoptic_unit_for_comparison(element, prefer_reg=True)
+
                 comparison_data.append({
                     'token': token,
                     'prefix': prefix,
-                    'text': text_repr
+                    'text': text_repr,
+                    'reg_text': reg_text_repr
                 })
         
         # Keep old format for backward compatibility

@@ -1044,8 +1044,11 @@ main {
 }
 
 /* Base text (Leithandschrift) row - always shown first, set apart from the
-   other witnesses with a slim divider and a bit of breathing room. */
-.syn-line-base {
+   other witnesses with a slim divider and a bit of breathing room. The
+   divider lives on the group wrapper (not .syn-line-base itself) so it
+   renders after the base row AND its collapsible diplomatic row below,
+   not between the two. */
+.syn-line-group-base {
     padding-bottom: 0.5em;
     margin-bottom: 0.75em;
     border-bottom: 1px solid #dee2e6;
@@ -1054,6 +1057,33 @@ main {
 .syn-line-wit-base {
     /* font-size: larger; */
 }
+
+.syn-diplomatic-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 2px;
+    font-size: 0.75em;
+    color: #6c757d;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.syn-diplomatic-toggle:hover,
+.syn-diplomatic-toggle:focus {
+    color: #343a40;
+}
+
+.syn-diplomatic-toggle-open span {
+    display: inline-block;
+    transform: rotate(90deg);
+}
+
+/* The collapsible diplomatic (<orig>) row shown below the base row is
+   pointer-events:none (see below, placed after .syn-line .syn-token so its
+   overrides win on specificity ties) - purely informational, fully inert to
+   clicks (no mouseover/mousedown/focus handlers exist on tokens elsewhere,
+   so pointer-events:none alone is sufficient to block interaction). */
 
 .syn-line .syn-token {
     padding: 2px 4px;
@@ -1172,6 +1202,58 @@ main {
 .syn-line .syn-gap-marker {
     color: #999;
     font-style: italic;
+}
+
+.syn-line .syn-note-marker {
+    display: inline-block;
+    color: #d4a017;
+    cursor: pointer;
+    padding: 0 2px;
+    font-size: 0.9em;
+    line-height: 1;
+}
+
+.syn-line .syn-note-marker:hover,
+.syn-line .syn-note-marker:focus {
+    color: #b8860b;
+}
+
+.syn-line .syn-note-marker:focus-visible {
+    outline: 2px solid #b8860b;
+    outline-offset: 1px;
+    border-radius: 2px;
+}
+
+/* Diplomatic row overrides - placed after .syn-line .syn-token et al above
+   so these win on specificity ties (same selector weight, later wins). */
+.syn-line-diplomatic {
+    pointer-events: none;
+    margin-top: -0.25em;
+}
+
+/* .syn-line sets display:flex, which - being an author rule - overrides the
+   browser's default [hidden] { display: none } UA-stylesheet rule (author
+   styles always beat the UA stylesheet, regardless of specificity), so
+   without this the hidden attribute alone would never actually hide the
+   row. */
+.syn-line-diplomatic[hidden] {
+    display: none;
+}
+
+.syn-line-diplomatic .syn-line-wit,
+.syn-line-diplomatic .syn-line-content {
+    color: #888;
+    font-weight: normal;
+}
+
+.syn-line-diplomatic .syn-token {
+    border-color: transparent;
+    background: none;
+    cursor: default;
+}
+
+.syn-line-diplomatic .syn-note-marker {
+    color: inherit;
 }
 
 
