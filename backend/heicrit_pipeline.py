@@ -3,7 +3,7 @@ from lxml import etree as et
 
 from heipy.namespaces import prefix_format
 from heipy.heipipe.steps import Pipeline, DeleteStep, XsltStep
-from heipy.heipipe.step_library import container2milestone, whitespaces, number_line_segment_beginnings, delete_comments
+from heipy.heipipe.step_library import container2milestone, whitespaces, number_line_segment_beginnings, delete_comments, revision_spans
 from heipy.heipipe.step_library.synoptic import move_layout_milestones, append_synoptic_links
 from heipy.heipipe.pipeline_library.synoptic import milestone_element_map
 
@@ -29,6 +29,8 @@ class HeiCritPipe(Pipeline):
             DeleteStep(elements=['tei:facsimile', 'tei:metamark', 'tei:fw', 'tei:note', 'tei:teiHeader'], name="delete_basic"),
             reduce_markup,
             whitespaces.get_step(),
+            revision_spans.get_step(),
+
             move_layout_milestones.get_step(),
             container2milestone_step,
             

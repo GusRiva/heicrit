@@ -1,4 +1,5 @@
-const API_BASE = 'http://127.0.0.1:5000/api';
+const API_PORT = new URLSearchParams(window.location.search).get('apiPort') || '5000';
+const API_BASE = `http://127.0.0.1:${API_PORT}/api`;
 
 class HeiCritApp {
     constructor() {
@@ -194,7 +195,7 @@ class HeiCritApp {
                 <div class="view-container apparatus-container">
                     <div class="apparatus-layout">
                         <div class="text-panel">
-                            <h3>Main Text (Leithandschrift)</h3>
+                            <h3 id="main-text-heading-${tabId}">Base Text</h3>
                             <div id="main-text-content-${tabId}"></div>
                         </div>
                         <div class="apparatus-panel">
@@ -494,6 +495,11 @@ class HeiCritApp {
         const mainTextContent = document.getElementById(`main-text-content-${tabId}`);
         if (mainTextContent && data.mainTextData && data.mainTextData.content) {
             mainTextContent.innerHTML = data.mainTextData.content;
+        }
+
+        const mainTextHeading = document.getElementById(`main-text-heading-${tabId}`);
+        if (mainTextHeading) {
+            mainTextHeading.textContent = this.getMainTextHeading();
         }
 
         // Setup apparatus data for this tab
@@ -1255,7 +1261,7 @@ class HeiCritApp {
             this.updateStatus('Saving file...');
             const content = this.textarea.value;
             
-            await this.apiRequest('/file', {
+            await this.apiRequest('/save', {
                 method: 'POST',
                 body: JSON.stringify({
                     filename: this.currentFile,
@@ -1369,7 +1375,7 @@ class HeiCritApp {
             await this.readFilesIntoProjectFiles(files, absoluteDirectoryPath);
 
             this.updateLoadingStep('step-reading', 'completed');
-            this.updateStatus(`Loaded ${this.projectFiles.size} files from relevant folders (apparatus, synopses, texts)`);
+            this.updateStatus(`Loaded ${this.projectFiles.size} files from relevant folders (apparatus, synopses, texts, indexes)`);
 
             // Auto-detect and process apparatus and synoptic map files
             await this.autoProcessProjectFiles();
@@ -1403,8 +1409,11 @@ class HeiCritApp {
             this.currentProjectDirectory = firstFilePath.split('/')[0];
         }
 
-        // Filter files to only process relevant folders: apparatus, synopses, texts
-        const relevantFolders = ['apparatus', 'synopses', 'texts'];
+        // Filter files to only process relevant folders: apparatus, synopses,
+        // texts, indexes (the last holds the shared witness-index file some
+        // projects use to declare editorial sigla - see electron/main.js's
+        // matching RELEVANT_PROJECT_FOLDERS).
+        const relevantFolders = ['apparatus', 'synopses', 'texts', 'indexes'];
         const filteredFiles = files.filter(file => {
             const pathParts = pathOf(file).split('/');
 
@@ -1897,9 +1906,12 @@ class HeiCritApp {
             count: result.apparatus_count || 0
         };
 
-        // Store leiths-info if available (contains siglum for main text)
-        if (result['leiths-info']) {
-            this.leithsInfo = result['leiths-info'];
+        // Store leiths info if available (contains siglum for main text).
+        // The backend's actual endpoints (/witnesses/load, /project/finalize)
+        // key this 'leiths_info'; only the older single-shot /project/open
+        // endpoint used the hyphenated 'leiths-info', so check both.
+        if (result.leiths_info || result['leiths-info']) {
+            this.leithsInfo = result.leiths_info || result['leiths-info'];
         }
 
         // Store witness order if available
@@ -1978,6 +1990,11 @@ class HeiCritApp {
             mainTextContent.innerHTML = this.mainTextData.content;
         }
 
+        const mainTextHeading = document.getElementById(`main-text-heading-${projectTab.id}`);
+        if (mainTextHeading) {
+            mainTextHeading.textContent = this.getMainTextHeading();
+        }
+
         // Reuses the same merge/position-preservation logic already used
         // after create/update/delete of an apparatus entry.
         this.refreshApparatusEntriesInTab(projectTab.id, this.apparatusData.entries);
@@ -2040,6 +2057,15 @@ class HeiCritApp {
         } else {
             this.updateStatus('No data loaded');
         }
+    }
+
+    getMainTextHeading() {
+        // Once leiths-info has loaded, append the base text's siglum so it
+        // matches the "App: X" convention used in getCurrentDisplayFilename().
+        if (this.leithsInfo && this.leithsInfo.siglum) {
+            return `Base Text (${this.leithsInfo.siglum})`;
+        }
+        return 'Base Text';
     }
 
     getCurrentDisplayFilename() {
@@ -2129,8 +2155,14 @@ class HeiCritApp {
                         // Add witnesses in italics
                         const wit = reading.attributes?.wit || reading.wit; // Support both new and old format
                         if (wit) {
-                            // Clean up witness list (remove # symbols and extra spaces)
-                            const witnesses = wit.replace(/#/g, '').trim().split(/\s+/).join(' ');
+                            // wit holds raw witness xml:id references (e.g. "#bb #ba"),
+                            // not display-ready sigla - xml:ids are conventionally
+                            // lowercase even when the editorial siglum has uppercase
+                            // letters (id "bb" -> siglum "Bb"), so resolve each one.
+                            const witnessIds = wit.replace(/#/g, '').trim().split(/\s+/).filter(Boolean);
+                            const witnesses = witnessIds
+                                .map(id => this.witnessMapping?.[id]?.siglum || id)
+                                .join(' ');
                             if (witnesses) {
                                 readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(witnesses)}</em>`;
                             }

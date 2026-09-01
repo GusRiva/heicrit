@@ -11,7 +11,14 @@
     
 -->  
      
-  <xsl:output method="html"/>
+  <!-- indent="no": the html output method defaults to indent="yes", which
+       auto-inserts whitespace around elements the serializer doesn't
+       recognize as inline (e.g. TEI's <surplus>, left un-transformed by the
+       identity/shallow-copy default below) - splitting words like
+       "gerstenkoren" apart with a stray newline. The tree arriving here is
+       already whitespace-correct (reduce_markup/whitespaces upstream), so
+       nothing should be added at serialization time. -->
+  <xsl:output method="html" indent="no"/>
 
   <!-- Identity template -->
   <xsl:mode on-no-match="shallow-copy" />
@@ -39,7 +46,13 @@
     </xsl:template>
 
     <xsl:template match="tei:l | tei:p | tei:titlePart">
-        <div class="synoptic-unit">
+        <!-- revision_spans (a pipeline step run before this one) marks a
+             whole line/paragraph reconstructed from other witnesses - not
+             present in this manuscript at all - by setting ana to
+             "hc:EditorialAdditionSpan" directly on this element. Surface
+             that as a class so the base text column can flag it visually
+             (see .synoptic-unit-editorial-addition in styles.css). -->
+        <div class="synoptic-unit{if (contains(concat(' ', @ana, ' '), ' hc:EditorialAdditionSpan ')) then ' synoptic-unit-editorial-addition' else ''}">
             <xsl:apply-templates select="tei:gap[@corresp]">
                 <xsl:with-param name="data-container-id" select="@xml:id"/>
             </xsl:apply-templates>

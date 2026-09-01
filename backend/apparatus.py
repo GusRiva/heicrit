@@ -15,7 +15,7 @@ from lxml import etree as et
 from lxml import html as lxml_html
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns, prefix_format
-from load_functions import resolve_relative_path, find_file_in_project, parse_location_token
+from load_functions import resolve_relative_path, find_file_in_project, parse_location_token, local_name
 from location_resolver import WitnessFragmentResolver
 
 XML_ID = '{http://www.w3.org/XML/1998/namespace}id'
@@ -809,6 +809,30 @@ def _regularize_long_s(text: str | None, prefer_reg: bool) -> str | None:
     return text
 
 
+def _in_editorial_addition_span(element: et.Element) -> bool:
+    """
+    True if `element` (or an ancestor) is wrapped in a
+    <milestone ana="hc:EditorialAdditionSpan" spanTo="#X"/> ... <anchor xml:id="X"/>
+    sibling span - content reconstructed from other witnesses because it's
+    entirely missing from this text (e.g. a verse the manuscript skips).
+
+    The HeiCritPipe pipeline (base text column) expands this span into an
+    ana attribute via the revision_spans step; the Location Details code
+    path renders straight from the parsed witness fragment without running
+    that pipeline, so it has to recognize the same raw span structure here.
+    """
+    node = element
+    while node is not None:
+        prev = node.getprevious()
+        if prev is not None and local_name(prev) == 'milestone' and prev.get('ana') == 'hc:EditorialAdditionSpan':
+            span_to = (prev.get('spanTo') or '').lstrip('#')
+            nxt = node.getnext()
+            if span_to and nxt is not None and local_name(nxt) == 'anchor' and nxt.get(XML_ID) == span_to:
+                return True
+        node = node.getparent()
+    return False
+
+
 def process_synoptic_token(el:et.Element, prefer_reg: bool = False) -> str:
     """
     prefer_reg selects, within a plain <choice><orig>.../<reg>...</choice>
@@ -823,7 +847,12 @@ def process_synoptic_token(el:et.Element, prefer_reg: bool = False) -> str:
         return ''
     tag_name = el.tag.split('}')[-1] if '}' in el.tag else el.tag
     result = ''
-    if tag_name in ['w', 'pc']:
+    if tag_name == 'pc' and prefer_reg:
+        # The base-text row (Location Details) drops punctuation entirely in
+        # the regularized reading - only the diplomatic row (prefer_reg=False)
+        # shows it.
+        pass
+    elif tag_name in ['w', 'pc']:
         xml_id = el.get(prefix_format('xml','id'))
         result += f"<span class='syn-token syn-token-pre' data-token-id='{xml_id}'> </span><span class='syn-token syn-tei-{tag_name}' data-token-id='{xml_id}'>"
         if el.text is not None:
@@ -895,6 +924,36 @@ def process_synoptic_token(el:et.Element, prefer_reg: bool = False) -> str:
             result += _regularize_long_s(el.tail, prefer_reg)
     elif tag_name == 'note':
         result += _render_note_marker(el)
+        if el.tail is not None and el.tail.strip() != '':
+            result += _regularize_long_s(el.tail, prefer_reg)
+    elif tag_name == 'supplied':
+        # An editorial reconstruction of illegible/damaged text (typically a
+        # <choice> sibling of an <orig><gap/></orig>). Shown in italics on
+        # the regularized base-text row only - suppressed on the diplomatic
+        # row and for every other witness, both of which use prefer_reg=False.
+        if prefer_reg:
+            inner = ''
+            if el.text is not None:
+                inner += _regularize_long_s(el.text.strip(), prefer_reg)
+            for child in el:
+                inner += process_synoptic_token(child, prefer_reg)
+                if child.tail is not None and child.tail.strip() != '':
+                    inner += _regularize_long_s(child.tail, prefer_reg)
+            result += f"<em class='syn-supplied'>{inner}</em>"
+        if el.tail is not None and el.tail.strip() != '':
+            result += _regularize_long_s(el.tail, prefer_reg)
+    elif tag_name == 'surplus':
+        # Text present in the source but editorially flagged as erroneous/
+        # extra - the mirror of <supplied>: kept as plain text in the
+        # diplomatic reading (prefer_reg=False, same as every other witness),
+        # dropped entirely from the regularized base-text row.
+        if not prefer_reg:
+            if el.text is not None:
+                result += _regularize_long_s(el.text.strip(), prefer_reg)
+            for child in el:
+                result += process_synoptic_token(child, prefer_reg)
+                if child.tail is not None and child.tail.strip() != '':
+                    result += _regularize_long_s(child.tail, prefer_reg)
         if el.tail is not None and el.tail.strip() != '':
             result += _regularize_long_s(el.tail, prefer_reg)
     else:
@@ -1002,6 +1061,14 @@ def process_synoptic_unit_for_comparison(element:et.Element, prefer_reg: bool = 
         return '<div class="synoptic-content-no-data">Stelle nicht gefunden</div>'
 
     try:
+        # A whole unit reconstructed from other witnesses (e.g. a verse this
+        # manuscript skips entirely) has nothing to diplomatically transcribe -
+        # same as an empty <gap>, the grey/diplomatic row shows "om." instead
+        # of the reconstructed text (which is still shown on the regularized
+        # row, via prefer_reg=True).
+        if not prefer_reg and _in_editorial_addition_span(element):
+            return "<div class='synoptic-content-om'>om.</div>"
+
         # Get the text content of the element, stripping whitespace
         # line_content = ''.join(element.itertext()).strip()
         line_content = ''

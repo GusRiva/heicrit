@@ -7,10 +7,11 @@ const { spawn } = require('child_process');
 // frontend/app.js's readFilesIntoProjectFiles() - only these top-level
 // project subfolders are walked/read when opening a project directory
 // via the native dialog (see the dialog:open-project-directory handler).
-const RELEVANT_PROJECT_FOLDERS = ['apparatus', 'synopses', 'texts'];
+const RELEVANT_PROJECT_FOLDERS = ['apparatus', 'synopses', 'texts', 'indexes'];
 
 let mainWindow;
 let flaskProcess;
+let backendPort = null;
 
 // Enable live reload for development
 const isDev = process.argv.includes('--dev');
@@ -31,8 +32,13 @@ function createWindow() {
         titleBarStyle: 'default'
     });
 
-    // Load the frontend
-    mainWindow.loadFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+    // Load the frontend, telling it which port the backend actually bound
+    // (see startFlaskBackend - the backend picks a free port at startup
+    // rather than a fixed one, to avoid clashing with anything else already
+    // using it, e.g. macOS's AirPlay Receiver on port 5000).
+    mainWindow.loadFile(path.join(__dirname, '..', 'frontend', 'index.html'), {
+        query: { apiPort: String(backendPort) }
+    });
 
     // Open DevTools in development
     if (isDev) {
@@ -244,31 +250,60 @@ function startFlaskBackend() {
             stdio: ['pipe', 'pipe', 'pipe']
         });
 
-        flaskProcess.stdout.on('data', (data) => {
-            console.log(`Flask stdout: ${data}`);
-            if (data.includes('Running on')) {
+        let settled = false;
+        const settleResolve = () => {
+            // Only ready once we both know the port (HEICRIT_BACKEND_PORT=...,
+            // printed by backend/app.py before it starts serving) and have
+            // seen Flask's own "Running on" banner confirming it's up.
+            if (!settled && backendPort !== null) {
+                settled = true;
                 resolve();
             }
+        };
+
+        const handleOutput = (data) => {
+            const text = data.toString();
+            const portMatch = text.match(/HEICRIT_BACKEND_PORT=(\d+)/);
+            if (portMatch) {
+                backendPort = parseInt(portMatch[1], 10);
+            }
+            if (text.includes('Running on')) {
+                settleResolve();
+            }
+        };
+
+        flaskProcess.stdout.on('data', (data) => {
+            console.log(`Flask stdout: ${data}`);
+            handleOutput(data);
         });
 
         flaskProcess.stderr.on('data', (data) => {
             console.log(`Flask stderr: ${data}`);
             // Flask often outputs normal info to stderr
-            if (data.includes('Running on')) {
-                resolve();
-            }
+            handleOutput(data);
         });
 
         flaskProcess.on('error', (error) => {
             console.error('Failed to start Flask backend:', error);
-            dialog.showErrorBox('Backend Error', 
+            dialog.showErrorBox('Backend Error',
                 'Failed to start the Flask backend. Please ensure Python and dependencies are installed.');
-            reject(error);
+            if (!settled) {
+                settled = true;
+                reject(error);
+            }
         });
 
         // Timeout after 10 seconds
         setTimeout(() => {
-            resolve(); // Continue even if we don't see the "Running on" message
+            if (settled) return;
+            settled = true;
+            if (backendPort !== null) {
+                resolve(); // Didn't see "Running on" but we do have a port - continue
+            } else {
+                const error = new Error('Flask backend did not report its port within 10 seconds');
+                dialog.showErrorBox('Backend Error', error.message);
+                reject(error);
+            }
         }, 10000);
     });
 }

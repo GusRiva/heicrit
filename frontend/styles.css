@@ -1019,6 +1019,13 @@ main {
     margin-left: 0.5rem; /* Add some space between line number and content */
 }
 
+/* Base text column: a line reconstructed from other witnesses (not present
+   in this manuscript at all) - see create_html.xsl's tei:l|p|titlePart
+   template, which sets this class from ana="hc:EditorialAdditionSpan". */
+.synoptic-unit-editorial-addition .tei-container-content {
+    font-style: italic;
+}
+
 
 /* Classes for the comparison */
 .syn-line {
