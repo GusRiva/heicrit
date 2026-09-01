@@ -24,23 +24,15 @@ class HeiCritPipe(Pipeline):
         
         # SourceDoc Pipeline Standard
         pipe_steps = [
-            # Index: 0
             delete_comments.get_step(),
-            DeleteStep(elements=['tei:facsimile', 'tei:metamark', 'tei:fw', 'tei:note', 'tei:teiHeader'], name="delete_basic"),
+            DeleteStep(elements=['tei:facsimile', 
+                                 'tei:metamark', 
+                                 'tei:fw', 
+                                 'tei:teiHeader'], 
+                       name="delete_basic"),
             reduce_markup,
             whitespaces.get_step(),
             revision_spans.get_step(),
-
-            move_layout_milestones.get_step(),
-            container2milestone_step,
-            
-            number_line_segment_beginnings.get_step(),
-            # AddAttribute(match='tei:text', att_name=prefix_format('xml','space'), att_val='preserve'),
-
-            # For first gap we add xml:id gap_leaf_1 if missing
-            # AddAttribute()
-
-            # suppress_first_cb.get_step(),
             create_html
             ]
         
