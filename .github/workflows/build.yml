@@ -1,6 +1,4 @@
 # Desktop (Electron) build pipeline for the GitHub mirror of this repo.
-# A matching pipeline lives in .gitlab-ci-template.yml for GitLab (the canonical
-# origin) — keep both in sync when changing the build matrix.
 name: Build and Release
 
 on:
@@ -34,8 +32,7 @@ jobs:
           esac
 
   # permissions.contents:write below is needed for electron-builder to publish
-  # GitHub Releases — GitHub-specific, intentionally not mirrored into
-  # .gitlab-ci-template.yml.
+  # GitHub Releases.
   build:
     needs: set-matrix
     runs-on: ${{ matrix.os }}
@@ -49,9 +46,9 @@ jobs:
       # Redirect the heipy submodule to its public GitHub mirror instead of
       # the university GitLab (unreliable/slow to reach from some GitHub
       # runner regions - see git history for the stalls this caused). Exact
-      # URL match only, so .gitmodules and the GitLab CI pipeline are
-      # unaffected. http.lowSpeedLimit/Time is kept as a safety net so any
-      # future stalled transfer aborts instead of hanging forever.
+      # URL match only, so .gitmodules is unaffected. http.lowSpeedLimit/Time
+      # is kept as a safety net so any future stalled transfer aborts instead
+      # of hanging forever.
       - name: Redirect heipy submodule to its GitHub mirror
         run: |
           git config --global url."https://github.com/GusRiva/heipy.git".insteadOf "https://gitlab.ub.uni-heidelberg.de/editions/heipy.git"
@@ -78,7 +75,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       - name: Setup Python

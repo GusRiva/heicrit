@@ -89,19 +89,19 @@
                 <!-- Dâ] Do nK2, H3, n2W1 -->
                 <!-- V. 4 -->
                 <!-- hircz H3 -->
-                <app target="b:range(w_71_4_1,w_71_4_4)">
-                    <rdg wit="#w1" ana="hc:SubstitutionVariant">
-                        <ptr target="w1:range(w_71_4_1,w_71_4_3)"/>
-                        <note><mentioned>schlange</mentioned> ebd. i. d. F. immer weibl.</note>
-                    </rdg>
-                </app>
-
                 <app target="b:w_71_4_4">
                     <rdg wit="#h3" ana="hc:SubstitutionVariant">
                         <ptr target="h3:w_71_4_4"/>
                     </rdg>
                 </app>
 
+
+                <app target="b:range(w_71_4_1,w_71_4_4)">
+                    <rdg wit="#w1" ana="hc:SubstitutionVariant">
+                        <ptr target="w1:range(w_71_4_1,w_71_4_3)"/>
+                        <note><mentioned>schlange</mentioned> ebd. i. d. F. immer weibl.</note>
+                    </rdg>
+                </app>
 
                 <!-- V. 4 -->
                 <!--Die was hertt g. n2W1 (schlange ebd. i. d. F. immer weibl.)-->
@@ -251,7 +251,7 @@
                         <link target="b:w_71_8_4 k1:w_71_8_2"/>
                     </rdg>
                 </app>
-            <app target="b:w_71_8_5"><rdg wit="#bn" ana="hc:SubstitutionVariant"><ptr target="bn:range(w_71_8_5, w_71_8_4)"/></rdg></app><app target="b:range(w_71_14_5, w_71_14_4)"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:range(w_71_14_5, w_71_14_4)"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_69_2"><rdg wit="#bn" ana="hc:SubstitutionVariant"><ptr target="bn:range(w_71_69_2, w_71_69_1)"/></rdg></app><app target="b:None"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_69_3"/></rdg></app><app target="b:w_71_74_2"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_74_2"/></rdg></app><app target="b:w_71_75_4"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_75_4, w_71_75_5)"/></rdg></app><app target="b:w_71_10_2"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_10_2, w_71_10_5)"/></rdg><rdg wit="#h3 #k1" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_10_1, w_71_10_3)"/><ptr target="k1:w_71_10_2"/></rdg></app><app target="b:w_71_54_5"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_54_6"/></rdg></app><app target="b:range(w_71_5_2, w_71_5_5)"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_5_2, w_71_5_5)"/></rdg></app><app target="b:w_71_7_3"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:w_71_7_3"/></rdg></app><app target="b:w_71_7_6"><rdg wit="#bl #h3 #w1" ana="hc:OmissionVariant"><ptr target="bl:left(w_71_7_6)"/><ptr target="h3:left(w_71_7_6)"/><ptr target="w1:left(w_71_7_6)"/></rdg></app></listApp>
+            <app target="b:w_71_8_5"><rdg wit="#bn" ana="hc:SubstitutionVariant"><ptr target="bn:range(w_71_8_5, w_71_8_4)"/></rdg></app><app target="b:range(w_71_14_5, w_71_14_4)"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:range(w_71_14_5, w_71_14_4)"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_14_5"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_14_4, w_71_14_6)"/></rdg></app><app target="b:w_71_69_2"><rdg wit="#bn" ana="hc:SubstitutionVariant"><ptr target="bn:range(w_71_69_2, w_71_69_1)"/></rdg></app><app target="b:None"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_69_3"/></rdg></app><app target="b:w_71_74_2"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_74_2"/></rdg></app><app target="b:w_71_75_4"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_75_4, w_71_75_5)"/></rdg></app><app target="b:w_71_10_2"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_10_2, w_71_10_5)"/></rdg><rdg wit="#h3 #k1" ana="hc:SubstitutionVariant"><ptr target="h3:range(w_71_10_1, w_71_10_3)"/><ptr target="k1:w_71_10_2"/></rdg></app><app target="b:w_71_54_5"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_54_6"/></rdg></app><app target="b:range(w_71_5_2, w_71_5_5)"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:range(w_71_5_2, w_71_5_5)"/></rdg></app><app target="b:w_71_7_3"><rdg wit="#h3" ana="hc:SubstitutionVariant"><ptr target="h3:w_71_7_3"/></rdg></app><app target="b:w_71_7_6"><rdg wit="#bl #h3 #w1" ana="hc:OmissionVariant"><ptr target="bl:left(w_71_7_6)"/><ptr target="h3:left(w_71_7_6)"/><ptr target="w1:left(w_71_7_6)"/></rdg></app><app target="b:w_71_3_4"><rdg wit="#bl" ana="hc:SubstitutionVariant"><ptr target="bl:w_71_3_4"/></rdg></app></listApp>
         </body>
     </text>
 </TEI>

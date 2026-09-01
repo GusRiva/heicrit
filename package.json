@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "HeiCrit - Critical Apparatus Editor",
   "main": "electron/main.js",
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
+  },
   "scripts": {
     "start": "electron . --no-sandbox",
     "dev": "electron . --dev --no-sandbox",
@@ -12,8 +16,8 @@
     "dist:publish": "electron-builder --publish=always"
   },
   "author": {
-    "name": "HeiCrit Team",
-    "email": "contact@heicrit.org"
+    "name": "Gustavo Fernández Riva",
+    "email": "gustavo.fernandez.riva@ub.uni-heidelberg.de"
   },
   "homepage": "https://github.com/GusRiva/heicrit",
   "repository": {
@@ -22,7 +26,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "electron": "^43.4.1",
+    "electron": "^44.1.0",
     "electron-builder": "^26.15.3"
   },
   "build": {

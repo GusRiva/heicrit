@@ -14,7 +14,7 @@ HeiCrit's desktop build wraps the Flask backend and static frontend in an [Elect
 
 ### 1.1 Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 24+ and npm
 - Python 3.12 (≥3.11 required — `heipy`'s `networkx~=3.5` dependency needs it), with a virtual environment at `venv/` in the project root containing the packages from `requirements.txt` (including the `heipy` submodule — run `git submodule update --init --recursive` first if you haven't already)
 
 ```bash
@@ -35,7 +35,28 @@ This launches Electron, which spawns the Flask backend (`backend/app.py`, using 
 
 `npm start` runs the same thing without DevTools/dev-only flags.
 
-### 1.3 Building an installer (`npm run dist`)
+### 1.3 Build & packaging scripts
+
+All four `package.json` scripts below wrap `electron-builder` with different flags:
+
+| Script | Command | What it produces |
+|---|---|---|
+| `npm run build` | `electron-builder` | No `--publish` flag — falls back to electron-builder's own default publish policy (roughly: publish only if it detects a CI + tagged-release context). Ambiguous; not used anywhere in this project. |
+| `npm run pack` | `electron-builder --dir` | The packaged app as a plain **unpacked** directory (e.g. `dist/linux-unpacked/`) — no installer file, no compression. Fastest option; see below. |
+| `npm run dist` | `electron-builder --publish=never` | The real installer artifacts (`.exe`/`.dmg`/`.AppImage`/`.deb`/`.tar.xz`) under `dist/`, never uploaded anywhere. |
+| `npm run dist:publish` | `electron-builder --publish=always` | Same installer artifacts, and always uploads them to GitHub Releases per `package.json`'s `build.publish` config (§1.4). |
+
+#### Quick local packaging (`npm run pack`)
+
+```bash
+npm run pack
+```
+
+This runs the *same* packaging step as `npm run dist` — bundling `electron/`, `frontend/`, and the `extraResources` (`backend/`, `heipy/`, `requirements.txt`, the whole `venv/`) — but stops before the slower step of compressing that into a platform installer. The result is a runnable app folder, e.g. on Linux: `dist/linux-unpacked/heicrit` (the binary name is the lowercased `productName`); on Windows: `dist\win-unpacked\HeiCrit.exe`; on macOS: `dist/mac/HeiCrit.app`. Run that binary directly to launch it.
+
+**How this differs from `npm run dev` (§1.2):** `dev` runs Electron straight from the source tree — no bundling step at all — and spawns the backend from your own local `venv/`. `pack` actually exercises the packaging logic: it copies the backend/heipy/venv into the resources folder the way the final installer would, applies the same `asarUnpack` rules, and runs from that copy rather than your source tree. Use `pack` when you want to verify the packaging itself works (paths resolve, the bundled Python/venv starts correctly) without waiting for `dist`'s installer-compression step.
+
+#### Building an installer (`npm run dist`)
 
 ```bash
 npm run dist
@@ -61,12 +82,11 @@ Either way, start by bumping the version:
 
 #### Option A: GitHub Actions (recommended)
 
-Two equivalent CI pipelines build installers for Windows, macOS, and Linux by creating a fresh `venv` on each target OS before packaging:
+CI pipelines build installers for Windows, macOS, and Linux by creating a fresh `venv` on each target OS before packaging:
 
-- `.gitlab-ci-template.yml` — GitLab CI, runs on the canonical `gitlab.ub.uni-heidelberg.de` origin, triggered on tags/`main`.
 - `.github/workflows/build.yml` — GitHub Actions, intended for a GitHub mirror of this repo, triggered on `v*` tags or manual dispatch.
 
-Both are kept in sync intentionally (see the comment at the top of each file) rather than one being redundant — update both if you change the build matrix, Node/Python versions, or packaging steps. The GitHub workflow's `permissions: contents: write` and its 30-minute `timeout-minutes` are GitHub-Releases-specific and are intentionally *not* mirrored into `.gitlab-ci-template.yml`.
+The GitHub workflow's `permissions: contents: write` and its 30-minute `timeout-minutes` are GitHub-Releases-specific.
 
 `build.yml` publishes installers straight to GitHub Releases when triggered by a version tag — but only as a **draft** release (electron-builder's default), so nothing is visible to the public until a maintainer manually reviews and publishes it. A `workflow_dispatch` (manual, no-tag) run intentionally skips publishing; it only produces workflow-run debug artifacts (`.exe`/`.dmg`/`.AppImage`/`.deb`/`.tar.xz`), useful for testing the build itself without publishing anything.
 
@@ -129,7 +149,6 @@ Replace `electron/assets/icon.png` (ideally ≥1024×1024, square) with real Hei
 | Packaged app fails to start / backend errors about missing binary extensions | The `venv/` bundled into the installer was built on a different OS than the one running it — rebuild on the target OS or use CI (§1.4) |
 | electron-builder warns or fails about the app icon | Confirm `electron/assets/icon.png` (and `icon.ico` for Windows) exist and are valid image files |
 | Electron window opens but shows a blank page / can't reach the backend | Check the Electron console (`npm run dev` opens DevTools) for the Flask child-process log lines; confirm nothing else is already listening on port 5000 |
-| GitHub Actions job returns `503`, or hangs indefinitely while cloning the `heipy` submodule (seen on `macos-latest` specifically) | The institutional GitLab firewall may be rejecting or silently dropping connections from GitHub's runner IP range — this can affect one OS's runner and not others, since GitHub hosts macOS runners on separate infrastructure from Linux/Windows. `build.yml`'s `timeout-minutes: 30` fails the job fast instead of hanging for hours; ask your GitLab/network admin to check firewall logs, or fall back to Option B (§1.4) for the affected platform |
 | Windows installer opens a window but nothing that needs the backend works (e.g. opening a project silently fails) | A plain `python -m venv venv` isn't relocatable on Windows — `Scripts\python.exe` looks up its stdlib/DLLs via `pyvenv.cfg`'s `home`, an absolute path back to whichever machine created the venv. `build.yml`'s Windows job instead copies a whole self-contained Python installation (`$env:pythonLocation`) directly into `venv/`; `electron/main.js`'s `resolvePythonPath` looks for `Scripts\python.exe` first (local dev venv) and falls back to `venv\python.exe` at the root (CI-vendored layout). If you hit this, check the Electron console for whether the Flask child process actually started at all |
 
 ---
