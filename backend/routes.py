@@ -98,16 +98,32 @@ def get_synoptic_comparison():
     Expected JSON payload: { 'data_link': 'a:l_1 b:l_1' }
     """
     try:
+        if apparatus is None:
+            return jsonify({'error': 'No apparatus loaded. Call /apparatus/parse first.'}), 400
+
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         data_link = data.get('data_link')
         if not data_link:
             return jsonify({'error': 'No data_link provided'}), 400
-        
+
+        # The regularized reading (prefer_reg=True) is only ever shown for the
+        # base/leiths witness's row (see frontend's createSynLine) - skip
+        # computing it at all for every other witness.
+        leiths_path = apparatus.get_leiths_path()
+        witness_mapping = apparatus.get_witness_to_prefix_mapping()
+        leiths_prefix = None
+        if leiths_path:
+            leiths_filename = leiths_path.split('/')[-1]
+            for _witness_id, mapping_info in witness_mapping.items():
+                if mapping_info['target_file'].endswith(leiths_filename):
+                    leiths_prefix = mapping_info['synoptic_prefix']
+                    break
+
         comparison_data = []
-        
+
         # Parse data_link and get text representations
         tokens = data_link.split()
         for token in tokens:
@@ -117,8 +133,11 @@ def get_synoptic_comparison():
                 if not wit_elements or len(wit_elements) == 0:
                     continue
                 element = wit_elements.get(element_id)
-                text_repr = process_synoptic_unit_for_comparison(element)
-                reg_text_repr = process_synoptic_unit_for_comparison(element, prefer_reg=True)
+                editorial_addition_ids = synoptic_map.get_wit_editorial_addition_ids(prefix)
+                text_repr = process_synoptic_unit_for_comparison(element, editorial_addition_ids=editorial_addition_ids)
+                reg_text_repr = None
+                if prefix == leiths_prefix:
+                    reg_text_repr = process_synoptic_unit_for_comparison(element, prefer_reg=True)
 
                 comparison_data.append({
                     'token': token,

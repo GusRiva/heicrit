@@ -809,28 +809,52 @@ def _regularize_long_s(text: str | None, prefer_reg: bool) -> str | None:
     return text
 
 
-def _in_editorial_addition_span(element: et.Element) -> bool:
+def compute_editorial_addition_ids(root: et.Element) -> set[str]:
     """
-    True if `element` (or an ancestor) is wrapped in a
-    <milestone ana="hc:EditorialAdditionSpan" spanTo="#X"/> ... <anchor xml:id="X"/>
-    sibling span - content reconstructed from other witnesses because it's
-    entirely missing from this text (e.g. a verse the manuscript skips).
+    Return the xml:ids of every element that falls between a sibling
+    <milestone ana="hc:EditorialAdditionSpan" spanTo="#X"/> and its matching
+    <anchor xml:id="X"/> - content reconstructed from other witnesses because
+    it's entirely missing from this text (e.g. a run of verses the
+    manuscript skips).
 
-    The HeiCritPipe pipeline (base text column) expands this span into an
-    ana attribute via the revision_spans step; the Location Details code
+    Computed once per witness file at parse time (see
+    SynopticMap._parse_witness_file) instead of walked live on every
+    Location Details request: a single forward pass over the whole tree in
+    document order naturally sweeps in every element between a milestone and
+    its anchor, at any nesting depth, without needing a separate per-element
+    ancestor/sibling walk.
+
+    The HeiCritPipe pipeline (base text column) expands this same span into
+    an ana attribute via the revision_spans step; the Location Details code
     path renders straight from the parsed witness fragment without running
-    that pipeline, so it has to recognize the same raw span structure here.
+    that pipeline, so it has to recognize the raw span structure itself.
+
+    Known limitation (not present in real data, no worse than the previous
+    implementation): overlapping/nested spans aren't tracked - a second
+    milestone opening before the first's anchor is reached silently replaces
+    the open span instead of nesting.
     """
-    node = element
-    while node is not None:
-        prev = node.getprevious()
-        if prev is not None and local_name(prev) == 'milestone' and prev.get('ana') == 'hc:EditorialAdditionSpan':
-            span_to = (prev.get('spanTo') or '').lstrip('#')
-            nxt = node.getnext()
-            if span_to and nxt is not None and local_name(nxt) == 'anchor' and nxt.get(XML_ID) == span_to:
-                return True
-        node = node.getparent()
-    return False
+    ids: set[str] = set()
+    open_target: str | None = None
+    for el in root.iter():
+        if not isinstance(el.tag, str):  # skip comments and processing instructions
+            continue
+        tag = local_name(el)
+        if tag == 'milestone' and el.get('ana') == 'hc:EditorialAdditionSpan':
+            open_target = (el.get('spanTo') or '').lstrip('#') or None
+            continue
+        if tag == 'anchor':
+            if open_target is not None and el.get(XML_ID) == open_target:
+                xml_id = el.get(XML_ID)
+                if xml_id:
+                    ids.add(xml_id)
+                open_target = None
+            continue
+        if open_target is not None:
+            xml_id = el.get(XML_ID)
+            if xml_id:
+                ids.add(xml_id)
+    return ids
 
 
 def process_synoptic_token(el:et.Element, prefer_reg: bool = False) -> str:
@@ -1045,7 +1069,11 @@ def _last_token_id(element) -> str:
     return last_id
 
 
-def process_synoptic_unit_for_comparison(element:et.Element, prefer_reg: bool = False) -> str:
+def process_synoptic_unit_for_comparison(
+    element: et.Element,
+    prefer_reg: bool = False,
+    editorial_addition_ids: set[str] | None = None,
+) -> str:
     """
     Process an XML synoptic unit and return a string representation for comparison.
 
@@ -1053,6 +1081,10 @@ def process_synoptic_unit_for_comparison(element:et.Element, prefer_reg: bool = 
         element: The lxml etree Element to process
         prefer_reg: see process_synoptic_token - False (default) renders the
             diplomatic reading, True the regularized one.
+        editorial_addition_ids: the set of xml:ids (from
+            SynopticMap.get_wit_editorial_addition_ids) that fall inside an
+            hc:EditorialAdditionSpan in this witness's file - only consulted
+            on the diplomatic (prefer_reg=False) path.
 
     Returns:
         String representation of the element content
@@ -1066,7 +1098,7 @@ def process_synoptic_unit_for_comparison(element:et.Element, prefer_reg: bool = 
         # same as an empty <gap>, the grey/diplomatic row shows "om." instead
         # of the reconstructed text (which is still shown on the regularized
         # row, via prefer_reg=True).
-        if not prefer_reg and _in_editorial_addition_span(element):
+        if not prefer_reg and editorial_addition_ids and element.get(XML_ID) in editorial_addition_ids:
             return "<div class='synoptic-content-om'>om.</div>"
 
         # Get the text content of the element, stripping whitespace

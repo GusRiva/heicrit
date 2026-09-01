@@ -12,6 +12,7 @@ from lxml import etree as et
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns
 from load_functions import resolve_relative_path, find_file_in_project, parse_location_token
+from apparatus import compute_editorial_addition_ids
 
 
 class SynopticMap:
@@ -193,10 +194,10 @@ class SynopticMap:
     def get_wit_elements(self, wit_ident: str) -> dict[str, Any] | None:
         """
         Get XML elements for a specific witness (for internal use).
-        
+
         Args:
             wit_ident: The witness identifier
-            
+
         Returns:
             Dictionary mapping xml:id to XML elements, or None if not found
         """
@@ -204,7 +205,24 @@ class SynopticMap:
         if wit_info:
             return wit_info.get('elements', {})
         return None
-    
+
+    def get_wit_editorial_addition_ids(self, wit_ident: str) -> set[str]:
+        """
+        Get the set of xml:ids that fall inside an hc:EditorialAdditionSpan
+        for a specific witness, precomputed at parse time (see
+        _parse_witness_file / apparatus.compute_editorial_addition_ids).
+
+        Args:
+            wit_ident: The witness identifier
+
+        Returns:
+            Set of xml:ids, empty if the witness is unknown or has none
+        """
+        wit_info = self._wits.get(wit_ident)
+        if wit_info:
+            return wit_info.get('editorial_addition_ids', set())
+        return set()
+
     def get_all_wit_idents(self) -> list[str]:
         """
         Get a list of all witness identifiers.
@@ -307,14 +325,18 @@ class SynopticMap:
                             if isinstance(parse_result, dict) and 'elements' in parse_result:
                                 wit_info['elements'] = parse_result['elements']
                                 wit_info['siglum'] = parse_result.get('siglum')
+                                wit_info['editorial_addition_ids'] = parse_result.get('editorial_addition_ids', set())
                             else:
                                 # Backward compatibility for old return format
                                 wit_info['elements'] = parse_result
+                                wit_info['editorial_addition_ids'] = set()
                         except Exception as e:
                             print(f"WARNING: Could not parse witness file {file_name}: {str(e)}")
                             wit_info['elements'] = {}
+                            wit_info['editorial_addition_ids'] = set()
                     else:
                         wit_info['elements'] = {}
+                        wit_info['editorial_addition_ids'] = set()
                     
                     wits_map[ident] = wit_info
             # Extract link elements
@@ -467,11 +489,16 @@ class SynopticMap:
                     continue
                 xml_id = el.get("{http://www.w3.org/XML/1998/namespace}id")
                 elements_map[xml_id] = el
-            return {'elements': elements_map, 'siglum': siglum_text}
-            
+
+            # Precomputed once here (not per Location Details request) - see
+            # apparatus.compute_editorial_addition_ids.
+            editorial_addition_ids = compute_editorial_addition_ids(root)
+
+            return {'elements': elements_map, 'siglum': siglum_text, 'editorial_addition_ids': editorial_addition_ids}
+
         except Exception as e:
             print(f"ERROR: Could not parse witness file {file_name}: {str(e)}")
-            return {'elements': {}, 'siglum': None}
+            return {'elements': {}, 'siglum': None, 'editorial_addition_ids': set()}
 
     def load_from_project(self, corresp_path: str, apparatus_filepath: str, 
                          project_files: dict[str, dict[str, Any]], 
