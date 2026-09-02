@@ -16,9 +16,17 @@ def create_app():
 
     return app
 
-def find_free_port():
+# Uncommon port we try first, so a fresh install usually gets a stable,
+# predictable port instead of a random one every launch. Falls back to an
+# OS-assigned free port if this one is already taken.
+DEFAULT_PORT = 57321
+
+def find_free_port(preferred_port=DEFAULT_PORT):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('127.0.0.1', 0))
+        try:
+            s.bind(('127.0.0.1', preferred_port))
+        except OSError:
+            s.bind(('127.0.0.1', 0))
         return s.getsockname()[1]
 
 if __name__ == '__main__':

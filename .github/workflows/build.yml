@@ -116,6 +116,42 @@ jobs:
         shell: pwsh
         run: venv\python.exe -m pip install -r requirements.txt
 
+      # The vendored install above is a full CPython distribution, not a lean
+      # venv - it drags in Tk/Tkinter, IDLE, the stdlib's own test suite and
+      # the pip/setuptools wheels ensurepip bootstraps from, none of which
+      # the Flask backend ever imports. Stripping them cuts a large chunk off
+      # the Windows installer size. -ErrorAction SilentlyContinue because not
+      # every path exists on every Python build (layout has shifted across
+      # versions) - this is best-effort cleanup, not a correctness step.
+      - name: Prune unused stdlib pieces from vendored Python (Windows)
+        if: matrix.platform == 'win'
+        shell: pwsh
+        run: |
+          $before = (Get-ChildItem venv -Recurse -File | Measure-Object -Property Length -Sum).Sum
+          $paths = @(
+            'venv\tcl',
+            'venv\Doc',
+            'venv\Tools',
+            'venv\Lib\test',
+            'venv\Lib\tkinter',
+            'venv\Lib\idlelib',
+            'venv\Lib\turtledemo',
+            'venv\Lib\lib-tk',
+            'venv\Lib\ensurepip\_bundled',
+            'venv\Lib\__pycache__',
+            'venv\DLLs\tcl86t.dll',
+            'venv\DLLs\tk86t.dll',
+            'venv\DLLs\_tkinter.pyd',
+            'venv\Lib\turtle.py'
+          )
+          foreach ($p in $paths) {
+            Remove-Item -Path $p -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          Get-ChildItem venv -Recurse -Filter '__pycache__' -Directory -ErrorAction SilentlyContinue |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          $after = (Get-ChildItem venv -Recurse -File | Measure-Object -Property Length -Sum).Sum
+          Write-Host ("Vendored Python: {0:N1} MB -> {1:N1} MB" -f ($before / 1MB), ($after / 1MB))
+
       - name: Build and publish Electron app (tag push)
         if: startsWith(github.ref, 'refs/tags/')
         run: npm run dist:publish

@@ -16,6 +16,38 @@ let backendPort = null;
 // Enable live reload for development
 const isDev = process.argv.includes('--dev');
 
+// Diagnostic log for the Flask startup sequence. Packaged Electron apps have
+// no attached console on Windows/macOS when launched by double-click, so
+// console.log/console.error are invisible there - this file is the only way
+// a user can hand us the real error (e.g. a Python traceback from a port
+// bind failure) instead of just the generic dialog text. Overwritten each
+// launch since it's meant to capture the most recent startup attempt, not
+// serve as a long-running audit log.
+let logFilePath = null;
+
+function initLogFile() {
+    try {
+        const logDir = path.join(app.getPath('userData'), 'logs');
+        fs.mkdirSync(logDir, { recursive: true });
+        logFilePath = path.join(logDir, 'main.log');
+        fs.writeFileSync(logFilePath, `=== HeiCrit startup log - ${new Date().toISOString()} ===\n`);
+    } catch (error) {
+        console.error('Could not initialize log file:', error);
+    }
+}
+
+function log(...args) {
+    const line = args.map(a => (a instanceof Error ? (a.stack || a.message) : String(a))).join(' ');
+    console.log(line);
+    if (logFilePath) {
+        try {
+            fs.appendFileSync(logFilePath, `[${new Date().toISOString()}] ${line}\n`);
+        } catch (error) {
+            console.error('Could not write to log file:', error);
+        }
+    }
+}
+
 function createWindow() {
     // Create the browser window
     mainWindow = new BrowserWindow({
@@ -220,35 +252,56 @@ function resolvePythonPath(venvPath) {
 
 function startFlaskBackend() {
     return new Promise((resolve, reject) => {
-        console.log('Starting Flask backend...');
-        
+        log('Starting Flask backend...');
+
         // Path to resources (different in dev vs production)
         const isDev = process.argv.includes('--dev');
-        const resourcesPath = isDev 
+        const resourcesPath = isDev
             ? path.join(__dirname, '..')  // Development: project root
             : path.join(process.resourcesPath); // Production: resources directory
-            
+
         // Path to Python virtual environment
         const venvPath = path.join(resourcesPath, 'venv');
         const pythonPath = resolvePythonPath(venvPath);
-        
+
         const backendPath = path.join(resourcesPath, 'backend', 'app.py');
         const projectRoot = resourcesPath;
-        
-        console.log('Python path:', pythonPath);
-        console.log('Backend path:', backendPath);
-        console.log('Project root:', projectRoot);
-        
+
+        log('Python path:', pythonPath);
+        log('Backend path:', backendPath);
+        log('Project root:', projectRoot);
+
         // Start Flask process
         flaskProcess = spawn(pythonPath, [backendPath], {
             cwd: projectRoot,
-            env: { 
-                ...process.env, 
+            env: {
+                ...process.env,
                 PYTHONPATH: projectRoot,
                 FLASK_ENV: 'development'
             },
             stdio: ['pipe', 'pipe', 'pipe']
         });
+
+        // Kept so the error dialogs below can show the actual Python
+        // traceback (e.g. a socket bind failure) instead of just a generic
+        // message - the full output always goes to logFilePath regardless.
+        const recentOutput = [];
+        const MAX_RECENT_LINES = 40;
+        const rememberOutput = (text) => {
+            for (const line of text.split('\n')) {
+                if (line.trim() === '') continue;
+                recentOutput.push(line);
+            }
+            while (recentOutput.length > MAX_RECENT_LINES) recentOutput.shift();
+        };
+
+        const showStartupError = (title, summary) => {
+            const detail = recentOutput.length
+                ? `\n\nRecent backend output:\n${recentOutput.join('\n')}`
+                : '';
+            const logHint = logFilePath ? `\n\nFull log: ${logFilePath}` : '';
+            dialog.showErrorBox(title, `${summary}${detail}${logHint}`);
+        };
 
         let settled = false;
         const settleResolve = () => {
@@ -273,23 +326,36 @@ function startFlaskBackend() {
         };
 
         flaskProcess.stdout.on('data', (data) => {
-            console.log(`Flask stdout: ${data}`);
+            log(`Flask stdout: ${data}`);
+            rememberOutput(data.toString());
             handleOutput(data);
         });
 
         flaskProcess.stderr.on('data', (data) => {
-            console.log(`Flask stderr: ${data}`);
+            log(`Flask stderr: ${data}`);
             // Flask often outputs normal info to stderr
+            rememberOutput(data.toString());
             handleOutput(data);
         });
 
         flaskProcess.on('error', (error) => {
-            console.error('Failed to start Flask backend:', error);
-            dialog.showErrorBox('Backend Error',
+            log('Failed to start Flask backend:', error);
+            showStartupError('Backend Error',
                 'Failed to start the Flask backend. Please ensure Python and dependencies are installed.');
             if (!settled) {
                 settled = true;
                 reject(error);
+            }
+        });
+
+        flaskProcess.on('exit', (code, signal) => {
+            log(`Flask process exited (code=${code}, signal=${signal})`);
+            if (!settled && code !== 0) {
+                settled = true;
+                showStartupError('Backend Error',
+                    `The Flask backend exited unexpectedly (code ${code}) before it finished starting. ` +
+                    'This can happen if the port it tried to use is blocked by a firewall, antivirus, or another program.');
+                reject(new Error(`Flask backend exited with code ${code}`));
             }
         });
 
@@ -301,7 +367,8 @@ function startFlaskBackend() {
                 resolve(); // Didn't see "Running on" but we do have a port - continue
             } else {
                 const error = new Error('Flask backend did not report its port within 10 seconds');
-                dialog.showErrorBox('Backend Error', error.message);
+                log(error.message);
+                showStartupError('Backend Error', error.message);
                 reject(error);
             }
         }, 10000);
@@ -310,6 +377,7 @@ function startFlaskBackend() {
 
 // App event handlers
 app.whenReady().then(async () => {
+    initLogFile();
     try {
         createMenu();
 
@@ -319,7 +387,7 @@ app.whenReady().then(async () => {
         // Then create the window
         createWindow();
     } catch (error) {
-        console.error('Failed to start application:', error);
+        log('Failed to start application:', error);
         app.quit();
     }
 

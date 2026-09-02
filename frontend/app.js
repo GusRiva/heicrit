@@ -39,6 +39,15 @@ class HeiCritApp {
         // Project tracking for save functionality
         this.currentProjectDirectory = null;
         this.currentApparatusFile = null;
+        this.currentBaseTextPath = null;
+
+        // Punctuation editing (Base Text panel "Edit Punctuation" toggle)
+        this.punctuationEditMode = false;
+        this.punctuationEditTabId = null;
+        this.punctContainers = null; // Map<container_id, {container_id, signature, tokens, boundaries}>
+        this.mainTextDataStale = false; // true once a punctuation edit has been saved but mainTextData hasn't been resynced yet
+        this._activePunctPicker = null;
+        this._punctPickerOutsideHandler = null;
         
         // Store bound event handlers for proper removal
         this.tokenClickHandler = null;
@@ -195,7 +204,10 @@ class HeiCritApp {
                 <div class="view-container apparatus-container">
                     <div class="apparatus-layout">
                         <div class="text-panel">
-                            <h3 id="main-text-heading-${tabId}">Base Text</h3>
+                            <div class="main-text-header">
+                                <h3 id="main-text-heading-${tabId}">Base Text</h3>
+                                <button type="button" class="edit-punctuation-btn" id="edit-punctuation-btn-${tabId}">Edit Punctuation</button>
+                            </div>
                             <div id="main-text-content-${tabId}"></div>
                         </div>
                         <div class="apparatus-panel">
@@ -421,10 +433,28 @@ class HeiCritApp {
             });
         }
 
+        const editPunctuationBtn = document.getElementById(`edit-punctuation-btn-${tabId}`);
+        if (editPunctuationBtn) {
+            editPunctuationBtn.addEventListener('click', () => this.togglePunctuationEditMode(tabId));
+        }
+
         // Add click handler for subentries to make them active
         const tabPanel = document.getElementById(`panel-${tabId}`);
         if (tabPanel) {
             tabPanel.addEventListener('click', (e) => {
+                if (this.punctuationEditMode && this.punctuationEditTabId === tabId) {
+                    const markEl = e.target.closest('.punct-mark[data-occurrence]');
+                    if (markEl) {
+                        this.openPunctuationPicker(tabId, markEl, 'mark');
+                        return;
+                    }
+                    const slotEl = e.target.closest('.punct-slot');
+                    if (slotEl) {
+                        this.openPunctuationPicker(tabId, slotEl, 'slot');
+                        return;
+                    }
+                }
+
                 const subentry = e.target.closest('.classical-subentry[data-subentry-index]');
                 if (subentry) {
                     const subentryIndex = parseInt(subentry.getAttribute('data-subentry-index'));
@@ -1958,6 +1988,15 @@ class HeiCritApp {
                 filename: filename
             };
         }
+
+        // Store the base/leithandschrift witness file's own path (as authored
+        // relative to the apparatus file) for the punctuation-editing feature,
+        // which needs to resolve and rewrite that file directly - the same
+        // leiths_path field /witnesses/load already returns and
+        // /maintext/generate already consumes (see processApparatusInSteps).
+        if (result.leiths_path) {
+            this.currentBaseTextPath = result.leiths_path;
+        }
     }
 
     handleApparatusProcessingResult(result, filename) {
@@ -1984,6 +2023,22 @@ class HeiCritApp {
         projectTab.apparatusData = this.apparatusData;
         projectTab.synopticMapData = this.synopticMapData;
         projectTab.mainTextData = this.mainTextData;
+        if (projectTab.data) {
+            projectTab.data.baseTextPath = this.currentBaseTextPath;
+        }
+
+        // A manual reload (the toolbar's reload button, or the apparatus
+        // finishing a create/update elsewhere) always replaces the main text
+        // DOM with the fresh plain render below - exit any in-progress
+        // punctuation-edit overlay for this tab first so its now-stale
+        // this.punctContainers/button state don't linger past that replace.
+        if (this.punctuationEditMode && this.punctuationEditTabId === projectTab.id) {
+            this.punctuationEditMode = false;
+            this.punctuationEditTabId = null;
+            this.punctContainers = null;
+            this.mainTextDataStale = false;
+            this.updateEditPunctuationButton(projectTab.id);
+        }
 
         const mainTextContent = document.getElementById(`main-text-content-${projectTab.id}`);
         if (mainTextContent && this.mainTextData) {
@@ -1998,6 +2053,383 @@ class HeiCritApp {
         // Reuses the same merge/position-preservation logic already used
         // after create/update/delete of an apparatus entry.
         this.refreshApparatusEntriesInTab(projectTab.id, this.apparatusData.entries);
+    }
+
+    // ---- Punctuation editing (Base Text panel "Edit Punctuation" toggle) ----
+    //
+    // Fully additive: the default (non-edit-mode) Base Text render always
+    // comes straight from this.mainTextData.content, exactly as before this
+    // feature existed. Entering edit mode swaps each line's already-rendered
+    // .tei-container-content in place for an interactive token overlay built
+    // from /api/punctuation/edit-tokens; exiting restores the pristine HTML
+    // untouched. Saved edits go straight to the base text's own XML file on
+    // disk (see backend/punctuation.py) - never through the apparatus file.
+
+    async togglePunctuationEditMode(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) return;
+
+        if (this.punctuationEditMode && this.punctuationEditTabId === tabId) {
+            // Exiting: resync the cached plain render with whatever was saved
+            // during this session (cheap - a single /maintext/generate call,
+            // not a full apparatus/synoptic reprocess, since punctuation edits
+            // never touch the apparatus or synoptic map) before restoring it.
+            if (this.mainTextDataStale) {
+                this.updateStatus('Saving punctuation view...');
+                await this.refreshMainTextData(tabId);
+            }
+            this.punctuationEditMode = false;
+            this.punctuationEditTabId = null;
+            this.punctContainers = null;
+
+            const mainTextContent = document.getElementById(`main-text-content-${tabId}`);
+            if (mainTextContent && this.mainTextData) {
+                mainTextContent.innerHTML = this.mainTextData.content;
+            }
+            this.updateEditPunctuationButton(tabId);
+            this.updateStatus('Punctuation editing disabled');
+            return;
+        }
+
+        // Mutually exclusive with the Location Details entry creation/editing
+        // machinery - both mutate different files with different anchor
+        // schemes, and letting them overlap would be confusing at best.
+        if (this.creationMode || this.editMode) {
+            this.updateStatus('Finish or cancel the current apparatus entry edit before editing punctuation.', 'error');
+            return;
+        }
+
+        if (!tab.data || !tab.data.baseTextPath) {
+            this.updateStatus('No base text file available to edit punctuation for.', 'error');
+            return;
+        }
+
+        try {
+            this.updateStatus('Loading punctuation editor...');
+            const response = await this.apiRequest('/punctuation/edit-tokens', {
+                method: 'POST',
+                body: JSON.stringify({
+                    leiths_path: tab.data.baseTextPath,
+                    apparatus_filepath: tab.data.apparatusFile,
+                    project_directory: tab.data.projectDirectory
+                })
+            });
+
+            this.punctContainers = new Map((response.containers || []).map(c => [c.container_id, c]));
+            this.punctuationEditMode = true;
+            this.punctuationEditTabId = tabId;
+            this.mainTextDataStale = false;
+
+            this.renderPunctuationOverlay(tabId);
+            this.updateEditPunctuationButton(tabId);
+            this.updateStatus('Punctuation editing enabled - click a mark or a gap between words to edit it.');
+        } catch (error) {
+            this.showErrorPopup('Punctuation Editor Error', `Failed to load punctuation data: ${error.message}`);
+        }
+    }
+
+    updateEditPunctuationButton(tabId) {
+        const btn = document.getElementById(`edit-punctuation-btn-${tabId}`);
+        if (!btn) return;
+        const active = this.punctuationEditMode && this.punctuationEditTabId === tabId;
+        btn.textContent = active ? 'Done Editing Punctuation' : 'Edit Punctuation';
+        btn.classList.toggle('active', active);
+    }
+
+    // Re-fetches the plain (non-edit) Base Text HTML for the current base
+    // text file and refreshes this.mainTextData/tab.mainTextData with it -
+    // reuses /maintext/generate exactly as processApparatusInSteps does, so
+    // it stays byte-for-byte the same rendering path the default view has
+    // always used; it does not touch the apparatus or synoptic map.
+    async refreshMainTextData(tabId) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return;
+        try {
+            const response = await this.apiRequest('/maintext/generate', {
+                method: 'POST',
+                body: JSON.stringify({
+                    leiths_path: tab.data.baseTextPath,
+                    apparatus_filepath: tab.data.apparatusFile
+                })
+            });
+            if (response.success && response.has_main_text) {
+                this.mainTextData = {
+                    content: response.main_text,
+                    filename: this.mainTextData ? this.mainTextData.filename : tab.data.filename
+                };
+                tab.mainTextData = this.mainTextData;
+            }
+        } catch (error) {
+            // Non-fatal: the on-disk file is already correct from the save(s)
+            // that ran - only this cached HTML preview would stay briefly
+            // stale (it's retried the next time edit mode is entered/exited).
+        }
+        this.mainTextDataStale = false;
+    }
+
+    // Replaces every addressable line's .tei-container-content with an
+    // interactive token overlay. Lines with no xml:id (a pre-existing data
+    // gap, e.g. an <l> inside a reconstructed hc:EditorialAdditionSpan) have
+    // no entry in this.punctContainers and are simply left as their static
+    // rendering - not editable, matching this feature's scope.
+    renderPunctuationOverlay(tabId, onlyContainerId = null) {
+        const mainTextContent = document.getElementById(`main-text-content-${tabId}`);
+        if (!mainTextContent || !this.punctContainers) return;
+
+        mainTextContent.querySelectorAll('.tei-container-n[data-container-id]').forEach(nEl => {
+            const containerId = nEl.getAttribute('data-container-id');
+            if (onlyContainerId && containerId !== onlyContainerId) return;
+
+            const contentEl = nEl.nextElementSibling;
+            if (!contentEl || !contentEl.classList.contains('tei-container-content')) return;
+
+            const containerTokens = this.punctContainers.get(containerId);
+            if (!containerTokens) return;
+
+            contentEl.dataset.containerId = containerId;
+            contentEl.innerHTML = this.buildPunctuationOverlayHTML(containerTokens);
+        });
+    }
+
+    // Builds the plain-word-spans + boundary-marks markup for one container.
+    // A gap of N marks has N+1 "slots" (before mark 0, between each pair,
+    // after the last mark) - each independently may or may not carry a
+    // space in the real source (a mark's own spacing is not inferrable from
+    // its character - e.g. the same semicolon is sometimes followed by a
+    // space, sometimes not). Every slot renders a literal space when the
+    // data says one is there, plus an always-visible small clickable
+    // .punct-slot affordance for inserting a mark or toggling that space.
+    buildPunctuationOverlayHTML(containerTokens) {
+        const { tokens, boundaries } = containerTokens;
+
+        const renderSlot = (boundary, slotIndex, hasSpace) => {
+            if (!boundary.editable) return hasSpace ? ' ' : '';
+            const afterAttr = boundary.after_w_id ?? '';
+            const spaceChar = hasSpace ? ' ' : '';
+            return `${spaceChar}<span class="punct-slot" data-after-w-id="${this.escapeHtml(afterAttr)}" data-slot="${slotIndex}" data-has-space="${hasSpace ? '1' : '0'}" title="Insert punctuation or toggle the space here">·</span>`;
+        };
+
+        const renderMark = (boundary, mark) => {
+            const isEmpty = mark.text === '';
+            const label = isEmpty ? '∅' : this.escapeHtml(mark.text);
+            if (!boundary.editable) {
+                return `<span class="punct-mark punct-mark-readonly${isEmpty ? ' punct-mark-empty' : ''}">${label}</span>`;
+            }
+            const afterAttr = boundary.after_w_id ?? '';
+            return `<span class="punct-mark${isEmpty ? ' punct-mark-empty' : ''}" data-after-w-id="${this.escapeHtml(afterAttr)}" data-occurrence="${mark.occurrence}" data-has-space="${mark.space_before ? '1' : '0'}">${label}</span>`;
+        };
+
+        const renderBoundary = (boundary) => {
+            if (!boundary) return '';
+            let out = '';
+            boundary.marks.forEach((mark, i) => {
+                out += renderSlot(boundary, i, mark.space_before);
+                out += renderMark(boundary, mark);
+            });
+            out += renderSlot(boundary, boundary.marks.length, boundary.space_before_next_word);
+            return out;
+        };
+
+        let html = renderBoundary(boundaries[0]);
+        tokens.forEach((tok, i) => {
+            html += `<span class="punct-word">${this.escapeHtml(tok.text)}</span>`;
+            html += renderBoundary(boundaries[i + 1]);
+        });
+        return html;
+    }
+
+    // kind: 'mark' (an existing .punct-mark was clicked - Change/Remove,
+    // plus a "space before this mark" checkbox) or 'slot' (a .punct-slot
+    // was clicked - Insert a new mark here, plus "space before"/"space
+    // after" checkboxes for the two slots the new mark would sit between;
+    // confirming with no mark text just toggles the slot's own space).
+    openPunctuationPicker(tabId, anchorEl, kind) {
+        this.closePunctuationPicker();
+
+        const contentEl = anchorEl.closest('.tei-container-content[data-container-id]');
+        if (!contentEl) return;
+        const containerId = contentEl.dataset.containerId;
+        const containerTokens = this.punctContainers ? this.punctContainers.get(containerId) : null;
+        if (!containerTokens) return;
+
+        const afterWId = anchorEl.dataset.afterWId || null;
+        const hasSpace = anchorEl.dataset.hasSpace === '1';
+        const occurrence = kind === 'mark' ? parseInt(anchorEl.dataset.occurrence, 10) : null;
+        const slot = kind === 'slot' ? parseInt(anchorEl.dataset.slot, 10) : null;
+        const currentText = kind === 'mark' ? (anchorEl.textContent === '∅' ? '' : anchorEl.textContent) : '';
+
+        const commonMarks = ['.', ',', ';', ':', '!', '?', '‹', '›', '‘', '’'];
+
+        const picker = document.createElement('div');
+        picker.className = 'punct-picker';
+        picker.innerHTML = `
+            <div class="punct-picker-marks">
+                ${commonMarks.map(m => `<button type="button" data-mark="${this.escapeHtml(m)}">${this.escapeHtml(m)}</button>`).join('')}
+            </div>
+            <div class="punct-picker-input-row">
+                <input type="text" class="punct-picker-input" value="${this.escapeHtml(currentText)}" placeholder="mark" maxlength="8">
+                <button type="button" class="punct-picker-save">${kind === 'mark' ? 'Change' : 'Insert'}</button>
+            </div>
+            <div class="punct-picker-spaces">
+                ${kind === 'mark'
+                    ? `<label><input type="checkbox" class="punct-picker-space-before" ${hasSpace ? 'checked' : ''}> Space before this mark</label>`
+                    : `<label><input type="checkbox" class="punct-picker-space-before" ${hasSpace ? 'checked' : ''}> Space before</label>
+                       <label><input type="checkbox" class="punct-picker-space-after"> Space after</label>`}
+            </div>
+            <div class="punct-picker-actions">
+                ${kind === 'mark' ? '<button type="button" class="punct-picker-remove">Remove</button>' : '<span></span>'}
+                <button type="button" class="punct-picker-cancel">Cancel</button>
+            </div>
+        `;
+        document.body.appendChild(picker);
+
+        const rect = anchorEl.getBoundingClientRect();
+        const pickerRect = picker.getBoundingClientRect();
+        let left = rect.left;
+        let top = rect.bottom + 4;
+        if (left + pickerRect.width > window.innerWidth - 8) {
+            left = Math.max(8, window.innerWidth - pickerRect.width - 8);
+        }
+        if (top + pickerRect.height > window.innerHeight - 8) {
+            top = Math.max(8, rect.top - pickerRect.height - 4);
+        }
+        picker.style.left = `${left}px`;
+        picker.style.top = `${top}px`;
+
+        const input = picker.querySelector('.punct-picker-input');
+        const spaceBeforeBox = picker.querySelector('.punct-picker-space-before');
+        const spaceAfterBox = picker.querySelector('.punct-picker-space-after');
+
+        const submit = () => {
+            const text = input.value;
+            if (kind === 'mark') {
+                this.submitPunctuationEdit(tabId, containerId, {
+                    afterWId, occurrence, action: 'change',
+                    newText: text, spaceBefore: spaceBeforeBox.checked
+                });
+            } else if (text && text.trim()) {
+                this.submitPunctuationEdit(tabId, containerId, {
+                    afterWId, slot, action: 'insert', newText: text,
+                    spaceBefore: spaceBeforeBox.checked, spaceAfter: spaceAfterBox.checked
+                });
+            } else {
+                this.submitPunctuationEdit(tabId, containerId, {
+                    afterWId, slot, action: 'set_space', spaceBefore: spaceBeforeBox.checked
+                });
+            }
+        };
+
+        picker.querySelectorAll('[data-mark]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                input.value = btn.getAttribute('data-mark');
+                submit();
+            });
+        });
+
+        picker.querySelector('.punct-picker-save').addEventListener('click', submit);
+
+        const removeBtn = picker.querySelector('.punct-picker-remove');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                this.submitPunctuationEdit(tabId, containerId, { afterWId, occurrence, action: 'remove' });
+            });
+        }
+
+        picker.querySelector('.punct-picker-cancel').addEventListener('click', () => this.closePunctuationPicker());
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submit();
+            } else if (e.key === 'Escape') {
+                this.closePunctuationPicker();
+            }
+        });
+        input.focus();
+        input.select();
+
+        // Dismiss on outside click - deferred so the click that opened the
+        // picker doesn't immediately close it via this same listener.
+        this._punctPickerOutsideHandler = (e) => {
+            if (!picker.contains(e.target)) this.closePunctuationPicker();
+        };
+        setTimeout(() => document.addEventListener('click', this._punctPickerOutsideHandler), 0);
+
+        this._activePunctPicker = picker;
+    }
+
+    closePunctuationPicker() {
+        if (this._activePunctPicker) {
+            this._activePunctPicker.remove();
+            this._activePunctPicker = null;
+        }
+        if (this._punctPickerOutsideHandler) {
+            document.removeEventListener('click', this._punctPickerOutsideHandler);
+            this._punctPickerOutsideHandler = null;
+        }
+    }
+
+    // opts: { afterWId, action, occurrence, slot, newText, spaceBefore, spaceAfter }
+    async submitPunctuationEdit(tabId, containerId, opts) {
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return;
+        const containerTokens = this.punctContainers ? this.punctContainers.get(containerId) : null;
+        if (!containerTokens) return;
+
+        const { afterWId, action, occurrence = null, slot = null, newText = null,
+                spaceBefore = null, spaceAfter = null } = opts;
+
+        if ((action === 'insert' || action === 'change') && (!newText || !newText.trim())) {
+            this.updateStatus('Enter a punctuation mark first.', 'error');
+            return;
+        }
+
+        this.closePunctuationPicker();
+
+        try {
+            const response = await this.apiRequest('/punctuation/save', {
+                method: 'POST',
+                body: JSON.stringify({
+                    leiths_path: tab.data.baseTextPath,
+                    apparatus_filepath: tab.data.apparatusFile,
+                    project_directory: tab.data.projectDirectory,
+                    container_id: containerId,
+                    signature: containerTokens.signature,
+                    after_w_id: afterWId,
+                    occurrence: occurrence,
+                    slot: slot,
+                    action: action,
+                    new_text: newText,
+                    space_before: spaceBefore,
+                    space_after: spaceAfter
+                })
+            });
+
+            if (response.error === 'stale' || response.success === false) {
+                // Another edit changed this line since it was fetched - reload
+                // the whole file's tokens fresh rather than risk applying this
+                // edit to a since-shifted anchor.
+                this.updateStatus('This line changed since it was loaded - refreshing...', 'error');
+                const refreshed = await this.apiRequest('/punctuation/edit-tokens', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        leiths_path: tab.data.baseTextPath,
+                        apparatus_filepath: tab.data.apparatusFile,
+                        project_directory: tab.data.projectDirectory
+                    })
+                });
+                this.punctContainers = new Map((refreshed.containers || []).map(c => [c.container_id, c]));
+                this.renderPunctuationOverlay(tabId);
+                return;
+            }
+
+            this.punctContainers.set(containerId, response.container);
+            this.renderPunctuationOverlay(tabId, containerId);
+            this.mainTextDataStale = true;
+            this.updateStatus('Punctuation saved.');
+        } catch (error) {
+            this.showErrorPopup('Punctuation Save Error', `Failed to save punctuation edit: ${error.message}`);
+        }
     }
 
     handleSynopticMapProcessingResult(result, filename) {
@@ -2047,6 +2479,7 @@ class HeiCritApp {
                 // Add project paths for save functionality
                 projectDirectory: this.currentProjectDirectory,
                 apparatusFile: this.currentApparatusFile,
+                baseTextPath: this.currentBaseTextPath,
                 synopticMapFile: this.synopticMapFile
             });
             
@@ -3530,6 +3963,10 @@ class HeiCritApp {
     // Entry creation mode methods
     toggleCreationMode(tabId) {
         // Handle button click for both creation and edit modes
+        if (!this.editMode && !this.creationMode && this.punctuationEditMode) {
+            this.updateStatus('Finish or exit punctuation editing before creating an apparatus entry.', 'error');
+            return;
+        }
         if (this.editMode) {
             // Currently in edit mode - finish editing
             this.exitEditMode(tabId);
@@ -3586,6 +4023,10 @@ class HeiCritApp {
     
     toggleEditMode(tabId) {
         // Handle button click for edit mode
+        if (!this.editMode && !this.creationMode && this.punctuationEditMode) {
+            this.updateStatus('Finish or exit punctuation editing before editing an apparatus entry.', 'error');
+            return;
+        }
         if (this.editMode) {
             // Currently in edit mode - finish editing
             this.exitEditMode(tabId);

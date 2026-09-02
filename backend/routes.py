@@ -6,6 +6,9 @@ from heipy.heipipe.steps import PythonStep
 # from heipy.heipipe.step_library.append_synoptic_links import append_synoptic_links_funct
 from heipy.namespaces import ns
 
+from io import BytesIO
+from heipy.parsers import HeiEditionsParser
+
 from load_functions import resolve_relative_path, find_file_in_project
 from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
 from synoptic_map import SynopticMap
@@ -13,6 +16,7 @@ from apparatus import (
     Apparatus, process_synoptic_unit_for_comparison, html_note_to_tei,
     build_new_format_app_element, build_rdg_element, ALLOWED_NEW_FORMAT_ANA
 )
+from punctuation import build_all_containers_tokens, build_edit_tokens, find_container_by_id, apply_punctuation_edit
 
 
 
@@ -752,6 +756,163 @@ def write_apparatus_file_and_refresh(resolved_file, apparatus_file, root):
 
     apparatus = Apparatus(apparatus_file, project_files_cache)
     return apparatus
+
+
+def _resolve_base_text_path(leiths_path, apparatus_filepath, project_directory):
+    """
+    Resolve the base/leithandschrift witness file to
+    (project_relative_path, resolved_disk_path), the same two-step
+    resolution resolve_text_file_from_project uses to pull its cached
+    content, except punctuation editing always needs a real path to write
+    back to - not just cached HTML - so it goes through
+    resolve_apparatus_file_on_disk (genuinely generic despite its name)
+    instead. Returns (project_relative_path, None) if no such file exists
+    on disk.
+    """
+    project_relative_path = resolve_relative_path(leiths_path, apparatus_filepath)
+    resolved_file = resolve_apparatus_file_on_disk(project_relative_path, project_directory)
+    return project_relative_path, resolved_file
+
+
+def _parse_witness_file(resolved_file):
+    """
+    Parse a witness/base-text file fresh from disk. Unlike apparatus files,
+    real witness files reference custom entities (e.g. &combcirc;) that need
+    HeiEditionsParser's bundled entity set - resolve_entities=True expands
+    them, recover=True keeps one bad/missing entity anywhere in the document
+    from blocking the rest of the parse (mirrors synoptic_map.py's
+    _parse_witness_file).
+    """
+    with open(resolved_file, encoding='utf-8') as f:
+        content = f.read()
+    parser = HeiEditionsParser(resolve_entities=True, recover=True)
+    doc = et.parse(BytesIO(content.encode('utf-8')), parser)
+    return doc.getroot()
+
+
+def write_base_text_file_and_refresh(resolved_file, base_text_project_relative_path, root):
+    """
+    Serialize root and write it to resolved_file on disk, keeping
+    project_files_cache in sync - mirrors write_apparatus_file_and_refresh,
+    minus rebuilding a global witness-tree object, since there isn't one for
+    witness/base-text files the way there is an `apparatus` global for the
+    apparatus file.
+    """
+    global project_files_cache
+
+    output_content = et.tostring(root, encoding='unicode', pretty_print=True)
+    full_content = '<?xml version="1.0" encoding="UTF-8"?>\n' + output_content
+
+    with open(resolved_file, 'w', encoding='utf-8') as f:
+        f.write(full_content)
+
+    for project_path, pf_data in project_files_cache.items():
+        if project_path.endswith(base_text_project_relative_path) or project_path == base_text_project_relative_path:
+            pf_data['content'] = full_content
+            break
+
+
+@api.route('/punctuation/edit-tokens', methods=['POST'])
+def get_punctuation_edit_tokens():
+    """
+    Fetch the punctuation edit-token structure for every addressable
+    <l>/<p>/<titlePart> container in the base text witness file, for the
+    frontend's "Edit Punctuation" overlay.
+    Expected JSON: { leiths_path, apparatus_filepath, project_directory }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        leiths_path = data.get('leiths_path')
+        apparatus_filepath = data.get('apparatus_filepath')
+        project_directory = data.get('project_directory', '')
+
+        if not leiths_path:
+            return jsonify({'error': 'No leiths_path specified'}), 400
+
+        _project_relative_path, resolved_file = _resolve_base_text_path(
+            leiths_path, apparatus_filepath, project_directory)
+        if not resolved_file:
+            return jsonify({'error': f'Base text file not found: {leiths_path}'}), 404
+
+        root = _parse_witness_file(resolved_file)
+        containers = build_all_containers_tokens(root)
+
+        return jsonify({'success': True, 'containers': containers})
+
+    except Exception as e:
+        return jsonify({'error': f'Failed to load punctuation tokens: {str(e)}'}), 500
+
+
+@api.route('/punctuation/save', methods=['POST'])
+def save_punctuation_edit():
+    """
+    Apply one insert/change/remove/set_space edit to a punctuation mark (or
+    a plain inter-mark space) in the base text witness file and write it
+    back to disk.
+    Expected JSON: {
+        leiths_path, apparatus_filepath, project_directory,
+        container_id, signature, after_w_id,
+        action: 'insert'|'change'|'remove'|'set_space',
+        occurrence,       # required for change/remove
+        slot,             # required for insert/set_space
+        new_text,         # required for insert/change
+        space_before,     # insert: space before the new mark (default False)
+                          # change: optional, toggles the mark's own leading slot
+                          # set_space: the desired state of `slot` (required)
+        space_after,      # insert only: space after the new mark (default False)
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        leiths_path = data.get('leiths_path')
+        apparatus_filepath = data.get('apparatus_filepath')
+        project_directory = data.get('project_directory', '')
+        container_id = data.get('container_id')
+        signature = data.get('signature')
+        after_w_id = data.get('after_w_id')
+        occurrence = data.get('occurrence')
+        slot = data.get('slot')
+        action = data.get('action')
+        new_text = data.get('new_text')
+        space_before = data.get('space_before')
+        space_after = data.get('space_after')
+
+        if not leiths_path or not container_id or not signature or action not in ('insert', 'change', 'remove', 'set_space'):
+            return jsonify({'error': 'leiths_path, container_id, signature and a valid action are required'}), 400
+
+        project_relative_path, resolved_file = _resolve_base_text_path(
+            leiths_path, apparatus_filepath, project_directory)
+        if not resolved_file:
+            return jsonify({'error': f'Base text file not found: {leiths_path}'}), 404
+
+        root = _parse_witness_file(resolved_file)
+        container = find_container_by_id(root, container_id)
+        if container is None:
+            return jsonify({'error': f'No container with xml:id {container_id}'}), 404
+
+        current_tokens = build_edit_tokens(container)
+        if current_tokens['signature'] != signature:
+            return jsonify({'success': False, 'error': 'stale'}), 409
+
+        try:
+            apply_punctuation_edit(container, after_w_id, action,
+                                    occurrence=occurrence, slot=slot, new_text=new_text,
+                                    space_before=space_before, space_after=space_after)
+        except ValueError as ve:
+            return jsonify({'error': str(ve)}), 404
+
+        write_base_text_file_and_refresh(resolved_file, project_relative_path, root)
+
+        return jsonify({'success': True, 'container': build_edit_tokens(container)})
+
+    except Exception as e:
+        return jsonify({'error': f'Failed to save punctuation edit: {str(e)}'}), 500
 
 
 @api.route('/apparatus/note/save', methods=['POST'])
