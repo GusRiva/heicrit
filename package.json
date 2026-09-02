@@ -1,6 +1,6 @@
 {
   "name": "heicrit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "HeiCrit - Critical Apparatus Editor",
   "main": "electron/main.js",
   "engines": {
