@@ -50,18 +50,13 @@
         "to": "venv"
       },
       {
-        "from": "heipy",
-        "to": "heipy"
-      },
-      {
         "from": "requirements.txt",
         "to": "requirements.txt"
       }
     ],
     "asarUnpack": [
       "**/backend/**/*",
-      "**/venv/**/*",
-      "**/heipy/**/*"
+      "**/venv/**/*"
     ],
     "publish": {
       "provider": "github",

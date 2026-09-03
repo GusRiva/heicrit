@@ -271,12 +271,15 @@ function startFlaskBackend() {
         log('Backend path:', backendPath);
         log('Project root:', projectRoot);
 
-        // Start Flask process
+        // Start Flask process. No PYTHONPATH override needed: app.py's own
+        // directory is put on sys.path[0] automatically (it's run directly),
+        // which is enough for the backend's sibling modules, and heipy is a
+        // real (non-editable) install in venv/site-packages - see
+        // requirements.txt.
         flaskProcess = spawn(pythonPath, [backendPath], {
             cwd: projectRoot,
             env: {
                 ...process.env,
-                PYTHONPATH: projectRoot,
                 FLASK_ENV: 'development'
             },
             stdio: ['pipe', 'pipe', 'pipe']
