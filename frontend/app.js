@@ -82,6 +82,7 @@ class HeiCritApp {
         if (!window.electronAPI?.isElectron) return;
 
         document.querySelector('.navbar-left')?.style.setProperty('display', 'none');
+        document.querySelector('.navbar')?.style.setProperty('display', 'none');
 
         const menuActions = {
             'open-project-directory': () => this.openProjectDirectory(),
@@ -2493,8 +2494,7 @@ class HeiCritApp {
     }
 
     getMainTextHeading() {
-        // Once leiths-info has loaded, append the base text's siglum so it
-        // matches the "App: X" convention used in getCurrentDisplayFilename().
+        // Once leiths-info has loaded, append the base text's siglum.
         if (this.leithsInfo && this.leithsInfo.siglum) {
             return `Base Text (${this.leithsInfo.siglum})`;
         }
@@ -2502,12 +2502,15 @@ class HeiCritApp {
     }
 
     getCurrentDisplayFilename() {
-        // If we have leiths-info with siglum, use "App: X" format
-        if (this.leithsInfo && this.leithsInfo.siglum) {
-            return `App: ${this.leithsInfo.siglum}`;
+        // Prefer the apparatus file's own <title>, same as the file-picker
+        // labels (extractApparatusTitle) - more meaningful in a tab than a
+        // raw path, and the content is already cached in projectFiles.
+        if (this.currentApparatusFile) {
+            const fileData = this.projectFiles.get(this.currentApparatusFile);
+            const title = fileData && this.extractApparatusTitle(fileData.content);
+            if (title) return title;
         }
-        
-        // Fallback to original filename display
+
         if (this.apparatusData && this.synopticMapData) {
             return `${this.apparatusData.filename} + ${this.synopticMapData.filename}`;
         } else if (this.apparatusData) {

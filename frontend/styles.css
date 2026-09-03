@@ -119,12 +119,6 @@ header {
     gap: 0;
 }
 
-.navbar-title {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #ecf0f1;
-}
-
 /* Dropdown styling */
 .dropdown {
     position: relative;
@@ -820,8 +814,15 @@ main {
     flex: 0 0 25%;
     background: #f8f9fa;
     border-right: 2px solid #dee2e6;
-    padding: 1rem;
     overflow-y: auto;
+}
+
+/* Content div's id is templated per-tab (main-text-content-${tabId}); this
+   attribute selector matches it without needing a shared class. Padding
+   lives here (not on .text-panel) so the sticky header below can sit flush
+   against the panel's top/sides with no gap. */
+.text-panel > [id^="main-text-content-"] {
+    padding: 0 1rem 1rem;
 }
 
 .text-panel h3 {
@@ -837,9 +838,13 @@ main {
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
+    margin: 0 0 0.5rem;
+    padding: 1rem 1rem 0.5rem;
     border-bottom: 1px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f8f9fa;
 }
 
 .main-text-header h3 {

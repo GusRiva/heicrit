@@ -74,11 +74,14 @@ To produce installers for **all three platforms**, either:
 
 There are two ways to get a new installer for all three platforms in front of users. Both end up in the same place — assets attached to a GitHub Release matching a `vX.Y.Z` tag — so they're freely mixable (e.g. let CI handle Windows/Linux and build macOS locally if CI can't reach a dependency, as in Option B below).
 
-Either way, start by bumping the version:
+Either way, start by updating `CHANGELOG.md` and bumping the version:
 
-1. Set `"version"` in `package.json` to the new release version (`X.Y.Z`, no `v` prefix).
-2. Commit that change.
-3. Tag it: `git tag vX.Y.Z` (must match the `package.json` version — electron-builder derives the release's tag from it).
+1. In `CHANGELOG.md`, rename the `## Unreleased` heading to `## vX.Y.Z - YYYY-MM-DD`, and add a fresh empty `## Unreleased` section above it for whatever comes next. (This only works if you kept it updated as you went — add a bullet under `Unreleased` right when each change lands, not retroactively at release time.)
+2. Set `"version"` in `package.json` to the same `X.Y.Z`.
+3. Commit both changes together.
+4. Tag it: `git tag vX.Y.Z` (must match the `package.json` version — electron-builder derives the release's tag from it).
+
+When you get to publishing the draft release below, paste the `## vX.Y.Z` section from `CHANGELOG.md` in as the release's description before clicking **Publish release** — it's already written.
 
 #### Option A: GitHub Actions (recommended)
 
@@ -90,11 +93,11 @@ The GitHub workflow's `permissions: contents: write` and its 30-minute `timeout-
 
 `build.yml` publishes installers straight to GitHub Releases when triggered by a version tag — but only as a **draft** release (electron-builder's default), so nothing is visible to the public until a maintainer manually reviews and publishes it. A `workflow_dispatch` (manual, no-tag) run intentionally skips publishing; it only produces workflow-run debug artifacts (`.exe`/`.dmg`/`.AppImage`/`.deb`/`.tar.xz`), useful for testing the build itself without publishing anything.
 
-Steps:
+Steps (continuing the numbering above):
 
-4. Push the tag to the GitHub remote: `git push github vX.Y.Z` (adjust the remote name to whatever your GitHub mirror is called).
-5. Wait for all three matrix jobs (`ubuntu-latest`/`windows-latest`/`macos-latest`) to finish.
-6. Open `https://github.com/GusRiva/heicrit/releases`, review the new **draft** release and its five attached assets (`HeiCrit-Setup.exe`, `HeiCrit.dmg`, `HeiCrit.AppImage`, `HeiCrit.deb`, `HeiCrit.tar.xz`), and click **Publish release**.
+5. Push the tag to the GitHub remote: `git push github vX.Y.Z` (adjust the remote name to whatever your GitHub mirror is called).
+6. Wait for all three matrix jobs (`ubuntu-latest`/`windows-latest`/`macos-latest`) to finish.
+7. Open `https://github.com/GusRiva/heicrit/releases`, review the new **draft** release and its five attached assets (`HeiCrit-Setup.exe`, `HeiCrit.dmg`, `HeiCrit.AppImage`, `HeiCrit.deb`, `HeiCrit.tar.xz`), paste in the `CHANGELOG.md` section as the description, and click **Publish release**.
 
 As soon as it's published, the download page (§2) starts serving it immediately — its links never need to change.
 
@@ -102,7 +105,7 @@ As soon as it's published, the download page (§2) starts serving it immediately
 
 Use this if you don't want to wait on CI, or need to work around an environment CI can't reach (see the network-block entry in §1.6). Builds aren't cross-platform (§1.3), so this must be repeated natively on a Windows, macOS, and Linux machine to cover all three — there's no way to produce every platform's installer from one computer.
 
-On each machine, after tagging (steps 1–3 above):
+On each machine, after tagging (steps 1–4 above):
 
 1. Clone (or `git pull`) and check out the exact tag being released:
    ```bash
@@ -129,7 +132,7 @@ On each machine, after tagging (steps 1–3 above):
    npm run dist:publish
    ```
    electron-builder defaults to building for the host OS, so this uploads that platform's installer(s) — `HeiCrit-Setup.exe` on Windows, `HeiCrit.dmg` on macOS, `HeiCrit.AppImage`/`HeiCrit.deb`/`HeiCrit.tar.xz` on Linux — directly to the GitHub Release matching the checked-out tag. It finds the release by tag (draft or already-published) and adds the asset; if no release exists yet for that tag, it creates one as a draft, same as CI.
-5. Once every platform you're covering has published to it, if the release is still a draft, go to `https://github.com/GusRiva/heicrit/releases` and click **Publish release** (same as Option A step 6). The download page then serves it immediately.
+5. Once every platform you're covering has published to it, if the release is still a draft, go to `https://github.com/GusRiva/heicrit/releases`, paste in the `CHANGELOG.md` section as the description, and click **Publish release** (same as Option A step 7). The download page then serves it immediately.
 
 Caveat: this produces a single-architecture build matching whatever machine you build on (e.g. Apple Silicon *or* Intel, not a universal binary) — same limitation as the CI job.
 
