@@ -247,6 +247,9 @@ class HeiCritApp {
                                             </select>
                                             <select id="reading-ana-select-${tabId}" class="reading-ana-select" style="display: none;">
                                                 <option value="">Addition / Omission / Substitution (auto)</option>
+                                                <option value="hc:CorrectionVariant">Auto type + source of emendation</option>
+                                                <option value="hc:BaseTextSupportingVariant">Supports uncorrected base text</option>
+                                                <option value="plain">Auto type, no emendation marker</option>
                                                 <option value="hc:TranspositionVariant">Transposition</option>
                                             </select>
                                         </div>
@@ -762,7 +765,7 @@ class HeiCritApp {
         // doesn't need to reconstruct or validate the entry's content.
         // Explicit-<lem>-override entries stay excluded, same as edit.
         const entry = this.getCurrentActiveEntry(tabId);
-        const isDeletable = entry && !entry.is_placeholder && !entry.lemma_is_explicit;
+        const isDeletable = entry && !entry.is_placeholder && !entry.is_generated && !entry.lemma_is_explicit;
 
         deleteBtn.style.display = isDeletable ? '' : 'none';
     }
@@ -780,8 +783,11 @@ class HeiCritApp {
 
         // Only show Edit Entry when the location has a real (non-placeholder)
         // entry and it's the one currently selected.
+        // For a generated entry (unrecorded emendation) the same button
+        // creates the real entry instead, with the lemma preselected.
         const entry = this.getCurrentActiveEntry(tabId);
         editBtn.style.display = entry && !entry.is_placeholder ? '' : 'none';
+        editBtn.textContent = entry && entry.is_generated ? 'Create Entry' : 'Edit Entry';
     }
 
     updateNavigationControls(tabId) {
@@ -2558,14 +2564,19 @@ class HeiCritApp {
                 return;
             }
             
-            html += `<div class="classical-subentry${entry.is_placeholder ? ' placeholder-entry' : ''}${isActive ? ' active' : ''}" 
+            // Generated entries (an emendation in the base text that no <app>
+            // records yet) aren't in the file: not draggable, flagged instead.
+            const isGenerated = !!entry.is_generated;
+            html += `<div class="classical-subentry${entry.is_placeholder ? ' placeholder-entry' : ''}${isGenerated ? ' generated-entry' : ''}${isActive ? ' active' : ''}" 
                          data-subentry-index="${index}" 
                          data-corresp="${this.escapeHtml(corresp)}"
-                         draggable="true"
+                         draggable="${isGenerated ? 'false' : 'true'}"
                          data-entry-id="${entry.id || index}">`;
             
             // Add drag handle for sortable entries (only for non-placeholder entries)
-            if (!entry.is_placeholder) {
+            if (isGenerated) {
+                html += '<span class="generated-entry-badge" title="Emendation in the base text without an apparatus entry. Select it and click &quot;Create Entry&quot; to record it.">not saved</span>';
+            } else if (!entry.is_placeholder) {
                 html += '<span class="drag-handle" title="Drag to reorder">⋮⋮</span>';
             }
             
@@ -2581,36 +2592,13 @@ class HeiCritApp {
                 }
 
                 // Readings with witnesses
-                if (entry.readings && entry.readings.length > 0) {
-                    const readingParts = [];
-
-                    entry.readings.forEach(reading => {
-                        const readingHtml = reading.html ?? this.escapeHtml(reading.text);
-                        let readingPart = ` ${readingHtml}`;
-                        
-                        // Add witnesses in italics
-                        const wit = reading.attributes?.wit || reading.wit; // Support both new and old format
-                        if (wit) {
-                            // wit holds raw witness xml:id references (e.g. "#bb #ba"),
-                            // not display-ready sigla - xml:ids are conventionally
-                            // lowercase even when the editorial siglum has uppercase
-                            // letters (id "bb" -> siglum "Bb"), so resolve each one.
-                            const witnessIds = wit.replace(/#/g, '').trim().split(/\s+/).filter(Boolean);
-                            const witnesses = witnessIds
-                                .map(id => this.witnessMapping?.[id]?.siglum || id)
-                                .join(' ');
-                            if (witnesses) {
-                                readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(witnesses)}</em>`;
-                            }
-                        }
-                        
-                        readingParts.push(readingPart);
-                    });
-                    
+                const readingParts = this.buildApparatusReadingParts(entry);
+                if (readingParts.length > 0) {
                     // Join readings with semicolons
                     html += readingParts.join(' ;');
-                } else {
-                    // When there is only lemma
+                } else if (!entry.readings || entry.readings.length === 0) {
+                    // When there is only lemma (not when the only readings
+                    // are hidden hc:BaseTextSupportingVariant ones)
                     html += "<i>om. alii</i>"
                 }
             }
@@ -2630,6 +2618,102 @@ class HeiCritApp {
         </div>`;
 
         return html;
+    }
+
+    witnessIdsFromWit(wit) {
+        // wit holds raw witness xml:id references (e.g. "#bb #ba"), not
+        // display-ready sigla.
+        return (wit || '').replace(/#/g, '').trim().split(/\s+/).filter(Boolean);
+    }
+
+    formatSigla(witnessIds) {
+        // xml:ids are conventionally lowercase even when the editorial siglum
+        // has uppercase letters (id "bb" -> siglum "Bb"), so resolve each one.
+        return witnessIds.map(id => this.witnessMapping?.[id]?.siglum || id).join(' ');
+    }
+
+    anaTokens(reading) {
+        return (reading?.attributes?.ana || '').split(/\s+/).filter(Boolean);
+    }
+
+    getEntryRelevantWitnessIds(entry) {
+        // Every non-base witness that has text at this entry's location -
+        // the set "rel." (reliqui) stands for. Witnesses the synoptic map
+        // only places via a left()/right() gap position (i.e. lacking the
+        // line) are left out; without synoptic data, fall back to all
+        // non-base witnesses declared in the apparatus.
+        const mapping = this.witnessMapping || {};
+        const isBase = id => mapping[id]?.synoptic_prefix === this.leithsPrefix;
+        let ids = Object.keys(mapping).filter(id => !isBase(id));
+
+        const locus = this.synopticMapData?.synoptic_map?.[entry.corresp];
+        if (locus && Array.isArray(locus.target)) {
+            const presentPrefixes = new Set(
+                locus.target
+                    .filter(t => !/:(left|right)\(/.test(t))
+                    .map(t => t.split(':')[0])
+            );
+            ids = ids.filter(id => presentPrefixes.has(mapping[id]?.synoptic_prefix));
+        }
+        return ids;
+    }
+
+    buildApparatusReadingParts(entry) {
+        // One "reading sigla" string per displayed reading.
+        //
+        // Emendations (entry.is_emendation): the lemma shows the emended
+        // text, so the base text's own uncorrected reading comes first,
+        // attributed to the base witness plus every hc:BaseTextSupportingVariant
+        // reading ("*K*atzen] Tatzen A B"). Those supporting readings are
+        // never shown on their own - without an emendation they merely
+        // agree with the lemma.
+        //
+        // A reading covering ALL remaining witnesses (at least two) is
+        // abbreviated "rel." and moved last ("Tatzen A, om. D, Katzen rel.").
+        const readings = [];
+        if (entry.is_emendation && entry.base_reading) {
+            readings.push({ reading: entry.base_reading, isBase: true });
+        }
+        (entry.readings || []).forEach(reading => {
+            if (this.anaTokens(reading).includes('hc:BaseTextSupportingVariant')) return;
+            readings.push({ reading, isBase: false });
+        });
+
+        const witnessIdsOf = r => this.witnessIdsFromWit(r.attributes?.wit || r.wit);
+        const relevant = this.getEntryRelevantWitnessIds(entry);
+        const relevantSet = new Set(relevant);
+        const isTransposition = (entry.readings || []).some(r => this.anaTokens(r).includes('hc:TranspositionVariant'));
+
+        let relIndex = -1;
+        if (!isTransposition) {
+            const citedElsewhere = index => new Set(
+                readings.filter((_, i) => i !== index).flatMap(r => witnessIdsOf(r.reading))
+            );
+            relIndex = readings.findIndex((r, index) => {
+                if (r.isBase) return false;
+                const ids = witnessIdsOf(r.reading);
+                if (ids.length < 2 || !ids.every(id => relevantSet.has(id))) return false;
+                const others = citedElsewhere(index);
+                const remaining = relevant.filter(id => !others.has(id));
+                return remaining.length === ids.length;
+            });
+        }
+
+        const ordered = relIndex >= 0
+            ? [...readings.filter((_, i) => i !== relIndex), readings[relIndex]]
+            : readings;
+
+        return ordered.map(({ reading }) => {
+            const readingHtml = reading.html ?? this.escapeHtml(reading.text);
+            const sigla = (relIndex >= 0 && reading === readings[relIndex].reading)
+                ? 'rel.'
+                : this.formatSigla(witnessIdsOf(reading));
+            let readingPart = ` ${readingHtml}`;
+            if (sigla) {
+                readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(sigla)}</em>`;
+            }
+            return readingPart;
+        });
     }
 
     renderNoteArea(entry) {
@@ -4043,7 +4127,7 @@ class HeiCritApp {
                 const currentEntries = tab.groupedEntries[currentCorresp];
                 if (currentEntries && tab.activeSubentryIndex >= 0 && tab.activeSubentryIndex < currentEntries.length) {
                     const currentEntry = currentEntries[tab.activeSubentryIndex];
-                    if (!currentEntry.is_placeholder) {
+                    if (!currentEntry.is_placeholder && !currentEntry.is_generated) {
                         this.enterEditMode(tabId, currentEntry);
                     }
                 }
@@ -4056,7 +4140,9 @@ class HeiCritApp {
                 const currentEntries = tab.groupedEntries[currentCorresp];
                 if (currentEntries && tab.activeSubentryIndex >= 0 && tab.activeSubentryIndex < currentEntries.length) {
                     const currentEntry = currentEntries[tab.activeSubentryIndex];
-                    if (!currentEntry.is_placeholder) {
+                    if (currentEntry.is_generated) {
+                        this.createEntryFromGenerated(tabId, currentEntry);
+                    } else if (!currentEntry.is_placeholder) {
                         this.enterEditMode(tabId, currentEntry);
                     }
                 }
@@ -4271,7 +4357,8 @@ class HeiCritApp {
         const [movedEntry] = entries.splice(fromIndex, 1);
         entries.splice(toIndex, 0, movedEntry);
 
-        const entry_order = entries.map(entry => entry.id - 1);
+        // Generated entries have no <app> (and no id) - leave them out.
+        const entry_order = entries.filter(entry => !entry.is_generated).map(entry => entry.id - 1);
 
         try {
             const response = await this.apiRequest('/apparatus/entry/reorder', {
@@ -4847,9 +4934,18 @@ class HeiCritApp {
                     const readingTokens = this.parseTokensFromCorresp(tabId, reading.attributes.corresp);
                     this.selectedTokens[readingGroup] = readingTokens;
 
-                    // New-format only: seed this reading group's variant type
-                    if (reading.attributes.ana) {
-                        this.selectedReadingAna[readingGroup] = reading.attributes.ana;
+                    // New-format only: seed this reading group's variant-type
+                    // select from its @ana. Existing entries never fall back
+                    // to auto emendation markers - "plain" keeps them as is.
+                    const anaTokens = this.anaTokens(reading);
+                    if (anaTokens.includes('hc:TranspositionVariant')) {
+                        this.selectedReadingAna[readingGroup] = 'hc:TranspositionVariant';
+                    } else if (anaTokens.includes('hc:BaseTextSupportingVariant')) {
+                        this.selectedReadingAna[readingGroup] = 'hc:BaseTextSupportingVariant';
+                    } else if (anaTokens.includes('hc:CorrectionVariant')) {
+                        this.selectedReadingAna[readingGroup] = 'hc:CorrectionVariant';
+                    } else if (anaTokens.length > 0) {
+                        this.selectedReadingAna[readingGroup] = 'plain';
                     }
 
                     // Update next reading group index
@@ -5138,6 +5234,28 @@ class HeiCritApp {
         select.value = 'lemma';
     }
     
+    createEntryFromGenerated(tabId, entry) {
+        // Turn a generated entry (an emendation no <app> records yet) into a
+        // real one: start creation mode with the emended span already
+        // selected as the lemma, and continue with the first reading group,
+        // so the editor only has to pick the other witnesses' readings.
+        // The backend lifts the selection back to the emendation container
+        // (e.g. surplus_1/choice_1) and suggests the emendation markers.
+        this.toggleCreationMode(tabId);
+        if (!this.creationMode) return;
+
+        const corresp = entry.lemma?.attributes?.corresp;
+        if (corresp) {
+            this.selectedTokens.lemma = this.parseTokensFromCorresp(tabId, corresp);
+            this.applyTokenSelections(tabId);
+        }
+
+        const select = document.getElementById(`reading-group-select-${tabId}`);
+        if (select) select.value = 'reading-1';
+        this.handleReadingGroupChange(tabId, 'reading-1');
+        this.updateStatus('Lemma preselected from the emendation - now select the readings of the other witnesses.');
+    }
+
     handleReadingGroupChange(tabId, value) {
         
         if (value === 'new-group') {
@@ -5313,6 +5431,17 @@ class HeiCritApp {
                 ana = 'hc:SubstitutionVariant';
             }
 
+            // Emendation markers (see test_data/emendatio/spec/): chosen
+            // explicitly in the variant-type select, or - when left on auto -
+            // suggested by the backend by comparing this reading with the
+            // emended lemma / the uncorrected base text (ana_auto).
+            const anaChoice = this.selectedReadingAna[group] || '';
+            if (anaChoice === 'hc:BaseTextSupportingVariant') {
+                ana = anaChoice;
+            } else if (anaChoice === 'hc:CorrectionVariant') {
+                ana += ' hc:CorrectionVariant';
+            }
+
             const witGroups = {};
             tokens.forEach(token => {
                 const witId = token.witnessInfo.witnessId;
@@ -5327,7 +5456,7 @@ class HeiCritApp {
                 ptrs.push(...parts);
             });
 
-            readings.push({ wit, ana, ptrs });
+            readings.push({ wit, ana, ptrs, ana_auto: anaChoice === '' });
         }
 
         return { target, readings };
@@ -5577,13 +5706,14 @@ class HeiCritApp {
         const select = document.getElementById(`reading-ana-select-${tabId}`);
         if (!select) return;
 
-        // Only shown during creation: Addition/Omission/Substitution are
-        // auto-detected from the selection shape (no manual choice needed),
-        // and the only remaining manual choice - Transposition - isn't
-        // available when editing (existing entries can't be converted into
-        // or out of a transposition here; enterEditMode already refuses to
-        // edit transposition entries at all).
-        if (this.creationMode && group && group !== 'lemma') {
+        // Addition/Omission/Substitution are auto-detected from the selection
+        // shape; the manual choices are the emendation markers (creation and
+        // editing) and Transposition (creation only - existing entries can't
+        // be converted into or out of a transposition here; enterEditMode
+        // already refuses to edit transposition entries at all).
+        const transpositionOption = select.querySelector('option[value="hc:TranspositionVariant"]');
+        if (transpositionOption) transpositionOption.hidden = !this.creationMode;
+        if ((this.creationMode || this.editMode) && group && group !== 'lemma') {
             select.style.display = '';
             select.value = this.selectedReadingAna[group] || '';
         } else {

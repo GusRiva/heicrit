@@ -19,7 +19,25 @@
         <xsl:apply-templates select="node()"/>
     </xsl:template>
 
-    <xsl:template match="sic | abbr | am">
+    <!-- Editorial emendations: the base text column always shows the
+         emended text, independent of $editorial - an erroneous <sic>
+         paired with a <corr> is dropped, the <corr> (and any <supplied>
+         text) is shown, marked as an emendation for create_html.xsl to
+         render in italics. A standalone <sic> (no <corr>) is transmitted
+         text the editor keeps, so it passes through unchanged. -->
+    <xsl:template match="sic[parent::choice[corr]]" priority="2"/>
+
+    <xsl:template match="corr[parent::choice[sic]] | supplied" priority="2">
+        <emph xmlns="http://www.tei-c.org/ns/1.0" rend="emendation">
+            <xsl:apply-templates select="node()"/>
+        </emph>
+    </xsl:template>
+
+    <xsl:template match="sic">
+        <xsl:apply-templates select="node()"/>
+    </xsl:template>
+
+    <xsl:template match="abbr | am">
         <xsl:choose>
             <xsl:when test="$editorial">
             </xsl:when>

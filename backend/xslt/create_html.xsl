@@ -107,6 +107,12 @@
         </div>
     </xsl:template>
     
+    <!-- Emended text (a <corr> replacing a <sic>, or <supplied> text),
+         marked by reduce_markup.xsl. -->
+    <xsl:template match="tei:emph[@rend = 'emendation']">
+        <em class="emendation"><xsl:apply-templates select="node()"/></em>
+    </xsl:template>
+
     <xsl:template match="tei:gap[not(@corresp)]">
         <span class="tei-gap">[…]</span>
     </xsl:template>

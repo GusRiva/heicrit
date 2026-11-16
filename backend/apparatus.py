@@ -16,7 +16,7 @@ from lxml import html as lxml_html
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns, prefix_format
 from load_functions import resolve_relative_path, find_file_in_project, parse_location_token, local_name
-from location_resolver import WitnessFragmentResolver
+from location_resolver import WitnessFragmentResolver, EMENDED
 
 XML_ID = '{http://www.w3.org/XML/1998/namespace}id'
 TEI_NS = 'http://www.tei-c.org/ns/1.0'
@@ -94,6 +94,35 @@ ALLOWED_NEW_FORMAT_ANA = frozenset({
     'hc:SubstitutionVariant',
     'hc:TranspositionVariant',
 })
+
+# A reading that agrees with the base text's own (uncorrected) reading at an
+# emended location - shown merged with the base witness after the lemma
+# bracket ("*K*atzen] Tatzen A B"), hidden when there is no emendation.
+BASE_TEXT_SUPPORTING_ANA = 'hc:BaseTextSupportingVariant'
+
+# Optional marker added to a variant type: this reading was used to emend the
+# base text. Never changes how the reading itself is classified or shown.
+CORRECTION_ANA = 'hc:CorrectionVariant'
+
+
+def is_valid_reading_ana(ana: str | None) -> bool:
+    """
+    A reading's @ana is one primary type - an ALLOWED_NEW_FORMAT_ANA value
+    or BASE_TEXT_SUPPORTING_ANA - optionally followed by CORRECTION_ANA
+    (space-separated, e.g. "hc:SubstitutionVariant hc:CorrectionVariant").
+    Transpositions take no marker.
+    """
+    tokens = (ana or '').split()
+    primary = [t for t in tokens if t != CORRECTION_ANA]
+    if len(primary) != 1 or len(tokens) - len(primary) > 1:
+        return False
+    if primary[0] == 'hc:TranspositionVariant':
+        return len(tokens) == 1
+    return primary[0] in ALLOWED_NEW_FORMAT_ANA or primary[0] == BASE_TEXT_SUPPORTING_ANA
+
+
+def ana_tokens(element) -> list[str]:
+    return (element.get('ana') or '').split()
 
 
 def build_ptr_element(target: str) -> et.Element:
@@ -297,14 +326,150 @@ class Apparatus:
 
             self._entries = []
 
-            resolver = WitnessFragmentResolver(
-                self._apparatus_filepath, self._project_files, self.get_witness_to_prefix_mapping())
+            resolver = self.get_resolver()
             for i, app in enumerate(app_elements):
                 self._entries.append(self._extract_new_format_entry(i, app, resolver))
+
+            self._generated_entries = self._generate_unrecorded_emendation_entries(app_elements, resolver)
 
         except Exception as e:
             print(f"ERROR: Could not extract apparatus entries: {str(e)}")
             raise
+
+    def _generate_unrecorded_emendation_entries(self, app_elements,
+                                                resolver: WitnessFragmentResolver) -> list[dict[str, Any]]:
+        """
+        Provisional entries for every emendation in the base text that no
+        <app> records yet - so an emended critical text never silently lacks
+        its apparatus entry. Built by the same rules as a recorded emendation
+        (emended lemma, then the uncorrected base reading), with no further
+        readings. Never written to the file: they carry is_generated=True and
+        no 'id' (ids index real <app> elements), and become real entries
+        only when the editor creates one from them.
+        """
+        try:
+            base_id = self._get_base_witness_id()
+            base_prefix = self.get_witness_to_prefix_mapping().get(base_id, {}).get('synoptic_prefix')
+            if not base_prefix:
+                return []
+
+            covered: set = set()
+            for app in app_elements:
+                targets = [app.get('target')] if app.get('target') else []
+                for ptr in app.findall('tei:lem/tei:ptr', namespaces=ns):
+                    targets.append(ptr.get('target'))
+                for target in targets:
+                    if target and target.startswith(f'{base_prefix}:'):
+                        covered |= resolver.covered_elements(target)
+
+            generated = []
+            for target, unit in resolver.emendation_units(base_prefix):
+                # Recorded if an <app> addresses the unit or any of its tokens
+                # (e.g. one side of a token-spanning <choice>).
+                if unit in covered or any(t in covered for t in unit.iter()
+                                          if isinstance(t.tag, str) and local_name(t) in ('w', 'pc')):
+                    continue
+                lemma = self._resolve_target_lemma(target, resolver, emended=True)
+                loc, corresp = self._loc_and_corresp_for_token(target, resolver)
+                generated.append({
+                    'id': None,
+                    'is_generated': True,
+                    'loc': loc,
+                    'corresp': corresp,
+                    'target': target,
+                    'lemma': lemma,
+                    'lemma_is_explicit': False,
+                    'readings': [],
+                    'is_emendation': True,
+                    'base_reading': self._resolve_base_reading(target, [], [], resolver),
+                    'note': None,
+                })
+            return generated
+        except Exception as e:
+            print(f"WARNING: Could not generate entries for unrecorded emendations: {str(e)}")
+            return []
+
+    def get_generated_entries(self) -> list[dict[str, Any]]:
+        """Provisional entries for unrecorded emendations (see above)."""
+        return list(getattr(self, '_generated_entries', []))
+
+    def get_display_entries(self) -> list[dict[str, Any]]:
+        """
+        What the frontend shows: the real entries (whose 'id' indexes the
+        <app> elements - every write route relies on that) followed by the
+        generated ones. Never use this for index-based write logic.
+        """
+        return self.get_entries() + self.get_generated_entries()
+
+    def get_resolver(self) -> WitnessFragmentResolver:
+        """The (cached) resolver for this apparatus's witness fragments."""
+        if getattr(self, '_resolver', None) is None:
+            self._resolver = WitnessFragmentResolver(
+                self._apparatus_filepath, self._project_files, self.get_witness_to_prefix_mapping())
+        return self._resolver
+
+    def lift_emendation_target(self, target: str | None) -> str | None:
+        """
+        Map a lemma token selection that exactly covers a token-spanning
+        emendation container (a whole-token <surplus>, or the sic or corr
+        side of a <choice>) to that container's own id, e.g. "a:w_5_4" ->
+        "a:surplus_1" - the form app/@target must take for such an entry.
+        Any other target is returned unchanged.
+        """
+        if not target:
+            return target
+        return self.get_resolver().emendation_container_for(target) or target
+
+    def describe_emendation(self, target: str | None) -> dict[str, Any]:
+        """
+        For the entry-creation UI: whether target (after lifting) is an
+        emended span, and its emended (lemma) and uncorrected (base text)
+        renderings, used to pre-classify readings as hc:CorrectionVariant /
+        hc:BaseTextSupportingVariant.
+        """
+        lifted = self.lift_emendation_target(target)
+        resolver = self.get_resolver()
+        if not lifted or not resolver.has_emendation(lifted):
+            return {'target': lifted, 'is_emendation': False}
+        emended_text, emended_html = resolver.resolve_text_html([lifted], mode=EMENDED)
+        base_text, base_html = resolver.resolve_text_html([lifted])
+        return {
+            'target': lifted,
+            'is_emendation': True,
+            'emended_text': emended_text,
+            'emended_html': emended_html,
+            'base_text': base_text,
+            'base_html': base_html,
+        }
+
+    def apply_emendation_ana_suggestions(self, target: str | None, readings: list[dict]) -> None:
+        """
+        For readings sent with ana_auto (the editor left the variant type on
+        auto) at an emended target, add the emendation markers in place:
+        a reading identical to the uncorrected base text becomes
+        hc:BaseTextSupportingVariant, one identical to the emended lemma
+        gets hc:CorrectionVariant added. Other readings are left alone.
+        """
+        info = self.describe_emendation(target)
+        if not info.get('is_emendation'):
+            return
+
+        def norm(text):
+            return ' '.join((text or '').split())
+
+        base_text, emended_text = norm(info['base_text']), norm(info['emended_text'])
+        resolver = self.get_resolver()
+        for reading in readings:
+            ana = reading.get('ana') or ''
+            if not reading.get('ana_auto') or 'hc:TranspositionVariant' in ana.split():
+                continue
+            text = norm(resolver.resolve_text_html(reading.get('ptrs') or [])[0])
+            if not text:
+                continue
+            if base_text and text == base_text:
+                reading['ana'] = BASE_TEXT_SUPPORTING_ANA
+            elif text == emended_text and CORRECTION_ANA not in ana.split():
+                reading['ana'] = f'{ana} {CORRECTION_ANA}'.strip()
 
     def _extract_new_format_entry(self, index: int, app, resolver: WitnessFragmentResolver) -> dict[str, Any]:
         """
@@ -332,15 +497,22 @@ class Apparatus:
             'readings': []
         }
 
+        rdg_elements = app.findall('tei:rdg', namespaces=ns)
+        is_emendation = lem_element is None and bool(target) and resolver.has_emendation(target)
+        entry['is_emendation'] = is_emendation
+
         if lem_element is not None:
             entry['lemma'] = self._extract_lem_or_rdg(lem_element, resolver)
         elif target:
-            entry['lemma'] = self._resolve_target_lemma(target, resolver)
+            entry['lemma'] = self._resolve_target_lemma(target, resolver, emended=is_emendation)
         else:
             entry['lemma'] = self._resolve_transposition_lemma(app, resolver)
 
-        for rdg in app.findall('tei:rdg', namespaces=ns):
+        for rdg in rdg_elements:
             entry['readings'].append(self._extract_lem_or_rdg(rdg, resolver))
+
+        if is_emendation:
+            entry['base_reading'] = self._resolve_base_reading(target, rdg_elements, entry['readings'], resolver)
 
         entry['loc'], entry['corresp'] = self._derive_loc_and_corresp(app, resolver)
         entry['note'] = self._extract_entry_note(app)
@@ -417,15 +589,57 @@ class Apparatus:
             'attributes': {'corresp': ' '.join(resolver.normalize_corresp_token(t) for t in base_tokens)}
         }
 
-    def _resolve_target_lemma(self, target: str, resolver: WitnessFragmentResolver) -> dict[str, Any]:
+    def _resolve_base_reading(self, target: str, rdg_elements, readings: list[dict[str, Any]],
+                              resolver: WitnessFragmentResolver) -> dict[str, Any]:
+        """
+        The base text's own, uncorrected reading at an emended location - shown
+        as the first reading after the lemma bracket, attributed to the base
+        witness plus every hc:BaseTextSupportingVariant reading's witnesses
+        ("*K*atzen] Tatzen A B"). Empty (e.g. an <supplied> addition with
+        nothing transmitted) renders as om.
+        """
+        text, html = resolver.resolve_text_html([target])
+        if not text:
+            text, html = 'om.', '<i>om.</i>'
+
+        wit_ids = []
+        base_id = self._get_base_witness_id()
+        if base_id:
+            wit_ids.append(base_id)
+        for rdg, reading in zip(rdg_elements, readings, strict=True):
+            if BASE_TEXT_SUPPORTING_ANA in ana_tokens(rdg):
+                for wit in (reading['attributes'].get('wit') or '').split():
+                    wit_id = wit.lstrip('#')
+                    if wit_id and wit_id not in wit_ids:
+                        wit_ids.append(wit_id)
+
+        return {
+            'text': text,
+            'html': html,
+            'wit_ids': wit_ids,
+            'attributes': {
+                'wit': ' '.join(f'#{w}' for w in wit_ids),
+                'corresp': resolver.normalize_corresp_token(target),
+            },
+        }
+
+    def _resolve_target_lemma(self, target: str, resolver: WitnessFragmentResolver,
+                              emended: bool = False) -> dict[str, Any]:
         """
         Resolve @target - the base text's own reading at this location - into a
         lemma dict, the new-format equivalent of the old format's inline <lem>.
         A target that resolves to no text (e.g. a left()/right() gap position with
         no base-text content at all) renders as an omission, matching the
         classical apparatus convention used elsewhere for omission variants.
+
+        emended: the span contains an editorial emendation - render the edited
+        text (corr/supplied in italics, surplus removed) instead of the
+        transmitted one; see location_resolver's EMENDED mode.
         """
-        text, html = resolver.resolve_text_html([target])
+        if emended:
+            text, html = resolver.resolve_text_html([target], mode=EMENDED)
+        else:
+            text, html = resolver.resolve_text_html([target])
         if not text:
             text, html = 'om.', '<i>om.</i>'
         return {
@@ -449,7 +663,7 @@ class Apparatus:
         links = element.findall('tei:link', namespaces=ns)
 
         text, html, corresp, entry_links = '', '', None, None
-        is_omission = element.get('ana') == 'hc:OmissionVariant'
+        is_omission = 'hc:OmissionVariant' in ana_tokens(element)
 
         if ptrs:
             target_tokens = [p.get('target') for p in ptrs if p.get('target')]
@@ -481,6 +695,10 @@ class Apparatus:
         attributes = dict(element.attrib)
         if corresp:
             attributes['corresp'] = corresp
+        if not attributes.get('wit'):
+            derived_wit = self._derive_wit_from_targets(ptrs, links)
+            if derived_wit:
+                attributes['wit'] = derived_wit
 
         result = {
             'text': text,
@@ -492,6 +710,28 @@ class Apparatus:
 
         return result
 
+    def _derive_wit_from_targets(self, ptrs, links) -> str | None:
+        """
+        Derive a reading's witnesses from the "prefix:" of its <ptr> (or
+        <link> witness-side) targets, for a <rdg> written without @wit.
+        """
+        if not hasattr(self, '_prefix_to_witness'):
+            self._prefix_to_witness = {
+                info['synoptic_prefix']: wit_id
+                for wit_id, info in self.get_witness_to_prefix_mapping().items()
+                if info.get('synoptic_prefix')
+            }
+        targets = [p.get('target') or '' for p in ptrs]
+        for link_el in links:
+            targets.extend((link_el.get('target') or '').split()[1:])
+        wit_ids = []
+        for target in targets:
+            spec = parse_location_token(target)
+            wit_id = self._prefix_to_witness.get(spec['prefix']) if spec else None
+            if wit_id and wit_id not in wit_ids:
+                wit_ids.append(wit_id)
+        return ' '.join(f'#{w}' for w in wit_ids) or None
+
     def _derive_loc_and_corresp(self, app, resolver: WitnessFragmentResolver) -> tuple[str | None, str | None]:
         """
         Derive a display 'loc' (line number) and 'corresp' (leiths-anchored line
@@ -500,15 +740,19 @@ class Apparatus:
         (transposition entries) anchors on the first <link>'s first (base-side)
         token.
         """
-        try:
-            token = app.get('target')
-            if not token:
-                first_link = app.find('.//tei:rdg/tei:link', namespaces=ns)
-                if first_link is not None:
-                    link_targets = (first_link.get('target') or '').split()
-                    if link_targets:
-                        token = link_targets[0]
+        token = app.get('target')
+        if not token:
+            first_link = app.find('.//tei:rdg/tei:link', namespaces=ns)
+            if first_link is not None:
+                link_targets = (first_link.get('target') or '').split()
+                if link_targets:
+                    token = link_targets[0]
+        return self._loc_and_corresp_for_token(token, resolver)
 
+    def _loc_and_corresp_for_token(self, token: str | None,
+                                   resolver: WitnessFragmentResolver) -> tuple[str | None, str | None]:
+        """(line @n, "prefix:line_xml_id") of the line a location token lies in."""
+        try:
             if not token:
                 return None, None
 
@@ -781,7 +1025,7 @@ class Apparatus:
         """
         return {
             'apparatus_filepath': self._apparatus_filepath,
-            'entries': self._entries.copy(),
+            'entries': self.get_display_entries(),
             'entries_count': self.get_entries_count(),
             'leiths_path': self._leiths_path,
             'corresp': self.get_corresp_attribute()
@@ -909,6 +1153,18 @@ def process_synoptic_token(el:et.Element, prefer_reg: bool = False) -> str:
             # before this function gained the prefer_reg parameter.
             if chosen is not None:
                 result += _render_choice_alternative(chosen, prefer_reg)
+        elif 'corr' in child_tags:
+            # An editorial correction (<sic>/<corr>, inside a token or spanning
+            # whole tokens): the regularized base-text row shows the emended
+            # text, marked in italics; the diplomatic row and every other
+            # witness show the transmitted <sic> (nothing, if there is none).
+            wanted = 'corr' if prefer_reg else 'sic'
+            chosen = next((c for c in children if local_name(c) == wanted), None)
+            if chosen is not None:
+                inner = _render_choice_alternative(chosen, prefer_reg)
+                if prefer_reg and inner:
+                    inner = f"<em class='syn-emendation'>{inner}</em>"
+                result += inner
         else:
             for child in el:
                 result += process_synoptic_token(child, prefer_reg)
@@ -978,6 +1234,15 @@ def process_synoptic_token(el:et.Element, prefer_reg: bool = False) -> str:
                 result += process_synoptic_token(child, prefer_reg)
                 if child.tail is not None and child.tail.strip() != '':
                     result += _regularize_long_s(child.tail, prefer_reg)
+        elif any(isinstance(d.tag, str) and local_name(d) in ('w', 'pc') for d in el.iter()):
+            # A whole-token <surplus> (e.g. a word the editor deletes) stays
+            # visible - struck through - on the regularized row too, so its
+            # tokens remain selectable as the lemma of an apparatus entry.
+            # In-word surplus (above) is simply dropped from that row.
+            inner = ''
+            for child in el:
+                inner += process_synoptic_token(child, prefer_reg)
+            result += f"<span class='syn-surplus'>{inner}</span>"
         if el.tail is not None and el.tail.strip() != '':
             result += _regularize_long_s(el.tail, prefer_reg)
     else:

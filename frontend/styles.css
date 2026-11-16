@@ -2016,3 +2016,38 @@ main {
     color: #6c757d;
     font-weight: bold;
 }
+
+/* Editorial emendations (corr replacing a sic, supplied text): italic in the
+   base text column and on the base text's regularized row in Location
+   Details. A whole-token <surplus> the editor deletes stays visible (and
+   selectable as a lemma) on that row, struck through. */
+.emendation,
+.syn-emendation,
+.syn-supplied {
+    font-style: italic;
+}
+
+.syn-surplus {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+/* Generated apparatus entry: an emendation in the base text that no <app>
+   records yet (not saved in the file). */
+.classical-subentry.generated-entry {
+    opacity: 0.65;
+    border-left: 2px dashed currentColor;
+    padding-left: 4px;
+}
+
+.generated-entry-badge {
+    font-size: 0.7em;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    padding: 0 3px;
+    margin-right: 4px;
+    vertical-align: middle;
+}

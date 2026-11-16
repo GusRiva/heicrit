@@ -207,6 +207,32 @@ Each `prefixDef` maps a short prefix to the witness file it belongs to. The pref
 
 Multiple `<app>` elements may share the same `@loc` and `@corresp` when there are several independent points of variation within one line.
 
+### Emendations in the critical text
+
+The base text may carry editorial emendations: `<choice><sic>…</sic><corr>…</corr></choice>` (inside a token, or spanning whole tokens with its own `xml:id`), `<supplied>` (added text) and `<surplus>` (text the editor deletes — inside a token, or wrapping whole tokens with its own `xml:id`). Worked examples: `test_data/emendatio/spec/app_emendatio.xml`; a loadable project with one example per line: `test_data/emendatio/`.
+
+When an `<app>`'s `@target` span contains an emendation, it is processed twice:
+
+1. **Lemma** — the emended text, emended parts in italics: `*K*atzen`; in-word surplus becomes `[ ]` (`grau[ ]`); a whole-token surplus target (`a:surplus_1`) becomes a gap, `*vor* grau`; a token-spanning choice (`a:choice_1`) shows its corr tokens, `*keine Hunde*`.
+2. **First reading after `]`** — the base text's own uncorrected reading, attributed to the base witness plus every `hc:BaseTextSupportingVariant` reading: `*K*atzen] Tatzen A B, Katzen C, om. D`.
+
+The typology of the other readings never depends on whether the base text is emended. Two extra `rdg/@ana` values:
+
+| `@ana` | Meaning |
+|--------|---------|
+| `hc:CorrectionVariant` | Optional marker, added after the variant type (`"hc:SubstitutionVariant hc:CorrectionVariant"`): this reading was used to emend the base text. |
+| `hc:BaseTextSupportingVariant` | Used instead of a variant type: the witness agrees with the base text's uncorrected reading. Merged into the base reading at an emendation, otherwise not displayed. |
+
+Not treated as emendations: `<supplied>` beside an `<orig>` in a `<choice>` (reconstruction of illegible text) and a standalone `<sic>` without `<corr>`.
+
+A reading covering all remaining witnesses with text at the location (at least two) is printed as **rel.** and moved last (`Tatzen A, om. D, Katzen rel.`). This applies to every entry. A `<rdg>` without `@wit` gets its witnesses from its `<ptr>` prefixes.
+
+**Emendations without an `<app>`** are never silent: for every emendation in the base text that no `<app>` target covers (neither the emendation nor any of its tokens), the backend generates a provisional entry by the same rules (`Nachts[ ] ] Nachtss A`). Generated entries are only shown, never written to the file. They carry `is_generated: True` and `id: None`, and come from `apparatus.get_generated_entries()`, while `get_entries()` keeps returning only the real `<app>` entries, whose positions the write routes rely on. Responses to the frontend use `get_display_entries()` (real entries followed by generated ones). In the UI they are marked *not saved*, can't be dragged, edited or deleted, and their **Create Entry** button starts creation mode with the lemma preselected. Once an `<app>` records the emendation, the generated entry disappears.
+
+An empty `<corr/>` (deleting its `<sic>`) is marked `[ ]` in the lemma, like an in-word `<surplus>`. A token-spanning `<choice>` without an `xml:id` is addressed as a range over both its sides.
+
+When creating an entry, selecting exactly the tokens of a whole-token `<surplus>` or of one side of a token-spanning `<choice>` stores the container's id as `@target`. Readings whose variant type is left on *auto* are classified automatically at an emended lemma: a reading identical to the uncorrected base text becomes `hc:BaseTextSupportingVariant`, and one identical to the emended lemma gets `hc:CorrectionVariant`.
+
 ---
 
 ## 4. Reference Notation
@@ -341,6 +367,13 @@ The backend (`apparatus.py`, `synoptic_map.py`) parses the XML and exposes struc
         },
         # … one dict per <rdg> element
     ],
+    'is_emendation': bool,  # @target span contains an editorial emendation
+    'base_reading': {       # only when is_emendation: uncorrected base text
+        'text': str, 'html': str,
+        'wit_ids': ['a', 'b'],  # base witness + hc:BaseTextSupportingVariant witnesses
+        'attributes': {'wit': '#a #b', 'corresp': str},
+    },
+    'is_generated': bool,   # only in get_generated_entries(): unrecorded emendation, id None
     'is_placeholder': bool  # True if synthesised from synoptic map (no <app> in file)
 }
 ```
@@ -468,3 +501,4 @@ When the user activates **New Variant** mode, all `syn-token` spans become click
 | `/api/apparatus/save` | POST | Insert new `<app>` entries into the apparatus XML file |
 | `/api/apparatus/entry/<id>` | PUT | Update an existing entry in the in-memory apparatus |
 | `/api/sigla-mapping` | GET | Return the witness-to-prefix mapping |
+| `/api/apparatus/emendation-check` | POST | For a lemma `target`: lifted target, whether it is emended, emended and uncorrected text |

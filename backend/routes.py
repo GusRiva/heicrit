@@ -14,7 +14,7 @@ from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
 from synoptic_map import SynopticMap
 from apparatus import (
     Apparatus, process_synoptic_unit_for_comparison, html_note_to_tei,
-    build_new_format_app_element, build_rdg_element, ALLOWED_NEW_FORMAT_ANA
+    build_new_format_app_element, build_rdg_element, is_valid_reading_ana
 )
 from punctuation import build_all_containers_tokens, build_edit_tokens, find_container_by_id, apply_punctuation_edit
 
@@ -288,7 +288,7 @@ def open_project():
                 'leiths-info': leiths_info,
                 'apparatus_filepath': apparatus_filepath,
                 'apparatus_count': len(apparatus_entries),
-                'apparatus_entries': apparatus_entries,
+                'apparatus_entries': apparatus.get_display_entries(),
                 'witness_order': witness_order,
                 'witness_mapping': witness_mapping,
                 'synoptic_map': synoptic_map.get_loci(),
@@ -610,7 +610,7 @@ def finalize_project():
             'success': True,
             'message': f'Project finalized with {len(apparatus_entries)} apparatus entries',
             'apparatus_count': len(apparatus_entries),
-            'apparatus_entries': apparatus_entries,
+            'apparatus_entries': apparatus.get_display_entries(),
             'witness_order': witness_order,
             'witness_mapping': witness_mapping,
             'leiths_info': leiths_info,
@@ -1029,7 +1029,7 @@ def _validate_new_format_readings(readings):
     for reading in readings:
         if not reading.get('wit'):
             return 'Each reading needs at least one witness'
-        if reading.get('ana') not in ALLOWED_NEW_FORMAT_ANA:
+        if not is_valid_reading_ana(reading.get('ana')):
             return f"Invalid or missing variant type (ana): {reading.get('ana')!r}"
 
         if reading.get('ana') == 'hc:TranspositionVariant':
@@ -1048,6 +1048,23 @@ def _validate_new_format_readings(readings):
                 return 'Each reading needs at least one token reference'
 
     return None
+
+
+@api.route('/apparatus/emendation-check', methods=['POST'])
+def check_emendation():
+    """
+    Tell the entry-creation UI whether a lemma selection is an emended span.
+    Request: { target: "a:w_1_4" }
+    Response: { target (lifted to an emendation container if it covers one),
+                is_emendation, [emended_text, emended_html, base_text, base_html] }
+    """
+    try:
+        data = request.get_json() or {}
+        if apparatus is None:
+            return jsonify({'target': data.get('target'), 'is_emendation': False})
+        return jsonify(apparatus.describe_emendation(data.get('target')))
+    except Exception as e:
+        return jsonify({'error': f'Failed to check emendation: {str(e)}'}), 500
 
 
 @api.route('/apparatus/entry/create', methods=['POST'])
@@ -1093,6 +1110,9 @@ def create_apparatus_entry_new_format():
         if parent is None:
             return jsonify({'error': 'Could not find <listApp> or <body> in apparatus file'}), 400
 
+        if not is_transposition and apparatus is not None:
+            target = apparatus.lift_emendation_target(target)
+            apparatus.apply_emendation_ana_suggestions(target, readings)
         new_app = build_new_format_app_element(target, readings)
         parent.append(new_app)
 
@@ -1122,7 +1142,7 @@ def create_apparatus_entry_new_format():
 
         return jsonify({
             'success': True,
-            'apparatus_entries': fresh_entries,
+            'apparatus_entries': updated_apparatus.get_display_entries(),
             'created_entry_id': len(fresh_entries)
         })
 
@@ -1193,6 +1213,9 @@ def update_apparatus_entry_new_format():
             if note_element is not None:
                 preserved_notes[index] = note_element
 
+        if apparatus is not None:
+            target = apparatus.lift_emendation_target(target)
+            apparatus.apply_emendation_ana_suggestions(target, readings)
         for child in list(app_element):
             app_element.remove(child)
         app_element.set('target', target)
@@ -1207,7 +1230,7 @@ def update_apparatus_entry_new_format():
 
         return jsonify({
             'success': True,
-            'apparatus_entries': updated_apparatus.get_entries()
+            'apparatus_entries': updated_apparatus.get_display_entries()
         })
 
     except Exception as e:
@@ -1251,7 +1274,7 @@ def delete_apparatus_entry_new_format():
 
         return jsonify({
             'success': True,
-            'apparatus_entries': updated_apparatus.get_entries()
+            'apparatus_entries': updated_apparatus.get_display_entries()
         })
 
     except Exception as e:
@@ -1322,7 +1345,7 @@ def reorder_apparatus_entries_new_format():
 
         return jsonify({
             'success': True,
-            'apparatus_entries': updated_apparatus.get_entries()
+            'apparatus_entries': updated_apparatus.get_display_entries()
         })
 
     except Exception as e:
