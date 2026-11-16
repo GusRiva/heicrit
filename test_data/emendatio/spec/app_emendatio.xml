@@ -1,0 +1,711 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?><?xml-model href="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/tei_hes.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<!DOCTYPE TEI SYSTEM "https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/heieditions-entities.txt">
+<TEI xmlns="http://www.tei-c.org/ns/1.0"
+    xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title ana="hc:MainTitle">Fiktiver Fabel</title>
+            </titleStmt>
+            <publicationStmt>
+                <p/>
+            </publicationStmt>
+            <sourceDesc>
+                <listWit>
+                    <witness xml:id="a" ana="hc:BaseText">
+                        <ptr target="../indexes/IndexOfWitnesses.xml#a"/>
+                    </witness>
+                    <witness xml:id="b">
+                        <ptr target="../indexes/IndexOfWitnesses.xml#b"/>
+                    </witness>
+                    <witness xml:id="c">
+                        <ptr target="../indexes/IndexOfWitnesses.xml#c"/>
+                    </witness>
+                    <witness xml:id="d">
+                        <ptr target="../indexes/IndexOfWitnesses.xml#d"/>
+                    </witness>
+                </listWit>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <listPrefixDef>
+                <prefixDef ident="hc" matchPattern="(.+)"
+                    replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"/>
+                <prefixDef ident="char" matchPattern="(.+)"
+                    replacementPattern="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/chars.xml#$1"/>
+
+                <prefixDef corresp="#a" matchPattern="(.+)" ident="a"
+                    replacementPattern="../texts/A/A_1.xml/$1"
+                    ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef corresp="#b" matchPattern="(.+)" ident="b"
+                    replacementPattern="../texts/B/B_1.xml/$1"
+                    ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef corresp="#c" matchPattern="(.+)" ident="c"
+                    replacementPattern="../texts/C/C_1.xml/$1"
+                    ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef corresp="#d" matchPattern="(.+)" ident="d"
+                    replacementPattern="../texts/D/D_1.xml/$1"
+                    ana="hc:SynopticTextPrefixDefinition"/>
+            </listPrefixDef>
+        </encodingDesc>
+    </teiHeader>
+
+    <text ana="hc:CompleteExpression">
+        <body>
+            
+            <!--
+                
+                Korrektur im Wort nach anderen Hss.
+            
+            A
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4"><choice><sic>T</sic><corr>K</corr></choice>atzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            B
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            C
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            D
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            -->
+                  
+            <listApp>
+
+                <!-- 
+                    *K*atzen] Tatzen A, Katzen B C D 
+                    oder:
+                    *K*atzen] Tatzen A, Katzen rel. 
+                    
+                    ohne editorische Korrekturen:
+                    Tatzen] Katzen B C D
+                    
+                -->
+                
+                <app target="a:w_1_4">
+                    <rdg ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:w_1_4"/>
+                        <ptr target="c:w_1_4"/>
+                        <ptr target="d:w_1_4"/>
+                    </rdg>
+                </app>
+                               
+            </listApp>
+                
+                <!-- 
+                    Verarbeitungslogik: 
+                    
+                    Wenn in der referenzierten Lemmaspanne ein Korrekturtag gefunden wird (hier: choice/corr), wird die Lemmaspanne doppelt verarbeitet:
+                    - als Lemmaansatz: mit durchgeführter Korrektur
+                    - als erste Variante hinter der Lemmaklammer: ohne durchgeführte Korrektur, also wie im (zu korrigierenden) Leittext
+                    
+                    Die Typologie der verzeichneten Varianten der anderen Textzeugen bleibt immer gleich, egal ob eine Korrektur des Leittextes vorliegt oder nicht. 
+                    Deswegen wird hier "Katzen" als hc:SubstitutionVariant verzeichnet.
+                    Die zusätzliche Angabe hc:CorrectionVariant ist optional und kennzeichnet diejenige Variante, die zur Korrekktur herangezogen wurde. 
+                    Das könnten aber auch mehrere verschiedene Varianten sein (die Korrektur würde mehrere Varianten kombinieren), oder es könnte sich 
+                    um eine Konjektur ohne belegte Variante handeln (d.h. es gäbe gar keine hc:CorrectionVariant).
+                    
+                -->
+                
+                <!-- ############################################# -->
+                
+                <!--
+                
+                Abwandlung des Vorangehenden: Die Korrekturvariante kommt nicht in allen anderen Textzeugen vor.
+            
+            A
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4"><choice><sic>T</sic><corr>K</corr></choice>atzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            B
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            C
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            D
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            -->
+
+            <listApp>
+                
+                <!-- 
+                    *K*atzen] Tatzen A, Katzen B C, om. D 
+                    oder:
+                    *K*atzen] Tatzen A, om. D, Katzen rel. 
+                -->
+                
+                <app target="a:w_1_4">
+                    <rdg ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:w_1_4"/>
+                        <ptr target="c:w_1_4"/>
+                    </rdg>
+                    <rdg ana="hc:OmissionVariant">
+                        <ptr target="d:right(w_1_3)"/>
+                    </rdg>
+                </app>
+                
+            </listApp>
+            
+            <!-- ############################################# -->
+            
+            <!--
+                
+                Abwandlung des Vorangehenden: Die Korrekturvariante kommt nicht in allen anderen Textzeugen vor, ein Textzeuge stützt die (zu korrigierende) Lesart des Leittextes.
+            
+            A
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4"><choice><sic>T</sic><corr>K</corr></choice>atzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            B
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Tatzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            C
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            D
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            -->
+            
+            <listApp>
+                
+                <!-- 
+                    *K*atzen] Tatzen A B, Katzen C, om. D 
+                    
+                    Tatzen] Katzen C, om. D
+                -->
+                
+                <app target="a:w_1_4">
+                    <rdg ana="hc:BaseTextSupportingVariant">
+                        <ptr target="b:w_1_4"/>
+                    </rdg>
+                    <rdg ana="hc:SubstitutionVariant hc:CorrectionVariant">                       
+                        <ptr target="c:w_1_4"/>
+                    </rdg>
+                    <rdg ana="hc:OmissionVariant">
+                        <ptr target="d:right(w_1_3)"/>
+                    </rdg>
+                </app>
+                
+            </listApp>
+            
+            <!-- ############################################# -->
+            
+            <!--
+                
+                surplus
+            
+            A
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau<surplus>enhaft</surplus></w>
+                <pc>.</pc>
+            </l>
+            
+            B
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            C
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            D
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            -->
+            
+            <listApp>
+                
+                <!-- 
+                    grau[ ] ] grauenhaft A, grau B C D 
+                    
+                -->
+                
+                <app target="a:w_1_5">
+                    <rdg ana="hc:SubstitutionVariant hc:CorrectionVariant">    
+                        <ptr target="b:w_1_5"/>
+                        <ptr target="c:w_1_5"/>
+                        <ptr target="d:w_1_5"/>
+                    </rdg>
+                </app>
+                
+            </listApp>
+            
+            <!-- ############################################# -->
+            
+            <!--
+                
+                surplus
+            
+            A
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <surplus xml:id="surplus_1">
+                    <w xml:id="w_1_4">Katzen</w>
+                </surplus>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            B
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            C
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            D
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            -->
+            
+            <listApp>
+                
+                <!-- 
+                    *vor* grau ] Katzen A, om. B C D
+                    
+                -->
+                
+                <app target="a:surplus_1">
+                    <rdg ana="hc:OmissionVariant hc:CorrectionVariant">    
+                        <ptr target="b:left(w_1_4)"/>
+                        <ptr target="c:left(w_1_4)"/>
+                        <ptr target="d:left(w_1_4)"/>
+                    </rdg>
+                </app>
+                
+            </listApp>
+            
+            <!-- ############################################# -->
+            
+            <!--
+                
+                choice overhalb der Tokenebene
+            
+            A
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts<surplus>s</surplus></w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <choice xml:id="choice_1">
+                    <sic>
+                        <w xml:id="w_1_3">alle</w>
+                        <c> </c>               
+                        <w xml:id="w_1_4">Katzen</w>
+                    </sic>
+                    <corr>
+                        <w xml:id="w_1_5">keine</w>
+                        <c> </c>
+                        <w xml:id="w_1_6">Hunde</w>
+                    </corr>
+                </choice>
+                <c> </c>
+                <w xml:id="w_1_7">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            B
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">keine</w>
+                <c> </c>
+                <w xml:id="w_1_4">Hunde</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            C
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">keine</w>
+                <c> </c>
+                <w xml:id="w_1_4">Hunde</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            D
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">keine</w>
+                <c> </c>
+                <w xml:id="w_1_4">Hunde</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            -->
+            
+            <listApp>
+                
+                <!-- 
+                    *keine Hunde* ] alle Katzen A, keine Hunde B C D
+                    
+                -->
+                
+                <app target="a:choice_1">
+                    <rdg ana="hc:SubstitutionVariant hc:CorrectionVariant">    
+                        <ptr target="b:range(w_1_3, w_1_4)"/>
+                        <ptr target="c:range(w_1_3, w_1_4)"/>
+                        <ptr target="d:range(w_1_3, w_1_4)"/>
+                    </rdg>
+                </app>
+                
+            </listApp>
+            
+            <!--
+                
+                Korrektur im Wort nach anderen Hss.
+            
+            A
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">al<supplied>l</supplied>e</w>
+                <c> </c>
+                <w xml:id="w_1_4"><choice><sic>T</sic><corr>K</corr></choice>atz<surplus>z</surplus><supplied>e</supplied>n</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            B
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            C
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            D
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+            
+            -->
+            
+            
+            
+
+
+            <!-- ############################################# -->
+
+            <!--
+
+                Emendationen ohne Apparateintrag
+
+            A
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4"><choice><sic>T</sic><corr>K</corr></choice>atzen</w>
+                <c> </c>
+                <surplus xml:id="surplus_2">
+                    <w xml:id="w_1_5">sehr</w>
+                </surplus>
+                <c> </c>
+                <w xml:id="w_1_6">grau</w>
+                <pc>.</pc>
+            </l>
+
+            B, C, D
+            <l xml:id="l_1">
+                <w xml:id="w_1_1">Nachts</w>
+                <c> </c>
+                <w xml:id="w_1_2">sind</w>
+                <c> </c>
+                <w xml:id="w_1_3">alle</w>
+                <c> </c>
+                <w xml:id="w_1_4">Katzen</w>
+                <c> </c>
+                <w xml:id="w_1_5">grau</w>
+                <pc>.</pc>
+            </l>
+
+            -->
+
+            <listApp>
+
+                <!--
+                    (kein <app>)
+
+                    Anzeige in HeiCrit, solange kein Apparateintrag existiert
+                    (generierte, nicht gespeicherte Einträge):
+                    *K*atzen] Tatzen A
+                    *vor* grau] sehr A
+
+                    Verarbeitungslogik:
+
+                    Jede Emendation im Leittext, die von keinem <app> erfasst wird
+                    (weder die Emendation selbst noch eines ihrer Tokens), erscheint als
+                    generierter Eintrag nach denselben Regeln wie oben: emendierter
+                    Lemmaansatz, dahinter die unkorrigierte Lesart des Leittextes.
+                    Die Lesarten der anderen Textzeugen fehlen, bis der Eintrag angelegt
+                    wird ("Create Entry"); erst dann wird er in die Datei geschrieben.
+                    Gespeichert sähe er z.B. so aus (*K*atzen] Tatzen A, Katzen rel.):
+                -->
+
+                <!--
+                <app target="a:w_1_4">
+                    <rdg ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:w_1_4"/>
+                        <ptr target="c:w_1_4"/>
+                        <ptr target="d:w_1_4"/>
+                    </rdg>
+                </app>
+                -->
+
+            </listApp>
+        </body>
+    </text>
+</TEI>

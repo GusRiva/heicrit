@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc><titleStmt><title>Synoptische Karte</title></titleStmt>
+      <publicationStmt><p/></publicationStmt><sourceDesc><p/></sourceDesc></fileDesc>
+    <encodingDesc>
+      <listPrefixDef>
+        <prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"/>
+        <prefixDef matchPattern="(.+)" ident="a" replacementPattern="../texts/A/A_1.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+        <prefixDef matchPattern="(.+)" ident="b" replacementPattern="../texts/B/B_1.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+        <prefixDef matchPattern="(.+)" ident="c" replacementPattern="../texts/C/C_1.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+        <prefixDef matchPattern="(.+)" ident="d" replacementPattern="../texts/D/D_1.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+      </listPrefixDef>
+    </encodingDesc>
+  </teiHeader>
+  <standOff>
+    <link target="a:l_1 b:l_1 c:l_1 d:l_1"/>
+    <link target="a:l_2 b:l_2 c:l_2 d:l_2"/>
+    <link target="a:l_3 b:l_3 c:l_3 d:l_3"/>
+    <link target="a:l_4 b:l_4 c:l_4 d:l_4"/>
+    <link target="a:l_5 b:l_5 c:l_5 d:l_5"/>
+    <link target="a:l_6 b:l_6 c:l_6 d:l_6"/>
+    <link target="a:l_7 b:l_7 c:l_7 d:l_7"/>
+    <link target="a:l_8 b:l_8 c:l_8 d:l_8"/>
+  </standOff>
+</TEI>

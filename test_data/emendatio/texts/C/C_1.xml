@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS">
+  <teiHeader><fileDesc><titleStmt><title>C - Fiktive Fabel</title></titleStmt>
+    <publicationStmt><p>Part file</p></publicationStmt><sourceDesc><p>Part file</p></sourceDesc></fileDesc></teiHeader>
+  <text ana="hc:ExpressionPart">
+    <body>
+      <lg xml:id="lg_1">
+        <l n="1" xml:id="l_1">
+          <w xml:id="w_1_1">Nachts</w>
+          <c> </c>
+          <w xml:id="w_1_2">sind</w>
+          <c> </c>
+          <w xml:id="w_1_3">alle</w>
+          <c> </c>
+          <w xml:id="w_1_4">Katzen</w>
+          <c> </c>
+          <w xml:id="w_1_5">grau</w>
+          <pc>.</pc>
+        </l>
+        <l n="2" xml:id="l_2">
+          <w xml:id="w_2_1">Nachts</w>
+          <c> </c>
+          <w xml:id="w_2_2">sind</w>
+          <c> </c>
+          <w xml:id="w_2_3">alle</w>
+          <c> </c>
+          <w xml:id="w_2_4">Katzen</w>
+          <c> </c>
+          <w xml:id="w_2_5">grau</w>
+          <pc>.</pc>
+        </l>
+        <l n="3" xml:id="l_3">
+          <w xml:id="w_3_1">Nachts</w>
+          <c> </c>
+          <w xml:id="w_3_2">sind</w>
+          <c> </c>
+          <w xml:id="w_3_3">alle</w>
+          <c> </c>
+          <w xml:id="w_3_4">Katzen</w>
+          <c> </c>
+          <w xml:id="w_3_5">grau</w>
+          <pc>.</pc>
+        </l>
+        <l n="4" xml:id="l_4">
+          <w xml:id="w_4_1">Nachts</w>
+          <c> </c>
+          <w xml:id="w_4_2">sind</w>
+          <c> </c>
+          <w xml:id="w_4_3">alle</w>
+          <c> </c>
+          <w xml:id="w_4_4">Katzen</w>
+          <c> </c>
+          <w xml:id="w_4_5">grau</w>
+          <pc>.</pc>
+        </l>
+        <l n="5" xml:id="l_5">
+          <w xml:id="w_5_1">Nachts</w>
+          <c> </c>
+          <w xml:id="w_5_2">sind</w>
+          <c> </c>
+          <w xml:id="w_5_3">alle</w>
+          <c> </c>
+          <w xml:id="w_5_4">grau</w>
+          <pc>.</pc>
+        </l>
+        <l n="6" xml:id="l_6">
+          <w xml:id="w_6_1">Nachts</w>
+          <c> </c>
+          <w xml:id="w_6_2">sind</w>
+          <c> </c>
+          <w xml:id="w_6_3">keine</w>
+          <c> </c>
+          <w xml:id="w_6_4">Hunde</w>
+          <c> </c>
+          <w xml:id="w_6_5">grau</w>
+          <pc>.</pc>
+        </l>
+        <l n="7" xml:id="l_7">
+          <w xml:id="w_7_1">Nachts</w>
+          <c> </c>
+          <w xml:id="w_7_2">sind</w>
+          <c> </c>
+          <w xml:id="w_7_3">alle</w>
+          <c> </c>
+          <w xml:id="w_7_4">Katzen</w>
+          <c> </c>
+          <w xml:id="w_7_5">grau</w>
+          <pc>.</pc>
+        </l>
+        <l n="8" xml:id="l_8">
+          <w xml:id="w_8_1">Nachts</w>
+          <c> </c>
+          <w xml:id="w_8_2">sind</w>
+          <c> </c>
+          <w xml:id="w_8_3">alle</w>
+          <c> </c>
+          <w xml:id="w_8_4">Katzen</w>
+          <c> </c>
+          <w xml:id="w_8_5">grau</w>
+          <pc>.</pc>
+        </l>
+      </lg>
+    </body>
+  </text>
+</TEI>

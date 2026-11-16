@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS">
+  <teiHeader><fileDesc><titleStmt><title ana="hc:MainTitle">Textzeugenverzeichnis</title></titleStmt>
+    <publicationStmt><p/></publicationStmt><sourceDesc><p>Born Digital</p></sourceDesc></fileDesc></teiHeader>
+  <text ana="hc:CompleteExpression">
+    <body>
+      <listWit>
+        <witness xml:id="a"><msDesc><msIdentifier><idno ana="hc:EditorialSiglum">A</idno></msIdentifier></msDesc></witness>
+        <witness xml:id="b"><msDesc><msIdentifier><idno ana="hc:EditorialSiglum">B</idno></msIdentifier></msDesc></witness>
+        <witness xml:id="c"><msDesc><msIdentifier><idno ana="hc:EditorialSiglum">C</idno></msIdentifier></msDesc></witness>
+        <witness xml:id="d"><msDesc><msIdentifier><idno ana="hc:EditorialSiglum">D</idno></msIdentifier></msDesc></witness>
+      </listWit>
+    </body>
+  </text>
+</TEI>

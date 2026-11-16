@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:hei="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title ana="hc:MainTitle">Fiktive Fabel (Emendationen)</title>
+            </titleStmt>
+            <publicationStmt>
+                <p/>
+            </publicationStmt>
+            <sourceDesc>
+                <listWit>
+                    <witness xml:id="a" ana="hc:BaseText">
+                        <ptr target="../indexes/IndexOfWitnesses.xml#a"/>
+                    </witness>
+                    <witness xml:id="b">
+                        <ptr target="../indexes/IndexOfWitnesses.xml#b"/>
+                    </witness>
+                    <witness xml:id="c">
+                        <ptr target="../indexes/IndexOfWitnesses.xml#c"/>
+                    </witness>
+                    <witness xml:id="d">
+                        <ptr target="../indexes/IndexOfWitnesses.xml#d"/>
+                    </witness>
+                </listWit>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <listPrefixDef>
+                <prefixDef ident="hc" matchPattern="(.+)" replacementPattern="https://lod.ub.uni-heidelberg.de/ontologies/heieditions/hc/current/$1"/>
+                <prefixDef ident="char" matchPattern="(.+)" replacementPattern="https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS/declarations/chars.xml#$1"/>
+                <prefixDef corresp="#a" matchPattern="(.+)" ident="a" replacementPattern="../texts/A/A_1.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef corresp="#b" matchPattern="(.+)" ident="b" replacementPattern="../texts/B/B_1.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef corresp="#c" matchPattern="(.+)" ident="c" replacementPattern="../texts/C/C_1.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+                <prefixDef corresp="#d" matchPattern="(.+)" ident="d" replacementPattern="../texts/D/D_1.xml/$1" ana="hc:SynopticTextPrefixDefinition"/>
+            </listPrefixDef>
+        </encodingDesc>
+    </teiHeader>
+
+    <!-- Test project for emendations in the critical text. The examples and the
+         processing rules they illustrate are documented in ../spec/app_emendatio.xml
+         (one example per line here; ids renumbered accordingly). -->
+
+    <text ana="hc:CompleteExpression">
+        <body>
+            <listApp corresp="../synopses/synoptic_map.xml">
+
+                <!-- V. 1: *K*atzen] Tatzen A, Katzen rel. -->
+                <app target="a:w_1_4">
+                    <rdg wit="#b #c #d" ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:w_1_4"/>
+                        <ptr target="c:w_1_4"/>
+                        <ptr target="d:w_1_4"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 2: *K*atzen] Tatzen A, om. D, Katzen rel. -->
+                <app target="a:w_2_4">
+                    <rdg wit="#b #c" ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:w_2_4"/>
+                        <ptr target="c:w_2_4"/>
+                    </rdg>
+                    <rdg wit="#d" ana="hc:OmissionVariant">
+                        <ptr target="d:right(w_2_3)"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 3: *K*atzen] Tatzen A B, Katzen C, om. D -->
+                <app target="a:w_3_4">
+                    <rdg wit="#b" ana="hc:BaseTextSupportingVariant">
+                        <ptr target="b:w_3_4"/>
+                    </rdg>
+                    <rdg wit="#c" ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="c:w_3_4"/>
+                    </rdg>
+                    <rdg wit="#d" ana="hc:OmissionVariant">
+                        <ptr target="d:right(w_3_3)"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 4: grau[ ] ] grauenhaft A, grau rel. -->
+                <app target="a:w_4_5">
+                    <rdg wit="#b #c #d" ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:w_4_5"/>
+                        <ptr target="c:w_4_5"/>
+                        <ptr target="d:w_4_5"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 5: *vor* grau ] Katzen A, om. rel. -->
+                <app target="a:surplus_1">
+                    <rdg wit="#b #c #d" ana="hc:OmissionVariant hc:CorrectionVariant">
+                        <ptr target="b:left(w_5_4)"/>
+                        <ptr target="c:left(w_5_4)"/>
+                        <ptr target="d:left(w_5_4)"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 6: *keine Hunde* ] alle Katzen A, keine Hunde rel. -->
+                <app target="a:choice_1">
+                    <rdg wit="#b #c #d" ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:range(w_6_3, w_6_4)"/>
+                        <ptr target="c:range(w_6_3, w_6_4)"/>
+                        <ptr target="d:range(w_6_3, w_6_4)"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 7 (mixed case): al*l*e] ale A, alle rel.;
+                     *K*atz[ ]*e*n] Tatzzn A, Katzen rel. -->
+                <app target="a:w_7_3">
+                    <rdg wit="#b #c #d" ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:w_7_3"/>
+                        <ptr target="c:w_7_3"/>
+                        <ptr target="d:w_7_3"/>
+                    </rdg>
+                </app>
+                <app target="a:w_7_4">
+                    <rdg wit="#b #c #d" ana="hc:SubstitutionVariant hc:CorrectionVariant">
+                        <ptr target="b:w_7_4"/>
+                        <ptr target="c:w_7_4"/>
+                        <ptr target="d:w_7_4"/>
+                    </rdg>
+                </app>
+
+                <!-- V. 8: deliberately NO <app> - both emendations in this line are
+                     shown as generated, unsaved entries:
+                     *K*atzen] Tatzen A   and   *vor* grau] sehr A -->
+
+            <app target="a:w_8_4"><rdg wit="#b #c #d" ana="hc:SubstitutionVariant hc:CorrectionVariant"><ptr target="b:w_8_4"/><ptr target="c:w_8_4"/><ptr target="d:w_8_4"/></rdg></app></listApp>
+        </body>
+    </text>
+</TEI>
