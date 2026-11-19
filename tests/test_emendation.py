@@ -145,11 +145,12 @@ def test_location_details_rows():
 
 
 def test_existing_projects_unaffected_except_real_emendations():
-    """AH_A's only emendation (w_14_1 Un<sic/><corr>d) is the only changed lemma."""
+    """AH_A's only emendation (w_14_1 Un<sic/><corr>d) is the only changed lemma
+    (normalized: <orig>U</orig><reg>u</reg>)."""
     entries = Apparatus(os.path.join(ROOT, 'test_data', 'apparatus', 'AH_A_app.xml')).get_entries()
     emended = [e for e in entries if e['is_emendation']]
     assert [(e['target'], e['lemma']['html'], e['base_reading']['text']) for e in emended] == [
-        ('a:w_14_1', 'Un<em>d</em>', 'Un'),
+        ('a:w_14_1', 'un<em>d</em>', 'Un'),
     ]
 
 
@@ -198,9 +199,9 @@ def test_no_generated_entries_once_everything_is_recorded():
 @pytest.mark.parametrize('loc, lemma_html, base_html', [
     ('281', '<em>was</em>', '<i>om.</i>'),             # supplied word
     ('345', 'geriete[ ]', 'gerieter'),                  # empty <corr/> deletes
-    ('480', '<em>ſi</em>', '<i>om.</i>'),               # word inside an id-less <corr>
+    ('480', '<em>si</em>', '<i>om.</i>'),               # word inside an id-less <corr>, long s normalized
     ('530', '<em>und fro</em>', 'unfro'),               # id-less token-spanning choice
-    ('602', 'Un<em>d</em>', 'Un'),                      # no whitespace leaking from <choice>
+    ('602', 'un<em>d</em>', 'Un'),                      # no whitespace leaking from <choice>; lemma uses <reg>
 ])
 def test_generated_entries_real_data(ah_a, loc, lemma_html, base_html):
     entry = next(e for e in ah_a.get_generated_entries() if e['loc'] == loc)

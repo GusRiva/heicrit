@@ -16,7 +16,7 @@ from lxml import html as lxml_html
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns, prefix_format
 from load_functions import resolve_relative_path, find_file_in_project, parse_location_token, local_name
-from location_resolver import WitnessFragmentResolver, EMENDED
+from location_resolver import WitnessFragmentResolver, EMENDED, NORMALIZED, EMENDED_NORMALIZED
 
 XML_ID = '{http://www.w3.org/XML/1998/namespace}id'
 TEI_NS = 'http://www.tei-c.org/ns/1.0'
@@ -580,7 +580,7 @@ class Apparatus:
         if not base_tokens:
             return None
 
-        text, html = resolver.resolve_ordered_text_html(base_tokens)
+        text, html = resolver.resolve_ordered_text_html(base_tokens, mode=NORMALIZED)
         if not text:
             return None
         return {
@@ -634,12 +634,12 @@ class Apparatus:
 
         emended: the span contains an editorial emendation - render the edited
         text (corr/supplied in italics, surplus removed) instead of the
-        transmitted one; see location_resolver's EMENDED mode.
+        transmitted one; see location_resolver's EMENDED mode. The lemma is
+        always normalized (<reg>, long s as 's'), like the base-text row in
+        Location Details.
         """
-        if emended:
-            text, html = resolver.resolve_text_html([target], mode=EMENDED)
-        else:
-            text, html = resolver.resolve_text_html([target])
+        text, html = resolver.resolve_text_html(
+            [target], mode=EMENDED_NORMALIZED if emended else NORMALIZED)
         if not text:
             text, html = 'om.', '<i>om.</i>'
         return {

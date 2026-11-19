@@ -61,3 +61,21 @@ def test_arbitrary_ids(tmp_path):
 
     resolver = Apparatus(str(project / 'apparatus' / 'app_emendatio.xml')).get_resolver()
     assert resolver.resolve_text_html(['b:alpha', 'b:zeta'])[0] == 'Katzen grau'
+
+
+def test_lemma_is_normalized(tmp_path):
+    # orig/reg choice and long s: readings stay diplomatic, the lemma
+    # (NORMALIZED mode) shows <reg> and plain s.
+    from location_resolver import NORMALIZED
+    project = tmp_path / 'emendatio'
+    shutil.copytree(PROJECT, project)
+    text_file = project / 'texts' / 'B' / 'B_1.xml'
+    xml = text_file.read_text(encoding='utf-8')
+    xml = xml.replace('<w xml:id="w_1_2">sind</w>', '<w xml:id="w_1_2">ſi<choice><orig>n</orig><reg>nn</reg></choice>d</w>')
+    text_file.write_text(xml, encoding='utf-8')
+
+    resolver = Apparatus(str(project / 'apparatus' / 'app_emendatio.xml')).get_resolver()
+    assert resolver.resolve_text_html(['b:w_1_2'])[0] == 'ſind'
+    assert resolver.resolve_text_html(['b:w_1_2'], mode=NORMALIZED)[0] == 'sinnd'
+    assert resolver.resolve_text_html(['b:left(w_1_2)'], mode=NORMALIZED)[0] == 'vor sinnd'
+    assert resolver.resolve_text_html(['b:range(w_1_1, w_1_2)'], mode=NORMALIZED)[0] == 'Nachts sinnd'

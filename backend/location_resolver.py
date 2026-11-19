@@ -17,6 +17,27 @@ XML_ID = '{http://www.w3.org/XML/1998/namespace}id'
 
 DIPLOMATIC = 'diplomatic'
 EMENDED = 'emended'
+# The lemma's renderings: like DIPLOMATIC / EMENDED, but normalized the way
+# the base-text row in Location Details shows the text - the <reg> side of
+# an orig/reg <choice> instead of <orig>, and long s (ſ) as plain 's'.
+NORMALIZED = 'normalized'
+EMENDED_NORMALIZED = 'emended_normalized'
+
+
+def is_emended_mode(mode: str) -> bool:
+    return mode in (EMENDED, EMENDED_NORMALIZED)
+
+
+def is_normalized_mode(mode: str) -> bool:
+    return mode in (NORMALIZED, EMENDED_NORMALIZED)
+
+
+def _is_orig_reg_choice(el) -> bool:
+    """A plain <choice> of <orig> and <reg> alternatives."""
+    if local_name(el) != 'choice':
+        return False
+    tags = _child_tags(el)
+    return bool(tags) and tags <= {'orig', 'reg'}
 
 # Inline-token and container-level elements that mark an editorial
 # emendation of the text (see test_data/emendatio/spec/app_emendatio.xml).
@@ -90,9 +111,9 @@ def _token_in_context(token, mode: str) -> list[tuple[et.Element, bool]]:
     """
     context = _emendation_context(token)
     if context == 'added':
-        return [(token, True)] if mode == EMENDED else []
+        return [(token, True)] if is_emended_mode(mode) else []
     if context == 'removed':
-        return [] if mode == EMENDED else [(token, False)]
+        return [] if is_emended_mode(mode) else [(token, False)]
     return [(token, False)]
 
 
@@ -136,13 +157,24 @@ def _render_token(element, mode: str = DIPLOMATIC) -> tuple[str, str]:
             if not isinstance(child.tag, str):
                 continue
             tag = local_name(child)
-            if tag == 'reg':
+            if tag in ('orig', 'reg') and _is_orig_reg_choice(el):
+                # One side of an orig/reg alternation: <orig> by default,
+                # the first <reg> when normalizing (falling back to <orig>
+                # if there is no <reg>).
+                regs = [c for c in el if isinstance(c.tag, str) and local_name(c) == 'reg']
+                if is_normalized_mode(mode) and regs:
+                    chosen = regs[0]
+                else:
+                    chosen = next((c for c in el if isinstance(c.tag, str) and local_name(c) == 'orig'), None)
+                if child is chosen:
+                    walk(child)
+            elif tag == 'reg':
                 pass
             elif tag == 'sic' and _in_correction_choice(child):
-                if mode != EMENDED:
+                if not is_emended_mode(mode):
                     walk(child)
             elif tag == 'corr' and _in_correction_choice(child):
-                if mode == EMENDED:
+                if is_emended_mode(mode):
                     if ''.join(child.itertext()).strip():
                         walk_wrapped(child, 'em')
                     else:
@@ -151,10 +183,10 @@ def _render_token(element, mode: str = DIPLOMATIC) -> tuple[str, str]:
                         text_parts.append('[ ]')
                         html_parts.append('[ ]')
             elif tag == 'supplied' and not _is_reconstruction_supplied(child):
-                if mode == EMENDED:
+                if is_emended_mode(mode):
                     walk_wrapped(child, 'em')
             elif tag == 'surplus':
-                if mode == EMENDED:
+                if is_emended_mode(mode):
                     text_parts.append('[ ]')
                     html_parts.append('[ ]')
                 else:
@@ -168,7 +200,10 @@ def _render_token(element, mode: str = DIPLOMATIC) -> tuple[str, str]:
                 html_parts.append(html_escape(child.tail))
 
     walk(element)
-    return ''.join(text_parts).strip(), ''.join(html_parts).strip()
+    text, html = ''.join(text_parts).strip(), ''.join(html_parts).strip()
+    if is_normalized_mode(mode):
+        text, html = text.replace('ſ', 's'), html.replace('ſ', 's')
+    return text, html
 
 
 def _collect_tokens(container, mode: str = DIPLOMATIC, italic: bool = False) -> list[tuple[et.Element, bool]]:
@@ -187,10 +222,11 @@ def _collect_tokens(container, mode: str = DIPLOMATIC, italic: bool = False) -> 
     if tag == 'choice':
         tags = _child_tags(container)
         if 'corr' in tags:
-            side = 'corr' if mode == EMENDED else 'sic'
-            side_italic = italic or mode == EMENDED
+            side = 'corr' if is_emended_mode(mode) else 'sic'
+            side_italic = italic or is_emended_mode(mode)
         elif 'orig' in tags:
-            side, side_italic = 'orig', italic
+            side = 'reg' if is_normalized_mode(mode) and 'reg' in tags else 'orig'
+            side_italic = italic
         else:
             side, side_italic = None, italic
         for child in container:
@@ -217,9 +253,9 @@ def _collect_child_tokens(child, mode: str = DIPLOMATIC, italic: bool = False) -
     if child_tag in ('note', 'reg'):
         return []
     if child_tag == 'surplus':
-        return _collect_tokens(child, mode, italic) if mode != EMENDED else []
+        return _collect_tokens(child, mode, italic) if not is_emended_mode(mode) else []
     if child_tag == 'supplied' and not _is_reconstruction_supplied(child):
-        return _collect_tokens(child, mode, True) if mode == EMENDED else []
+        return _collect_tokens(child, mode, True) if is_emended_mode(mode) else []
     return _collect_tokens(child, mode, italic)
 
 
@@ -424,7 +460,7 @@ class WitnessFragmentResolver:
             order = {el: i for i, el in enumerate(common.iter())}
             lo, hi = order[start_el], order[end_el]
             in_span = [(t, it) for t, it in _collect_tokens(common, mode) if lo <= order.get(t, -1) <= hi]
-            context_italic = _emendation_context(common) == 'added' and mode == EMENDED
+            context_italic = _emendation_context(common) == 'added' and is_emended_mode(mode)
             return [(t, it or context_italic) for t, it in in_span]
 
         collecting = False
@@ -479,7 +515,7 @@ class WitnessFragmentResolver:
             return '', ''
         if local_name(el) in ('w', 'pc'):
             return _render_tokens(_token_in_context(el, mode), mode)
-        if mode == EMENDED and local_name(el) == 'surplus':
+        if is_emended_mode(mode) and local_name(el) == 'surplus':
             # A whole-token <surplus> deleted by the editor: in the emended
             # text it is a gap, rendered like a left()/right() position -
             # "vor <next token>" (or "nach <previous token>" at line end).
@@ -541,7 +577,7 @@ class WitnessFragmentResolver:
                     return False
         return False
 
-    def resolve_ordered_text_html(self, tokens: list[str]) -> tuple[str, str]:
+    def resolve_ordered_text_html(self, tokens: list[str], mode: str = DIPLOMATIC) -> tuple[str, str]:
         """
         Resolve MULTIPLE distinct single-id tokens (e.g. the base-side or
         witness-side tokens of a transposition's <link> pairs) into one
@@ -572,7 +608,7 @@ class WitnessFragmentResolver:
         htmls: list[str] = []
         prev_spec: dict | None = None
         for spec in deduped:
-            text, html = self._resolve_id(spec['prefix'], spec['id'])
+            text, html = self._resolve_id(spec['prefix'], spec['id'], mode)
             if not text and not html:
                 continue
             if prev_spec is not None and not self._are_adjacent(prev_spec, spec):
