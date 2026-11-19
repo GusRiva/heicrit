@@ -2051,3 +2051,38 @@ main {
     margin-right: 4px;
     vertical-align: middle;
 }
+
+/* Whole-verse entries: in creation/edit mode a click on a row's siglum
+   selects the witness's whole verse (see handleVerseClick). Selected and
+   highlighted verse rows get a frame in their reading group's colour. */
+.syn-line-wit.syn-line-wit-selectable {
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.syn-line-wit.syn-line-wit-selectable:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+.syn-line.verse-selected,
+.syn-line.verse-highlight {
+    --verse-color: #4caf50;
+    outline: 2px solid var(--verse-color);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+.syn-line.verse-highlight {
+    outline-style: dashed;
+}
+
+.syn-line.verse-selected {
+    background-color: color-mix(in srgb, var(--verse-color) 12%, transparent);
+}
+
+.syn-line.verse-selected-reading-1, .syn-line.verse-highlight-reading-1 { --verse-color: #ff9800; }
+.syn-line.verse-selected-reading-2, .syn-line.verse-highlight-reading-2 { --verse-color: #9c27b0; }
+.syn-line.verse-selected-reading-3, .syn-line.verse-highlight-reading-3 { --verse-color: #03a9f4; }
+.syn-line.verse-selected-reading-4, .syn-line.verse-highlight-reading-4 { --verse-color: #ff5722; }
+.syn-line.verse-selected-reading-5, .syn-line.verse-highlight-reading-5 { --verse-color: #795548; }
+.syn-line.verse-selected-reading-6, .syn-line.verse-highlight-reading-6 { --verse-color: #e91e63; }

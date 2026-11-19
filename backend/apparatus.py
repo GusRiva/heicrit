@@ -393,13 +393,24 @@ class Apparatus:
         """Provisional entries for unrecorded emendations (see above)."""
         return list(getattr(self, '_generated_entries', []))
 
-    def get_display_entries(self) -> list[dict[str, Any]]:
+    def get_display_entries(self, synoptic_loci: dict | None = None) -> list[dict[str, Any]]:
         """
         What the frontend shows: the real entries (whose 'id' indexes the
         <app> elements - every write route relies on that) followed by the
         generated ones. Never use this for index-based write logic.
+
+        synoptic_loci (SynopticMap.get_loci()): places whole-verse additions
+        at their added locus, and adds suggested whole-verse entries for
+        verses the synoptic map shows as missing (see _generate_verse_entries).
         """
-        return self.get_entries() + self.get_generated_entries()
+        entries = self.get_entries()
+        if not synoptic_loci:
+            return entries + self.get_generated_entries()
+        resolver = self.get_resolver()
+        entries = [self._fix_verse_addition_entry(e, synoptic_loci)
+                   if e.get('is_verse_entry') and resolver.is_absent_verse_token(e.get('target')) else e
+                   for e in entries]
+        return entries + self.get_generated_entries() + self._generate_verse_entries(synoptic_loci, entries)
 
     def get_resolver(self) -> WitnessFragmentResolver:
         """The (cached) resolver for this apparatus's witness fragments."""
@@ -498,11 +509,16 @@ class Apparatus:
         }
 
         rdg_elements = app.findall('tei:rdg', namespaces=ns)
-        is_emendation = lem_element is None and bool(target) and resolver.has_emendation(target)
+        is_verse_entry = lem_element is None and resolver.is_verse_token(target)
+        is_emendation = (lem_element is None and bool(target) and not is_verse_entry
+                         and resolver.has_emendation(target))
         entry['is_emendation'] = is_emendation
+        entry['is_verse_entry'] = is_verse_entry
 
         if lem_element is not None:
             entry['lemma'] = self._extract_lem_or_rdg(lem_element, resolver)
+        elif is_verse_entry:
+            entry['lemma'] = self._verse_lemma(target, resolver)
         elif target:
             entry['lemma'] = self._resolve_target_lemma(target, resolver, emended=is_emendation)
         else:
@@ -518,6 +534,281 @@ class Apparatus:
         entry['note'] = self._extract_entry_note(app)
 
         return entry
+
+    # --- Whole-verse entries ------------------------------------------------
+
+    @staticmethod
+    def _span_label(first_n: str | None, last_n: str | None) -> str:
+        """'' for one verse (the location number is shown anyway), '5–6' for a span."""
+        if not first_n or not last_n or first_n == last_n:
+            return ''
+        return f'{first_n}–{last_n}'
+
+    def _verse_lemma(self, target: str, resolver: WitnessFragmentResolver,
+                     label: str | None = None) -> dict[str, Any]:
+        """
+        Lemma of a whole-verse entry: no verse text, only the verse number(s)
+        - empty for a single verse, '5–6' for a span. For an addition (the
+        target is the gap left()/right() of a base verse) the label comes
+        from the synoptic loci, see get_display_entries.
+        """
+        if label is None:
+            spec = parse_location_token(target)
+            verses = resolver.verse_elements(spec) if spec else []
+            label = self._span_label(verses[0].get('n'), verses[-1].get('n')) if verses else ''
+        return {
+            'text': label,
+            'html': html_escape(label),
+            'attributes': {'corresp': resolver.normalize_corresp_token(target)},
+        }
+
+    def _witness_for_prefix(self, prefix: str) -> str | None:
+        if not hasattr(self, '_prefix_to_witness'):
+            self._prefix_to_witness = {
+                info['synoptic_prefix']: wit_id
+                for wit_id, info in self.get_witness_to_prefix_mapping().items()
+                if info.get('synoptic_prefix')
+            }
+        return self._prefix_to_witness.get(prefix)
+
+    def _base_prefix(self) -> str | None:
+        base_id = self._get_base_witness_id()
+        return self.get_witness_to_prefix_mapping().get(base_id, {}).get('synoptic_prefix')
+
+    def prepare_verse_entry(self, target_verses: list[str], readings: list[dict]) -> tuple[str | None, str | None]:
+        """
+        For saving a whole-verse entry: collapse the lemma's one-per-verse
+        tokens into a single target (an <l>, a range of consecutive <l>, or
+        the gap of a verse the base lacks) and each reading's pointers into
+        ranges, and set each reading's variant type from the shape: base
+        verse absent -> Addition, reading verse absent -> Omission, else
+        Substitution. Returns (target, error).
+        """
+        resolver = self.get_resolver()
+        base_prefix = self._base_prefix()
+        if not target_verses:
+            return None, 'Select the base text verse (click its siglum) before saving.'
+        if any(not t.startswith(f'{base_prefix}:') for t in target_verses):
+            return None, 'The lemma verse must be selected on the base text row.'
+        if any(not resolver.is_verse_token(t) for t in target_verses):
+            return None, 'The lemma selection is not a verse.'
+        parts = resolver.collapse_verse_ptrs(target_verses)
+        if len(parts) != 1:
+            return None, 'The lemma verses must be consecutive (or a single verse the base text lacks).'
+        target = parts[0]
+        base_absent = resolver.is_absent_verse_token(target)
+
+        for reading in readings:
+            ptrs = reading.get('ptrs') or []
+            if any(not resolver.is_verse_token(p) for p in ptrs):
+                return None, 'A reading in a verse entry must select whole verses (click the siglum).'
+            reading['ptrs'] = resolver.collapse_verse_ptrs(ptrs)
+            reading_absent = all(resolver.is_absent_verse_token(p) for p in reading['ptrs'])
+            if base_absent and reading_absent:
+                return None, 'The base text and a reading cannot both lack the verse.'
+            reading['ana'] = ('hc:AdditionVariant' if base_absent
+                              else 'hc:OmissionVariant' if reading_absent
+                              else 'hc:SubstitutionVariant')
+            reading['ana_auto'] = False
+        return target, None
+
+    @staticmethod
+    def _locus_base_token(locus_key: str) -> str:
+        """Synoptic locus key without its '#N' disambiguator."""
+        return locus_key.split('#', 1)[0]
+
+    def _addition_loci_for_entry(self, entry: dict, synoptic_loci: dict) -> list[str]:
+        """Loci keys (in order) of the added verses an addition entry records."""
+        resolver = self.get_resolver()
+        verse_tokens = set()
+        for reading in entry.get('readings') or []:
+            for token in (reading.get('attributes', {}).get('corresp') or '').split():
+                verse_tokens.add(token)
+        return [key for key, info in synoptic_loci.items()
+                if self._locus_base_token(key) == entry.get('target')
+                and verse_tokens & set(info.get('target') or [])
+                and resolver.is_absent_verse_token(self._locus_base_token(key))]
+
+    def _fix_verse_addition_entry(self, entry: dict, synoptic_loci: dict) -> dict:
+        """
+        An addition's target (the gap after a base verse) is shared by every
+        verse added there (40a, 40b, ...): place the entry at the first added
+        locus it records and label it with their numbers.
+        """
+        keys = self._addition_loci_for_entry(entry, synoptic_loci)
+        if not keys:
+            return entry
+        entry = dict(entry)
+        first, last = synoptic_loci[keys[0]], synoptic_loci[keys[-1]]
+        entry['corresp'] = keys[0]
+        entry['loc'] = first.get('n') or entry.get('loc')
+        entry['lemma'] = self._verse_lemma(entry['target'], self.get_resolver(),
+                                           label=self._span_label(first.get('n'), last.get('n')))
+        return entry
+
+    def _generate_verse_entries(self, synoptic_loci: dict, real_entries: list[dict]) -> list[dict]:
+        """
+        Provisional whole-verse entries from the synoptic map, like the
+        suggestions for unrecorded emendations: never written to the file
+        until the editor confirms them.
+        - Omissions: a witness whose synoptic token is the gap left()/right()
+          of a verse, at loci where the base has a verse. Consecutive loci
+          form one span; witnesses with the same span share one reading.
+          Lacunae (any other non-verse token) are not variants - skipped.
+        - Additions: loci where the base has only the gap and witnesses have
+          verses. Consecutive such loci at the same gap with the same
+          witnesses form one entry.
+        Pairs already recorded by a real verse entry are skipped.
+        """
+        try:
+            resolver = self.get_resolver()
+            base_prefix = self._base_prefix()
+            if not base_prefix or not synoptic_loci:
+                return []
+
+            # Recorded pairs: (base verse id, witness prefix) for omissions
+            # and substitutions, (witness prefix, witness verse id) for additions.
+            covered_omit: set = set()
+            covered_add: set = set()
+            for entry in real_entries:
+                if not entry.get('is_verse_entry'):
+                    continue
+                base_ids = resolver.verse_ids(entry['target'])
+                for reading in entry.get('readings') or []:
+                    for token in (reading.get('attributes', {}).get('corresp') or '').split():
+                        spec = parse_location_token(token)
+                        if not spec:
+                            continue
+                        for base_id in base_ids:
+                            covered_omit.add((base_id, spec['prefix']))
+                        if spec['kind'] == 'single':
+                            covered_add.add((spec['prefix'], spec['id']))
+
+            def split_token(token):
+                spec = parse_location_token(token)
+                return (spec['prefix'], spec) if spec else (None, None)
+
+            generated: list[dict] = []
+
+            # --- omissions ---
+            runs: dict[str, dict] = {}  # prefix -> open run
+            finished: list[dict] = []
+
+            def close(prefix):
+                run = runs.pop(prefix, None)
+                if run:
+                    finished.append(run)
+
+            for key, info in synoptic_loci.items():
+                base_token = self._locus_base_token(key)
+                base_prefix_of_key, base_spec = split_token(base_token)
+                base_is_verse = (base_spec is not None and base_spec['kind'] == 'single'
+                                 and resolver.is_verse_spec(base_spec))
+                absent_here: dict[str, str] = {}
+                if base_is_verse:
+                    for token in info.get('target') or []:
+                        prefix, _spec = split_token(token)
+                        if prefix and prefix != base_prefix and resolver.is_absent_verse_token(token) \
+                                and (base_spec['id'], prefix) not in covered_omit:
+                            absent_here[prefix] = token
+                for prefix in list(runs):
+                    if prefix not in absent_here:
+                        close(prefix)
+                for prefix, token in absent_here.items():
+                    run = runs.get(prefix)
+                    if run:
+                        run['end'] = base_spec['id']
+                        if token not in run['tokens']:
+                            run['tokens'].append(token)
+                    else:
+                        runs[prefix] = {'prefix': prefix, 'start': base_spec['id'], 'end': base_spec['id'],
+                                        'key': key, 'n': info.get('n'), 'tokens': [token]}
+            for prefix in list(runs):
+                close(prefix)
+
+            spans: dict[tuple, list[dict]] = {}
+            for run in finished:
+                spans.setdefault((run['start'], run['end']), []).append(run)
+            for (start, end), span_runs in spans.items():
+                target = (f'{base_prefix}:{start}' if start == end
+                          else f'{base_prefix}:range({start}, {end})')
+                ptrs = [t for run in span_runs for t in run['tokens']]
+                wit_ids = [w for w in (self._witness_for_prefix(r['prefix']) for r in span_runs) if w]
+                entry = self._generated_verse_entry(target, span_runs[0]['key'], span_runs[0]['n'],
+                                                    'hc:OmissionVariant', wit_ids, ptrs, resolver)
+                generated.append(entry)
+
+            # --- additions ---
+            group: dict | None = None
+
+            def flush():
+                if group and group['ptrs']:
+                    wit_ids = [w for w in (self._witness_for_prefix(p) for p in group['prefixes']) if w]
+                    ptrs = resolver.collapse_verse_ptrs(group['ptrs'])
+                    entry = self._generated_verse_entry(group['target'], group['keys'][0], group['n'],
+                                                        'hc:AdditionVariant', wit_ids, ptrs, resolver)
+                    first_n = synoptic_loci[group['keys'][0]].get('n')
+                    last_n = synoptic_loci[group['keys'][-1]].get('n')
+                    entry['lemma'] = self._verse_lemma(group['target'], resolver,
+                                                       label=self._span_label(first_n, last_n))
+                    generated.append(entry)
+
+            for key, info in synoptic_loci.items():
+                base_token = self._locus_base_token(key)
+                if not resolver.is_absent_verse_token(base_token):
+                    flush()
+                    group = None
+                    continue
+                present: dict[str, str] = {}
+                for token in info.get('target') or []:
+                    prefix, spec = split_token(token)
+                    if (prefix and prefix != base_prefix and spec['kind'] == 'single'
+                            and resolver.is_verse_spec(spec) and (prefix, spec['id']) not in covered_add):
+                        present[prefix] = token
+                prefixes = tuple(sorted(present))
+                if group and group['target'] == base_token and group['prefixes'] == prefixes:
+                    group['keys'].append(key)
+                    group['ptrs'].extend(present.values())
+                else:
+                    flush()
+                    group = {'target': base_token, 'prefixes': prefixes, 'keys': [key],
+                             'n': info.get('n'), 'ptrs': list(present.values())}
+            flush()
+
+            return generated
+        except Exception as e:
+            print(f"WARNING: Could not generate verse entries from the synoptic map: {str(e)}")
+            return []
+
+    def _generated_verse_entry(self, target: str, locus_key: str, n: str | None, ana: str,
+                               wit_ids: list[str], ptrs: list[str],
+                               resolver: WitnessFragmentResolver) -> dict:
+        if ana == 'hc:OmissionVariant':
+            text, html = 'om.', '<i>om.</i>'
+        else:
+            text, html = resolver.resolve_text_html(ptrs, mode=NORMALIZED)
+        return {
+            'id': None,
+            'is_generated': True,
+            'is_verse_entry': True,
+            'loc': n,
+            'corresp': locus_key,
+            'target': target,
+            'lemma': self._verse_lemma(target, resolver),
+            'lemma_is_explicit': False,
+            'readings': [{
+                'text': text,
+                'html': html,
+                'ptrs': ptrs,
+                'attributes': {
+                    'wit': ' '.join(f'#{w}' for w in wit_ids),
+                    'ana': ana,
+                    'corresp': ' '.join(resolver.normalize_corresp_token(p) for p in ptrs),
+                },
+            }],
+            'is_emendation': False,
+            'note': None,
+        }
 
     def _extract_entry_note(self, app) -> dict[str, Any] | None:
         """

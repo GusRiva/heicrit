@@ -233,6 +233,31 @@ An empty `<corr/>` (deleting its `<sic>`) is marked `[ ]` in the lemma, like an 
 
 When creating an entry, selecting exactly the tokens of a whole-token `<surplus>` or of one side of a token-spanning `<choice>` stores the container's id as `@target`. Readings whose variant type is left on *auto* are classified automatically at an emended lemma: a reading identical to the uncorrected base text becomes `hc:BaseTextSupportingVariant`, and one identical to the emended lemma gets `hc:CorrectionVariant`.
 
+### Whole-verse entries
+
+A variant covering one or more whole verses addresses `<l>` elements instead of word tokens. The synoptic map's own token for a verse a witness lacks (`h3:right(l_4)`) is reused as that reading's pointer.
+
+```xml
+<!-- omission: H3 lacks verses 5–6 -->
+<app target="bn:range(l_epilog_5, l_epilog_6)">
+  <rdg wit="#h3" ana="hc:OmissionVariant"><ptr target="h3:right(l_epilog_4)"/></rdg>
+</app>
+<!-- substitution of a whole verse -->
+<app target="bn:l_epilog_6">
+  <rdg wit="#k2" ana="hc:SubstitutionVariant"><ptr target="k2:l_epilog_6"/></rdg>
+</app>
+<!-- addition: H3 and Z1 have verse 40a, which the base text lacks -->
+<app target="bn:right(l_26_40)">
+  <rdg wit="#h3 #z1" ana="hc:AdditionVariant"><ptr target="h3:l_26_40a"/><ptr target="z1:l_26_40a"/></rdg>
+</app>
+```
+
+An entry is a whole-verse entry (`is_verse_entry: True`) when its `@target` is an `<l>`, a `range()` of `<l>`, or `left()`/`right()` of an `<l>`. Its lemma shows no verse text, only the verse number: nothing for a single verse (the location number is shown anyway), `5–6` for a span (`5–6 om. H3`). Several verses of one reading are joined with ` / `. An addition is placed at its added locus (40a), since all verses added after the same base verse share that target. Its reading is never abbreviated as **rel.**
+
+When creating or editing an entry, clicking a witness row's siglum selects that witness's whole verse; the selection is kept across locations, so a span is built by selecting the verse at each location. On save, consecutive verses are collapsed into `range()` and the variant type is set from the shape: base verse absent → `hc:AdditionVariant`, reading verse absent → `hc:OmissionVariant`, otherwise `hc:SubstitutionVariant`.
+
+**Suggestions from the synoptic map**: like unrecorded emendations, verses the synoptic map shows as missing appear as generated, unsaved entries. A witness whose token at a locus is `left()`/`right()` of an `<l>` lacks that verse (omission); consecutive loci form one span, and witnesses with the same span share one reading. A locus whose base token is `left()`/`right()` of an `<l>` is an addition by the witnesses that have a verse there. Lacunae (`gap_*`) are not variants and produce no suggestion. A verse already recorded by a real whole-verse entry for a witness is not suggested again. They come from `apparatus.get_display_entries(synoptic_loci)`; "Create Entry" preselects all of their rows.
+
 ---
 
 ## 4. Reference Notation

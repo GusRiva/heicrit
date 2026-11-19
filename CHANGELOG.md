@@ -21,6 +21,21 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   emended text; other witnesses and the diplomatic row show the uncorrected text.
 - Test project `test_data/emendatio/` and a pytest suite (`tests/`).
 
+### Whole-verse entries
+- Entries can address whole verses (`<l>`) instead of words: in creation/edit
+  mode, click a row's siglum to select that witness's verse. Spans of
+  consecutive verses are saved as `range(l_5, l_6)`; the apparatus shows only
+  the verse number (`5–6 om. H3`).
+- Verses the synoptic map shows as missing in a witness (omissions) or in the
+  base text (additions) appear as suggested, unsaved entries; "Create Entry"
+  preselects them for confirmation. Lacunae are not suggested.
+
+### Other
+- Multi-word readings stored as one `<ptr>` per word now show every word,
+  in text order; word order and adjacency no longer depend on the ids.
+- The lemma shows the normalized form (`<reg>`, ſ as s).
+- The desktop app's "Open Project" dialog starts at the last opened project.
+
 
 ## v0.2.0 - 2026-09-03
 

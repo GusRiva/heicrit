@@ -27,6 +27,12 @@ class HeiCritApp {
             lemma: [],
             'reading-1': []
         };
+        // Whole-verse selections (clicking a row's siglum), per reading
+        // group: [{ witnessId, prefix, lineToken }], lineToken being the
+        // row's synoptic token ("h3:l_5", or "h3:right(l_4)" for a verse the
+        // witness lacks). Kept across navigation, so a span of verses is
+        // built by selecting the verse at each location.
+        this.selectedVerses = {};
         this.nextReadingGroupIndex = 2;
         // New-format only: holds 'hc:TranspositionVariant' for a reading
         // group put into transposition (ordered-selection) mode, absent/empty
@@ -1118,6 +1124,7 @@ class HeiCritApp {
             });
             
             // Keep .has-apparatus class - it provides useful visual context during editing
+            this.clearVerseClasses(tabPanel, 'verse-highlight');
         }
     }
 
@@ -1126,6 +1133,12 @@ class HeiCritApp {
         const correspParts = this.splitCorrespParts(correspValue);
 
         correspParts.forEach(part => {
+            // A whole-verse part (a row's own synoptic token) frames the row.
+            const verseRows = this.rowsForLineToken(part);
+            if (verseRows.length > 0) {
+                verseRows.forEach(row => row.classList.add('verse-highlight', `verse-highlight-${type}`));
+                return;
+            }
             if (part.includes(':')) {
                 const colonIndex = part.indexOf(':');
                 const prefix = part.substring(0, colonIndex);
@@ -2683,9 +2696,13 @@ class HeiCritApp {
         const relevant = this.getEntryRelevantWitnessIds(entry);
         const relevantSet = new Set(relevant);
         const isTransposition = (entry.readings || []).some(r => this.anaTokens(r).includes('hc:TranspositionVariant'));
+        // An added verse is present only in the witnesses that add it, so
+        // its reading always "covers everyone" - never abbreviate it as rel.
+        const isVerseAddition = entry.is_verse_entry
+            && (entry.readings || []).some(r => this.anaTokens(r).includes('hc:AdditionVariant'));
 
         let relIndex = -1;
-        if (!isTransposition) {
+        if (!isTransposition && !isVerseAddition) {
             const citedElsewhere = index => new Set(
                 readings.filter((_, i) => i !== index).flatMap(r => witnessIdsOf(r.reading))
             );
@@ -4094,6 +4111,7 @@ class HeiCritApp {
                 lemma: [],
                 'reading-1': []
             };
+            this.selectedVerses = {};
             this.currentReadingGroup = 'lemma';
             this.nextReadingGroupIndex = 2;
             this.selectedReadingAna = {};
@@ -4154,7 +4172,8 @@ class HeiCritApp {
         // Persist the new entry before tearing down creation mode. On
         // validation/server failure, stay in creation mode (don't run the
         // cleanup below) so the user can fix the selection and retry.
-        const hasSelection = Object.values(this.selectedTokens).some(tokens => tokens && tokens.length > 0);
+        const hasSelection = Object.values(this.selectedTokens).some(tokens => tokens && tokens.length > 0)
+            || Object.values(this.selectedVerses).some(verses => verses && verses.length > 0);
         if (hasSelection) {
             this.saveNewEntryToServer(tabId).then(success => {
                 if (success) {
@@ -4250,7 +4269,8 @@ class HeiCritApp {
             // Add a data attribute to mark tokens as clickable in creation mode
             token.setAttribute('data-creation-clickable', 'true');
         });
-        
+        this.markSiglaSelectable(tabPanel, true);
+        this.applyVerseSelections(tabId);
     }
     
     setupTokenEventDelegation() {
@@ -4261,6 +4281,14 @@ class HeiCritApp {
         
         // Create new delegation handler
         this.delegationHandler = (event) => {
+            // A click on a witness row's siglum selects that witness's
+            // whole verse (creation/edit mode only). The base row's
+            // diplomatic-reading toggle button lives in the same cell.
+            const witCell = event.target.closest && event.target.closest('.syn-line-wit[data-line-id]');
+            if (witCell && (this.creationMode || this.editMode) && !event.target.closest('.syn-diplomatic-toggle')) {
+                this.handleVerseClick(this.activeTabId, witCell);
+                return;
+            }
             // Check if the clicked element is a token
             if (event.target.classList.contains('syn-token')) {
                 // Handle creation mode (requires data-creation-clickable attribute)
@@ -4514,6 +4542,7 @@ class HeiCritApp {
             token.style.cursor = '';
             token.removeAttribute('data-creation-clickable');
         });
+        this.markSiglaSelectable(tabPanel, false);
     }
     
     handleTokenClick(tabId, event) {
@@ -4537,6 +4566,8 @@ class HeiCritApp {
 
         // Get witness information to distinguish tokens with same ID from different witnesses
         const witnessInfo = this.getWitnessInfoFromLine(synLine);
+        // Selecting words in a row replaces a whole-verse selection there.
+        this.removeVerseSelectionForRow(synLine);
         const isPreSpace = token.classList.contains('syn-token-pre');
         const isPostSpace = token.classList.contains('syn-token-post');
 
@@ -4915,8 +4946,14 @@ class HeiCritApp {
             lemma: [],
             'reading-1': []
         };
+        this.selectedVerses = {};
         this.nextReadingGroupIndex = 2;
         this.selectedReadingAna = {};
+
+        if (entry.is_verse_entry) {
+            this.populateSelectedVersesFromEntry(tabId, entry);
+            return;
+        }
 
         // Parse lemma tokens
         if (entry.lemma && entry.lemma.attributes && entry.lemma.attributes.corresp) {
@@ -5094,6 +5131,8 @@ class HeiCritApp {
             token.style.cursor = 'pointer';
             token.setAttribute('data-creation-clickable', 'true');
         });
+        this.markSiglaSelectable(tabPanel, true);
+        this.applyVerseSelections(tabId);
         
         // Set up event delegation if not already done
         if (!this.delegationHandler) {
@@ -5241,6 +5280,156 @@ class HeiCritApp {
         select.value = 'lemma';
     }
     
+    // --- Whole-verse selection ---------------------------------------------
+
+    rowsForLineToken(lineToken) {
+        // The .syn-line row(s) whose siglum carries this synoptic token. An
+        // absent verse ("h3:right(l_4)") can be the token of several
+        // locations; only the rendered one is found.
+        if (!lineToken || !lineToken.includes(':')) return [];
+        const selector = `.syn-line-wit[data-line-id="${CSS.escape(lineToken)}"]`;
+        return Array.from(document.querySelectorAll(selector)).map(el => el.closest('.syn-line')).filter(Boolean);
+    }
+
+    markSiglaSelectable(tabPanel, selectable) {
+        tabPanel.querySelectorAll('.syn-line-wit[data-line-id]').forEach(cell => {
+            cell.classList.toggle('syn-line-wit-selectable', selectable);
+            if (selectable) {
+                cell.setAttribute('title', 'Click to select the whole verse');
+            } else {
+                cell.removeAttribute('title');
+            }
+        });
+    }
+
+    clearVerseClasses(root, prefix) {
+        root.querySelectorAll(`.syn-line.${prefix}`).forEach(row => {
+            const classes = Array.from(row.classList).filter(cls => cls === prefix || cls.startsWith(`${prefix}-`));
+            row.classList.remove(...classes);
+        });
+    }
+
+    applyVerseSelections(tabId) {
+        const root = document.getElementById(`panel-${tabId}`) || document;
+        this.clearVerseClasses(root, 'verse-selected');
+        Object.entries(this.selectedVerses).forEach(([group, verses]) => {
+            (verses || []).forEach(verse => {
+                this.rowsForLineToken(verse.lineToken).forEach(row => {
+                    row.classList.add('verse-selected', `verse-selected-${group}`);
+                });
+            });
+        });
+    }
+
+    removeVerseSelectionForRow(synLine) {
+        const cell = synLine && synLine.querySelector('.syn-line-wit[data-line-id]');
+        const lineToken = cell && cell.getAttribute('data-line-id');
+        if (!lineToken) return;
+        let removed = false;
+        Object.keys(this.selectedVerses).forEach(group => {
+            const before = this.selectedVerses[group].length;
+            this.selectedVerses[group] = this.selectedVerses[group].filter(v => v.lineToken !== lineToken);
+            removed = removed || this.selectedVerses[group].length !== before;
+        });
+        if (removed) {
+            synLine.classList.remove(...Array.from(synLine.classList).filter(cls => cls.startsWith('verse-selected')));
+        }
+    }
+
+    handleVerseClick(tabId, witCell) {
+        const synLine = witCell.closest('.syn-line');
+        const witnessInfo = this.getWitnessInfoFromLine(synLine);
+        const lineToken = witCell.getAttribute('data-line-id');
+        if (!witnessInfo || !lineToken) return;
+
+        const isBase = witnessInfo.prefix === this.leithsPrefix;
+        const group = isBase ? 'lemma' : this.currentReadingGroup;
+        if (!isBase && group === 'lemma') {
+            this.updateStatus('Choose a reading in the dropdown before selecting another witness\'s verse.', 'error');
+            return;
+        }
+
+        const alreadyInGroup = (this.selectedVerses[group] || []).some(v => v.lineToken === lineToken);
+        // Remove the verse from whatever group holds it...
+        Object.keys(this.selectedVerses).forEach(g => {
+            this.selectedVerses[g] = this.selectedVerses[g].filter(v => v.lineToken !== lineToken);
+        });
+        if (!alreadyInGroup) {
+            // ...and the row's word selections: a row is either words or the whole verse.
+            Object.keys(this.selectedTokens).forEach(g => {
+                this.selectedTokens[g] = (this.selectedTokens[g] || []).filter(t => {
+                    const inRow = t.witnessInfo && t.witnessInfo.witnessId === witnessInfo.witnessId;
+                    if (inRow) {
+                        synLine.querySelectorAll(`[data-token-id="${CSS.escape(t.tokenId)}"]`)
+                            .forEach(el => el.classList.remove(`selected-${g}`));
+                    }
+                    return !inRow;
+                });
+            });
+            if (!this.selectedVerses[group]) this.selectedVerses[group] = [];
+            this.selectedVerses[group].push({ witnessId: witnessInfo.witnessId, prefix: witnessInfo.prefix, lineToken });
+        }
+        this.applyVerseSelections(tabId);
+    }
+
+    populateSelectedVersesFromEntry(tabId, entry) {
+        // Rebuild verse selections from an entry's corresp values: verse
+        // spans arrive expanded to one "prefix:l_…" per verse, absent verses
+        // as the synoptic token itself - exactly the rows' data-line-ids.
+        const versesFrom = corresp => this.splitCorrespParts(corresp || '')
+            .filter(part => part.includes(':'))
+            .map(part => {
+                const prefix = part.split(':')[0];
+                const witnessId = Object.keys(this.witnessMapping || {})
+                    .find(id => this.witnessMapping[id].synoptic_prefix === prefix) || prefix;
+                return { witnessId, prefix, lineToken: part };
+            });
+
+        this.selectedVerses = { lemma: versesFrom(entry.lemma?.attributes?.corresp) };
+        (entry.readings || []).forEach((reading, index) => {
+            const group = `reading-${index + 1}`;
+            this.selectedTokens[group] = this.selectedTokens[group] || [];
+            this.selectedVerses[group] = versesFrom(reading.attributes?.corresp);
+            this.nextReadingGroupIndex = Math.max(this.nextReadingGroupIndex, index + 2);
+        });
+        this.applyVerseSelections(tabId);
+
+        this.currentReadingGroup = 'lemma';
+        this.resetReadingGroupDropdownForEdit(tabId);
+        this.updateAnaSelectForGroup(tabId, 'lemma');
+    }
+
+    buildVerseSavePayload() {
+        // Whole-verse entry: the lemma is the base text's verse(s), each
+        // reading the verse(s) of other witnesses. The backend collapses
+        // consecutive verses into range() and sets the variant type from the
+        // shape (base lacks the verse -> Addition, reading lacks it ->
+        // Omission, else Substitution).
+        const tokenGroup = Object.keys(this.selectedTokens).find(
+            group => this.selectedTokens[group] && this.selectedTokens[group].length > 0);
+        if (tokenGroup) {
+            return { error: 'An entry can select either whole verses (siglum) or words, not both. Clear the word selection first.' };
+        }
+        const lemmaVerses = this.selectedVerses.lemma || [];
+        if (lemmaVerses.length === 0) {
+            return { error: 'Select the base text verse (click its siglum) before saving.' };
+        }
+        const readings = [];
+        Object.keys(this.selectedVerses).forEach(group => {
+            if (group === 'lemma') return;
+            const verses = this.selectedVerses[group] || [];
+            if (verses.length === 0) return;
+            const wit = [...new Set(verses.map(v => v.witnessId))];
+            const ptrs = [...new Set(verses.map(v => v.lineToken))];
+            readings.push({ wit, ana: 'hc:SubstitutionVariant', ptrs, ana_auto: false });
+        });
+        if (readings.length === 0) {
+            return { error: 'Select at least one other witness\'s verse (click its siglum).' };
+        }
+        const targetVerses = [...new Set(lemmaVerses.map(v => v.lineToken))];
+        return { target: targetVerses[0], verse_entry: true, target_verses: targetVerses, readings };
+    }
+
     createEntryFromGenerated(tabId, entry) {
         // Turn a generated entry (an emendation no <app> records yet) into a
         // real one: start creation mode with the emended span already
@@ -5250,6 +5439,14 @@ class HeiCritApp {
         // (e.g. surplus_1/choice_1) and suggests the emendation markers.
         this.toggleCreationMode(tabId);
         if (!this.creationMode) return;
+
+        if (entry.is_verse_entry) {
+            // A verse suggested from the synoptic map: preselect the lemma
+            // verse(s) and every reading, so one save confirms it.
+            this.populateSelectedVersesFromEntry(tabId, entry);
+            this.updateStatus('Verse entry preselected from the synoptic map - check the readings and click "Finish" to save it.');
+            return;
+        }
 
         const corresp = entry.lemma?.attributes?.corresp;
         if (corresp) {
@@ -5303,6 +5500,8 @@ class HeiCritApp {
             token.classList.remove('transposition-numbered');
             token.removeAttribute('data-transposition-index');
         });
+
+        this.clearVerseClasses(tabPanel, 'verse-selected');
     }
     
     getCurrentLocation(tab) {
@@ -5411,6 +5610,9 @@ class HeiCritApp {
         );
         if (transpositionGroups.length > 0) {
             return this.buildTranspositionSavePayload(transpositionGroups);
+        }
+        if (Object.values(this.selectedVerses).some(verses => verses && verses.length > 0)) {
+            return this.buildVerseSavePayload();
         }
 
         const lemmaTokens = this.selectedTokens.lemma || [];
@@ -5624,7 +5826,9 @@ class HeiCritApp {
                     apparatus_file: tab.data.apparatusFile,
                     project_directory: tab.data.projectDirectory,
                     target: payload.target,
-                    readings: payload.readings
+                    readings: payload.readings,
+                    verse_entry: !!payload.verse_entry,
+                    target_verses: payload.target_verses
                 })
             });
 
@@ -5662,7 +5866,9 @@ class HeiCritApp {
                     project_directory: tab.data.projectDirectory,
                     entry_index: entryIndex,
                     target: payload.target,
-                    readings: payload.readings
+                    readings: payload.readings,
+                    verse_entry: !!payload.verse_entry,
+                    target_verses: payload.target_verses
                 })
             });
 

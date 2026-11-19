@@ -400,6 +400,11 @@ class WitnessFragmentResolver:
                 if ids:
                     return ' '.join(f"{spec['prefix']}:{i}" for i in ids)
             return token
+        if spec and spec['kind'] == 'range' and self._is_line(spec['prefix'], spec['start']):
+            # A span of whole verses: list each <l>, so every verse's row
+            # (one per location) can be matched by its data-line-id.
+            ids = self.verse_ids(token)
+            return ' '.join(f"{spec['prefix']}:{i}" for i in ids) if ids else token
         if spec and spec['kind'] == 'range':
             # A range whose ends sit in different containers (e.g. across
             # the <sic> and <corr> of an id-less <choice>) can't be walked
@@ -431,6 +436,102 @@ class WitnessFragmentResolver:
         if line_el is None:
             return None, None
         return line_el.get('n'), line_el.get(XML_ID)
+
+    # --- Whole-verse addressing ---------------------------------------------
+    # An entry can address whole verses (<l>) instead of word tokens: a single
+    # "prefix:l_5", a span "prefix:range(l_5, l_6)", or - for a verse the
+    # witness lacks - the synoptic map's own anchor "prefix:right(l_4)" /
+    # "prefix:left(l_7)". See docs/data.md.
+
+    def _lines(self, prefix: str) -> tuple[list, dict]:
+        """All <l> elements of a fragment in document order, and id -> index."""
+        fragment = self._get_fragment(prefix)
+        if not fragment:
+            return [], {}
+        if 'lines' not in fragment:
+            lines = [el for el in fragment['root'].iter() if isinstance(el.tag, str) and local_name(el) == 'l']
+            fragment['lines'] = lines
+            fragment['line_index'] = {el.get(XML_ID): i for i, el in enumerate(lines) if el.get(XML_ID)}
+        return fragment['lines'], fragment['line_index']
+
+    def _is_line(self, prefix: str, xml_id: str | None) -> bool:
+        el = self.resolve_element(prefix, xml_id) if xml_id else None
+        return el is not None and local_name(el) == 'l'
+
+    def is_verse_spec(self, spec: dict | None) -> bool:
+        """True if spec addresses whole verses (or the gap of a missing verse)."""
+        if not spec:
+            return False
+        anchor = spec['start'] if spec['kind'] == 'range' else spec.get('id')
+        return self._is_line(spec['prefix'], anchor)
+
+    def is_verse_token(self, token: str | None) -> bool:
+        return bool(token) and self.is_verse_spec(parse_location_token(token))
+
+    def is_absent_verse_token(self, token: str | None) -> bool:
+        """left()/right() of an <l>: the witness has no verse at this position."""
+        spec = parse_location_token(token) if token else None
+        return bool(spec) and spec['kind'] in ('left', 'right') and self.is_verse_spec(spec)
+
+    def verse_elements(self, spec: dict) -> list:
+        """The <l> elements a single/range verse spec covers, in document order."""
+        lines, index = self._lines(spec['prefix'])
+        if spec['kind'] == 'single':
+            i = index.get(spec['id'])
+            return [lines[i]] if i is not None else []
+        if spec['kind'] == 'range':
+            i, j = index.get(spec['start']), index.get(spec['end'])
+            if i is None or j is None:
+                return []
+            if i > j:
+                i, j = j, i
+            return lines[i:j + 1]
+        return []
+
+    def verse_ids(self, token: str) -> list[str]:
+        """xml:ids of the verses a verse token covers ([] for an absent verse)."""
+        spec = parse_location_token(token)
+        if not spec:
+            return []
+        return [el.get(XML_ID) for el in self.verse_elements(spec)]
+
+    def collapse_verse_ptrs(self, ptrs: list[str]) -> list[str]:
+        """
+        Merge one-per-verse pointers into ranges: per prefix, <l> ids that
+        follow each other in the witness's document become one
+        "prefix:range(l_a, l_b)". Duplicate tokens are dropped (e.g. the same
+        "h3:right(l_4)" collected at two locations of one omitted span).
+        Non-verse pointers pass through unchanged, in their original order.
+        """
+        slots: list[list[str]] = []
+        verse_ids_by_prefix: dict[str, list[str]] = {}
+        slot_of_prefix: dict[str, int] = {}
+        seen: set[str] = set()
+        for token in ptrs:
+            spec = parse_location_token(token)
+            if spec and spec['kind'] in ('single', 'range') and self.is_verse_spec(spec):
+                prefix = spec['prefix']
+                if prefix not in slot_of_prefix:
+                    slot_of_prefix[prefix] = len(slots)
+                    slots.append([])  # filled with this prefix's runs below
+                ids = verse_ids_by_prefix.setdefault(prefix, [])
+                ids.extend(i for i in self.verse_ids(token) if i not in ids)
+            elif token not in seen:
+                seen.add(token)
+                slots.append([token])
+
+        for prefix, ids in verse_ids_by_prefix.items():
+            _lines, index = self._lines(prefix)
+            runs: list[list[str]] = []
+            for xml_id in sorted(ids, key=lambda i: index.get(i, 0)):
+                if runs and index.get(xml_id) == index.get(runs[-1][-1], -2) + 1:
+                    runs[-1].append(xml_id)
+                else:
+                    runs.append([xml_id])
+            slots[slot_of_prefix[prefix]] = [
+                f'{prefix}:range({run[0]}, {run[-1]})' if len(run) > 1 else f'{prefix}:{run[0]}'
+                for run in runs]
+        return [part for slot in slots for part in slot]
 
     def _range_tokens(self, prefix: str, start_id: str, end_id: str,
                       mode: str = DIPLOMATIC) -> list[tuple[et.Element, bool]]:
@@ -628,6 +729,10 @@ class WitnessFragmentResolver:
             if kind == 'single':
                 return self._resolve_id(prefix, spec['id'], mode)
             if kind == 'range':
+                if self._is_line(prefix, spec['start']):
+                    rendered = [_render_container(el, mode) for el in self.verse_elements(spec)]
+                    rendered = [(t, h) for t, h in rendered if t or h]
+                    return ' / '.join(t for t, _ in rendered), ' / '.join(h for _, h in rendered)
                 return self._render_token_range(prefix, spec['start'], spec['end'], mode)
             if kind in ('left', 'right'):
                 # left(id)/right(id) mark a gap position relative to an anchor token
@@ -673,7 +778,8 @@ class WitnessFragmentResolver:
                 if html:
                     htmls.append(html)
             if texts or htmls:
-                return ' '.join(texts), ' '.join(htmls)
+                sep = ' / ' if any(s['kind'] in ('single', 'range') and self.is_verse_spec(s) for s in ordered) else ' '
+                return sep.join(texts), sep.join(htmls)
         return '', ''
 
     def _span_elements(self, spec: dict) -> list[et.Element]:

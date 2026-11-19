@@ -288,7 +288,7 @@ def open_project():
                 'leiths-info': leiths_info,
                 'apparatus_filepath': apparatus_filepath,
                 'apparatus_count': len(apparatus_entries),
-                'apparatus_entries': apparatus.get_display_entries(),
+                'apparatus_entries': apparatus.get_display_entries(synoptic_map.get_loci()),
                 'witness_order': witness_order,
                 'witness_mapping': witness_mapping,
                 'synoptic_map': synoptic_map.get_loci(),
@@ -610,7 +610,7 @@ def finalize_project():
             'success': True,
             'message': f'Project finalized with {len(apparatus_entries)} apparatus entries',
             'apparatus_count': len(apparatus_entries),
-            'apparatus_entries': apparatus.get_display_entries(),
+            'apparatus_entries': apparatus.get_display_entries(synoptic_map.get_loci()),
             'witness_order': witness_order,
             'witness_mapping': witness_mapping,
             'leiths_info': leiths_info,
@@ -1097,6 +1097,14 @@ def create_apparatus_entry_new_format():
         if readings_error:
             return jsonify({'error': readings_error}), 400
 
+        is_verse_entry = bool(data.get('verse_entry'))
+        if is_verse_entry:
+            if apparatus is None:
+                return jsonify({'error': 'No apparatus loaded'}), 400
+            target, verse_error = apparatus.prepare_verse_entry(data.get('target_verses') or [], readings)
+            if verse_error:
+                return jsonify({'error': verse_error}), 400
+
         is_transposition = readings[0].get('ana') == 'hc:TranspositionVariant'
         if not is_transposition and not target:
             return jsonify({'error': 'target is required'}), 400
@@ -1110,7 +1118,7 @@ def create_apparatus_entry_new_format():
         if parent is None:
             return jsonify({'error': 'Could not find <listApp> or <body> in apparatus file'}), 400
 
-        if not is_transposition and apparatus is not None:
+        if not is_transposition and not is_verse_entry and apparatus is not None:
             target = apparatus.lift_emendation_target(target)
             apparatus.apply_emendation_ana_suggestions(target, readings)
         new_app = build_new_format_app_element(target, readings)
@@ -1142,7 +1150,7 @@ def create_apparatus_entry_new_format():
 
         return jsonify({
             'success': True,
-            'apparatus_entries': updated_apparatus.get_display_entries(),
+            'apparatus_entries': updated_apparatus.get_display_entries(synoptic_map.get_loci()),
             'created_entry_id': len(fresh_entries)
         })
 
@@ -1187,6 +1195,13 @@ def update_apparatus_entry_new_format():
             return jsonify({'error': 'No apparatus file specified'}), 400
         if entry_index is None:
             return jsonify({'error': 'entry_index is required'}), 400
+        is_verse_entry = bool(data.get('verse_entry'))
+        if is_verse_entry and readings:
+            if apparatus is None:
+                return jsonify({'error': 'No apparatus loaded'}), 400
+            target, verse_error = apparatus.prepare_verse_entry(data.get('target_verses') or [], readings)
+            if verse_error:
+                return jsonify({'error': verse_error}), 400
         if not target:
             return jsonify({'error': 'target is required'}), 400
         readings_error = _validate_new_format_readings(readings)
@@ -1213,7 +1228,7 @@ def update_apparatus_entry_new_format():
             if note_element is not None:
                 preserved_notes[index] = note_element
 
-        if apparatus is not None:
+        if apparatus is not None and not is_verse_entry:
             target = apparatus.lift_emendation_target(target)
             apparatus.apply_emendation_ana_suggestions(target, readings)
         for child in list(app_element):
@@ -1230,7 +1245,7 @@ def update_apparatus_entry_new_format():
 
         return jsonify({
             'success': True,
-            'apparatus_entries': updated_apparatus.get_display_entries()
+            'apparatus_entries': updated_apparatus.get_display_entries(synoptic_map.get_loci())
         })
 
     except Exception as e:
@@ -1274,7 +1289,7 @@ def delete_apparatus_entry_new_format():
 
         return jsonify({
             'success': True,
-            'apparatus_entries': updated_apparatus.get_display_entries()
+            'apparatus_entries': updated_apparatus.get_display_entries(synoptic_map.get_loci())
         })
 
     except Exception as e:
@@ -1345,7 +1360,7 @@ def reorder_apparatus_entries_new_format():
 
         return jsonify({
             'success': True,
-            'apparatus_entries': updated_apparatus.get_display_entries()
+            'apparatus_entries': updated_apparatus.get_display_entries(synoptic_map.get_loci())
         })
 
     except Exception as e:
