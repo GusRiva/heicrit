@@ -610,15 +610,34 @@ class WitnessFragmentResolver:
 
     def resolve_text_html(self, target_tokens: list[str], mode: str = DIPLOMATIC) -> tuple[str, str]:
         """
-        Resolve the first target token (in order) that yields non-empty text/html.
+        Resolve the reading text of the first witness (by prefix, in listed
+        order) whose parts yield non-empty text/html. A witness can be
+        addressed by several parts (e.g. one <ptr> per word, or a single
+        token plus a range()); all of that witness's parts are rendered,
+        ordered by their position in the witness's own document - never by
+        the listed order or the shape of the ids - and joined with spaces.
+        Other witnesses in the same reading share that text, so only the
+        first one is rendered.
         """
+        specs_by_prefix: dict[str, list[dict]] = {}
         for token in target_tokens:
             spec = parse_location_token(token)
-            if not spec:
-                continue
-            text, html = self._resolve_spec(spec, mode)
-            if text or html:
-                return text, html
+            if spec:
+                specs_by_prefix.setdefault(spec['prefix'], []).append(spec)
+
+        for prefix, specs in specs_by_prefix.items():
+            ordered = sorted(specs, key=lambda s: self._document_order_key(
+                prefix, s['start'] if s['kind'] == 'range' else s['id']))
+            texts: list[str] = []
+            htmls: list[str] = []
+            for spec in ordered:
+                text, html = self._resolve_spec(spec, mode)
+                if text:
+                    texts.append(text)
+                if html:
+                    htmls.append(html)
+            if texts or htmls:
+                return ' '.join(texts), ' '.join(htmls)
         return '', ''
 
     def _span_elements(self, spec: dict) -> list[et.Element]:

@@ -4607,7 +4607,8 @@ class HeiCritApp {
                 text: token.textContent.trim(),
                 witnessInfo: witnessInfo,
                 isPreSpace: isPreSpace,
-                isPostSpace: isPostSpace
+                isPostSpace: isPostSpace,
+                position: this.tokenPosition(token)
             });
 
             token.classList.add(`selected-${readingGroup}`);
@@ -4642,18 +4643,21 @@ class HeiCritApp {
         // Anchor on whichever already-selected token in this row is FARTHEST
         // from the one just clicked, then select every word token between
         // that anchor and the click (inclusive), in document order.
-        const farthest = existingInRow.reduce((best, t) =>
-            Math.abs(this.tokenSortKey(t.tokenId) - this.tokenSortKey(clickedTokenId)) >
-            Math.abs(this.tokenSortKey(best.tokenId) - this.tokenSortKey(clickedTokenId)) ? t : best
-        );
-
-        const clickedKey = this.tokenSortKey(clickedTokenId);
-        const farthestKey = this.tokenSortKey(farthest.tokenId);
-        const startId = clickedKey <= farthestKey ? clickedTokenId : farthest.tokenId;
-        const endId = clickedKey <= farthestKey ? farthest.tokenId : clickedTokenId;
-
         const synLineContent = synLine.querySelector('.syn-line-content');
         if (!synLineContent) return;
+
+        // Positions come from the row's DOM order, never from the ids.
+        const wordElements = Array.from(this.rowWordTokenElements(synLineContent));
+        const positionInRow = id => wordElements.findIndex(el => el.getAttribute('data-token-id') === id);
+        const clickedKey = positionInRow(clickedTokenId);
+        const farthest = existingInRow.reduce((best, t) =>
+            Math.abs(positionInRow(t.tokenId) - clickedKey) >
+            Math.abs(positionInRow(best.tokenId) - clickedKey) ? t : best
+        );
+
+        const farthestKey = positionInRow(farthest.tokenId);
+        const startId = clickedKey <= farthestKey ? clickedTokenId : farthest.tokenId;
+        const endId = clickedKey <= farthestKey ? farthest.tokenId : clickedTokenId;
 
         this.collectTokensInDomRange(synLineContent, startId, endId).forEach(tokenElement => {
             const id = tokenElement.getAttribute('data-token-id');
@@ -4677,7 +4681,8 @@ class HeiCritApp {
                 text: tokenElement.textContent.trim(),
                 witnessInfo,
                 isPreSpace: false,
-                isPostSpace: false
+                isPostSpace: false,
+                position: this.tokenPosition(tokenElement)
             });
             tokenElement.classList.add(`selected-${readingGroup}`);
         });
@@ -4732,7 +4737,7 @@ class HeiCritApp {
         // even before the first reading token is clicked - it's already
         // selected via the normal lemma selection by this point.
         const lemmaTokens = this.selectedTokens.lemma || [];
-        const sortedLemma = [...lemmaTokens].sort((a, b) => this.tokenSortKey(a.tokenId) - this.tokenSortKey(b.tokenId));
+        const sortedLemma = [...lemmaTokens].sort((a, b) => this.positionOf(a) - this.positionOf(b));
         sortedLemma.forEach((tokenData, index) => {
             this.setTranspositionNumber(tokenData, index + 1);
         });
@@ -5002,7 +5007,8 @@ class HeiCritApp {
                         text: tokenElement.textContent.trim(),
                         witnessInfo: witnessInfo,
                         isPreSpace: isPreSpace,
-                        isPostSpace: isPostSpace
+                        isPostSpace: isPostSpace,
+                        position: this.tokenPosition(tokenElement)
                     });
                 }
             });
@@ -5029,7 +5035,8 @@ class HeiCritApp {
             text: tokenElement.textContent.trim(),
             witnessInfo: witnessInfo,
             isPreSpace: false,
-            isPostSpace: false
+            isPostSpace: false,
+            position: this.tokenPosition(tokenElement)
         }));
     }
 
@@ -5310,20 +5317,42 @@ class HeiCritApp {
     }
     
 
-    tokenSortKey(tokenId) {
-        // Token ids are "w_" followed by 2+ underscore-separated numeric
-        // segments - "w_17_3" (line 17, word 3) in some projects, but
-        // "w_10_1_5" (folio 10, line 1, word 5) in others. Only the LAST
-        // segment is the in-line word position that determines adjacency;
-        // earlier segments are a coarser, constant location prefix. Capturing
-        // just the first two segments (as this used to) silently drops the
-        // real word number whenever there are 3+ segments, making every word
-        // in a line compare equal. Fold all segments into one mixed-radix
-        // number instead, so comparisons and "adjacent = diff of 1" checks
-        // stay correct regardless of how many segments the id has.
-        const m = tokenId.match(/^w_(\d+(?:_\d+)*)$/);
-        if (!m) return 0;
-        return m[1].split('_').reduce((acc, seg) => acc * 100000 + parseInt(seg, 10), 0);
+    rowWordTokenElements(container) {
+        // A witness row's word tokens (no gap markers), in document order -
+        // the same set collectTokensInDomRange walks.
+        return container.querySelectorAll('.syn-token:not(.syn-token-pre):not(.syn-token-post)[data-token-id]');
+    }
+
+    tokenPosition(tokenElement) {
+        // Word order comes from where a token sits in its witness row, never
+        // from its id: ids may be arbitrary strings ("w_epilog_15_5",
+        // "w_head_2_1_5", ...) in no particular order. Gap markers
+        // (pre/post) share their word's data-token-id and get that word's
+        // position.
+        if (!tokenElement) return -1;
+        const container = tokenElement.closest('.syn-line-content');
+        if (!container) return -1;
+        const id = tokenElement.getAttribute('data-token-id');
+        const words = this.rowWordTokenElements(container);
+        for (let i = 0; i < words.length; i++) {
+            if (words[i].getAttribute('data-token-id') === id) return i;
+        }
+        return -1;
+    }
+
+    positionOf(tokenData) {
+        if (typeof tokenData.position === 'number' && tokenData.position >= 0) {
+            return tokenData.position;
+        }
+        // Fallback for a record created without a position: look its word
+        // span up in its own witness row.
+        const prefix = tokenData.witnessInfo && tokenData.witnessInfo.prefix;
+        const wit = prefix ? document.querySelector(`.syn-line-wit[data-line-id^="${prefix}:"]`) : null;
+        const synLine = wit ? wit.closest('.syn-line') : null;
+        const container = synLine ? synLine.querySelector('.syn-line-content') : null;
+        if (!container) return -1;
+        const words = Array.from(this.rowWordTokenElements(container));
+        return words.findIndex(el => el.getAttribute('data-token-id') === tokenData.tokenId);
     }
 
     buildCorrespPartsForTokens(prefix, tokens) {
@@ -5349,11 +5378,12 @@ class HeiCritApp {
         // handling already used for left()/right() gap markers above.
         if (wordTokens.length === 0) return [];
 
-        const sorted = [...wordTokens].sort((a, b) => this.tokenSortKey(a.tokenId) - this.tokenSortKey(b.tokenId));
+        const sorted = [...wordTokens].sort((a, b) => this.positionOf(a) - this.positionOf(b));
 
         const runs = [[sorted[0]]];
         for (let i = 1; i < sorted.length; i++) {
-            const isAdjacent = this.tokenSortKey(sorted[i].tokenId) === this.tokenSortKey(sorted[i - 1].tokenId) + 1;
+            // Adjacent = no other word between them in the witness row.
+            const isAdjacent = this.positionOf(sorted[i]) === this.positionOf(sorted[i - 1]) + 1;
             if (isAdjacent) {
                 runs[runs.length - 1].push(sorted[i]);
             } else {
@@ -5480,7 +5510,7 @@ class HeiCritApp {
         if (lemmaTokens.some(t => t.isPreSpace || t.isPostSpace)) {
             return { error: 'Transposition lemma tokens must be words, not gap positions.' };
         }
-        const sortedLemma = [...lemmaTokens].sort((a, b) => this.tokenSortKey(a.tokenId) - this.tokenSortKey(b.tokenId));
+        const sortedLemma = [...lemmaTokens].sort((a, b) => this.positionOf(a) - this.positionOf(b));
 
         const mixedGroup = Object.keys(this.selectedTokens).find(group =>
             group !== 'lemma' && !transpositionGroups.includes(group) &&
