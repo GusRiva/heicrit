@@ -183,11 +183,42 @@ function walkProjectFiles(relativePrefix, dir, results) {
 // gesture-gated, so the menu wires up these IPC handlers instead - see
 // electron/preload.js and frontend/app.js's openProjectDirectory/openFile/
 // saveAsFile for the renderer side.
+// Small persistent app settings (e.g. the last opened project directory),
+// stored next to the logs in the per-user app data folder.
+function settingsPath() {
+    return path.join(app.getPath('userData'), 'settings.json');
+}
+
+function readSettings() {
+    try {
+        return JSON.parse(fs.readFileSync(settingsPath(), 'utf-8')) || {};
+    } catch {
+        return {};
+    }
+}
+
+function writeSettings(patch) {
+    try {
+        fs.mkdirSync(path.dirname(settingsPath()), { recursive: true });
+        fs.writeFileSync(settingsPath(), JSON.stringify({ ...readSettings(), ...patch }, null, 2));
+    } catch (error) {
+        console.warn('Could not write settings:', error.message);
+    }
+}
+
 ipcMain.handle('dialog:open-project-directory', async () => {
-    const result = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
+    // Start the dialog in the last project's parent folder, so that project
+    // (or a sibling edition) is one click away. Skipped if it no longer exists.
+    const options = { properties: ['openDirectory'] };
+    const lastDir = readSettings().lastProjectDirectory;
+    if (typeof lastDir === 'string' && fs.existsSync(lastDir)) {
+        options.defaultPath = path.dirname(lastDir);
+    }
+    const result = await dialog.showOpenDialog(mainWindow, options);
     if (result.canceled || result.filePaths.length === 0) return null;
 
     const selectedDir = result.filePaths[0];
+    writeSettings({ lastProjectDirectory: selectedDir });
     const dirName = path.basename(selectedDir);
     const files = [];
     for (const folder of RELEVANT_PROJECT_FOLDERS) {
