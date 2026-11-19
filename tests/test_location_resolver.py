@@ -79,3 +79,33 @@ def test_lemma_is_normalized(tmp_path):
     assert resolver.resolve_text_html(['b:w_1_2'], mode=NORMALIZED)[0] == 'sinnd'
     assert resolver.resolve_text_html(['b:left(w_1_2)'], mode=NORMALIZED)[0] == 'vor sinnd'
     assert resolver.resolve_text_html(['b:range(w_1_1, w_1_2)'], mode=NORMALIZED)[0] == 'Nachts sinnd'
+
+
+def test_scribal_corrections_in_lemma_and_readings(tmp_path):
+    # Lemma (NORMALIZED): <add> underlined, <del> dropped. Readings
+    # (DIPLOMATIC): <del> struck, <add> underlined. Plain text: corrected text.
+    from location_resolver import NORMALIZED
+    project = tmp_path / 'emendatio'
+    shutil.copytree(PROJECT, project)
+    text_file = project / 'texts' / 'B' / 'B_1.xml'
+    xml = text_file.read_text(encoding='utf-8')
+    xml = xml.replace('<w xml:id="w_1_2">sind</w>',
+                      '<w xml:id="w_1_2">s<subst><del>a</del><add>i</add></subst>nd</w>')
+    xml = xml.replace('<w xml:id="w_1_3">alle</w>',
+                      '<subst><del><w xml:id="w_1_3a">keine</w></del><add><w xml:id="w_1_3">alle</w></add></subst>')
+    text_file.write_text(xml, encoding='utf-8')
+    resolver = Apparatus(str(project / 'apparatus' / 'app_emendatio.xml')).get_resolver()
+
+    assert resolver.resolve_text_html(['b:w_1_2']) == (
+        'sind', 's<span class="syn-del">a</span><span class="syn-add">i</span>nd')
+    assert resolver.resolve_text_html(['b:w_1_2'], mode=NORMALIZED) == (
+        'sind', 's<span class="syn-add">i</span>nd')
+
+    # whole tokens inside <del>/<add>: in a range and addressed directly
+    text, html = resolver.resolve_text_html(['b:range(w_1_2, w_1_4)'])
+    assert text == 'sind alle Katzen'
+    assert '<span class="syn-del">keine</span> <span class="syn-add">alle</span>' in html
+    text, html = resolver.resolve_text_html(['b:range(w_1_2, w_1_4)'], mode=NORMALIZED)
+    assert text == 'sind alle Katzen' and 'keine' not in html
+    assert resolver.resolve_text_html(['b:w_1_3a'])[1] == '<span class="syn-del">keine</span>'
+    assert resolver.resolve_text_html(['b:w_1_3a'], mode=NORMALIZED) == ('', '')

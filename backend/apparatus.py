@@ -1513,6 +1513,17 @@ def process_synoptic_token(el:et.Element, prefer_reg: bool = False) -> str:
             result += f"<em class='syn-supplied'>{inner}</em>"
         if el.tail is not None and el.tail.strip() != '':
             result += _regularize_long_s(el.tail, prefer_reg)
+    elif tag_name in ('del', 'add'):
+        # Scribal deletions and additions (inside a <subst> or on their
+        # own): the regularized base-text row shows the corrected text -
+        # additions underlined, deletions dropped; the diplomatic row and
+        # every other witness show both, deletions struck through.
+        if tag_name == 'add' or not prefer_reg:
+            inner = _render_inner(el, prefer_reg)
+            if inner:
+                result += f"<span class='syn-{tag_name}'>{inner}</span>"
+        if el.tail is not None and el.tail.strip() != '':
+            result += _regularize_long_s(el.tail, prefer_reg)
     elif tag_name == 'surplus':
         # Text present in the source but editorially flagged as erroneous/
         # extra - the mirror of <supplied>: kept as plain text in the
@@ -1560,6 +1571,14 @@ def _render_choice_alternative(el, prefer_reg: bool) -> str:
     tag_name == 'reg' branch unconditionally suppresses reg content (that
     branch exists to drop an UNCHOSEN stray <reg>, not the one just chosen).
     """
+    result = _render_inner(el, prefer_reg)
+    if el.tail is not None and el.tail.strip() != '':
+        result += _regularize_long_s(el.tail, prefer_reg)
+    return result
+
+
+def _render_inner(el, prefer_reg: bool) -> str:
+    """el's own text and children (each followed by its tail), without el's tail."""
     result = ''
     if el.text is not None:
         result += _regularize_long_s(el.text.strip(), prefer_reg)
@@ -1567,8 +1586,6 @@ def _render_choice_alternative(el, prefer_reg: bool) -> str:
         result += process_synoptic_token(child, prefer_reg)
         if child.tail is not None and child.tail.strip() != '':
             result += _regularize_long_s(child.tail, prefer_reg)
-    if el.tail is not None and el.tail.strip() != '':
-        result += _regularize_long_s(el.tail, prefer_reg)
     return result
 
 

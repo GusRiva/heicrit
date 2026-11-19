@@ -2086,3 +2086,15 @@ main {
 .syn-line.verse-selected-reading-4, .syn-line.verse-highlight-reading-4 { --verse-color: #ff5722; }
 .syn-line.verse-selected-reading-5, .syn-line.verse-highlight-reading-5 { --verse-color: #795548; }
 .syn-line.verse-selected-reading-6, .syn-line.verse-highlight-reading-6 { --verse-color: #e91e63; }
+
+/* Scribal corrections (<del>/<add>, also inside <subst>) in Location
+   Details: deletions struck through (diplomatic row, other witnesses),
+   additions underlined (every row) - see process_synoptic_token. */
+.syn-del {
+    text-decoration: line-through;
+}
+
+.syn-add {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}

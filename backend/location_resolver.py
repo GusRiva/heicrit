@@ -114,7 +114,23 @@ def _token_in_context(token, mode: str) -> list[tuple[et.Element, bool]]:
         return [(token, True)] if is_emended_mode(mode) else []
     if context == 'removed':
         return [] if is_emended_mode(mode) else [(token, False)]
+    scribal = _scribal_context(token)
+    if scribal == 'del':
+        return [] if is_normalized_mode(mode) else [(token, 'del')]
+    if scribal == 'add':
+        return [(token, 'add')]
     return [(token, False)]
+
+
+def _scribal_context(token) -> str | None:
+    """'del'/'add' if a token lies inside a scribal <del>/<add> (up to its <l>)."""
+    for ancestor in token.iterancestors():
+        tag = local_name(ancestor)
+        if tag == 'l':
+            break
+        if tag in ('del', 'add'):
+            return tag
+    return None
 
 
 def _render_token(element, mode: str = DIPLOMATIC) -> tuple[str, str]:
@@ -131,11 +147,16 @@ def _render_token(element, mode: str = DIPLOMATIC) -> tuple[str, str]:
     - EMENDED (the lemma of an emended base-text span): the edited text -
       <sic> dropped, <corr>/<supplied> shown in italics, <surplus> replaced
       by "[ ]" at its position.
+
+    Scribal corrections, as in the Location Details rows: <add> underlined
+    (class syn-add) in every mode; <del> struck through (syn-del) except in
+    the NORMALIZED modes (the lemma), which drop it. The plain text never
+    contains deleted text.
     """
     text_parts: list[str] = []
     html_parts: list[str] = []
 
-    def walk_wrapped(child, wrapper_tag: str):
+    def walk_wrapped(child, wrapper_tag: str, css_class: str | None = None, keep_text: bool = True):
         inner_text_start = len(text_parts)
         inner_html_start = len(html_parts)
         walk(child)
@@ -143,8 +164,9 @@ def _render_token(element, mode: str = DIPLOMATIC) -> tuple[str, str]:
         inner_html = ''.join(html_parts[inner_html_start:])
         del text_parts[inner_text_start:]
         del html_parts[inner_html_start:]
-        text_parts.append(inner_text)
-        html_parts.append(f'<{wrapper_tag}>{inner_html}</{wrapper_tag}>' if inner_html else '')
+        text_parts.append(inner_text if keep_text else '')
+        open_tag = f'<{wrapper_tag} class="{css_class}">' if css_class else f'<{wrapper_tag}>'
+        html_parts.append(f'{open_tag}{inner_html}</{wrapper_tag}>' if inner_html else '')
 
     def walk(el):
         # Pretty-printing whitespace between a <choice>'s alternatives
@@ -193,6 +215,14 @@ def _render_token(element, mode: str = DIPLOMATIC) -> tuple[str, str]:
                     walk(child)
             elif tag == 'emph':
                 walk_wrapped(child, 'em')
+            elif tag == 'del':
+                # Scribal deletion: dropped from the normalized lemma; in
+                # readings struck through in the html and left out of the
+                # plain text, which holds the corrected text.
+                if not is_normalized_mode(mode):
+                    walk_wrapped(child, 'span', 'syn-del', keep_text=False)
+            elif tag == 'add':
+                walk_wrapped(child, 'span', 'syn-add')
             else:
                 walk(child)
             if child.tail and not (in_choice and not child.tail.strip()):
@@ -252,6 +282,10 @@ def _collect_child_tokens(child, mode: str = DIPLOMATIC, italic: bool = False) -
         return [(child, italic)]
     if child_tag in ('note', 'reg'):
         return []
+    if child_tag == 'del':
+        return [] if is_normalized_mode(mode) else _collect_tokens(child, mode, 'del')
+    if child_tag == 'add':
+        return _collect_tokens(child, mode, italic or 'add')
     if child_tag == 'surplus':
         return _collect_tokens(child, mode, italic) if not is_emended_mode(mode) else []
     if child_tag == 'supplied' and not _is_reconstruction_supplied(child):
@@ -263,19 +297,30 @@ def _render_tokens(tokens: list[tuple[et.Element, bool]], mode: str = DIPLOMATIC
     """
     Join rendered tokens with single spaces; a run of consecutive italic
     tokens becomes ONE <em> span ("<em>keine Hunde</em>", not two).
+
+    The per-token style is False (plain), True (italic: emended text), or
+    'del'/'add' for whole tokens inside a scribal deletion/addition - struck
+    through/underlined like in-word ones; deleted tokens stay out of the
+    plain text.
     """
     texts: list[str] = []
-    html_runs: list[tuple[bool, list[str]]] = []
-    for token, italic in tokens:
+    html_runs: list[tuple[object, list[str]]] = []
+    for token, style in tokens:
         text, html = _render_token(token, mode)
-        if text:
+        if text and style != 'del':
             texts.append(text)
         if html:
-            if html_runs and html_runs[-1][0] == italic:
+            if html_runs and html_runs[-1][0] == style:
                 html_runs[-1][1].append(html)
             else:
-                html_runs.append((italic, [html]))
-    htmls = [f"<em>{' '.join(run)}</em>" if italic else ' '.join(run) for italic, run in html_runs]
+                html_runs.append((style, [html]))
+    wrappers = {True: ('<em>', '</em>'),
+                'del': ('<span class="syn-del">', '</span>'),
+                'add': ('<span class="syn-add">', '</span>')}
+    htmls = []
+    for style, run in html_runs:
+        opening, closing = wrappers.get(style, ('', ''))
+        htmls.append(f"{opening}{' '.join(run)}{closing}")
     return ' '.join(texts), ' '.join(htmls)
 
 

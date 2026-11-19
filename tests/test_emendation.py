@@ -235,3 +235,31 @@ def test_example_line_without_any_app(apparatus):
     readings = [{'ana': 'hc:OmissionVariant', 'ptrs': ['b:left(w_8_5)'], 'ana_auto': True}]
     apparatus.apply_emendation_ana_suggestions('a:surplus_2', readings)
     assert readings[0]['ana'] == 'hc:OmissionVariant hc:CorrectionVariant'
+
+
+def _tei_line(content: str):
+    return et.fromstring(f'<l xmlns="http://www.tei-c.org/ns/1.0" xml:id="l_x">{content}</l>')
+
+
+def test_subst_del_add_rows():
+    """Regularized base row: add underlined, del dropped; other rows: del struck, add underlined."""
+    in_word = _tei_line('<w xml:id="w_1">d<subst><del>o</del><add>a</add></subst>s</w>')
+    regularized = process_synoptic_unit_for_comparison(in_word, prefer_reg=True)
+    diplomatic = process_synoptic_unit_for_comparison(in_word)
+    assert "d<span class='syn-add'>a</span>s" in regularized and 'o' not in regularized.split('syn-add')[0][-20:]
+    assert "d<span class='syn-del'>o</span><span class='syn-add'>a</span>s" in diplomatic
+
+    spanning = _tei_line('<subst><del><w>der</w></del><add><w>daz</w></add></subst>')
+    regularized = process_synoptic_unit_for_comparison(spanning, prefer_reg=True)
+    diplomatic = process_synoptic_unit_for_comparison(spanning)
+    assert 'der' not in regularized and "<span class='syn-add'>" in regularized and 'daz' in regularized
+    assert "<span class='syn-del'>" in diplomatic and 'der' in diplomatic and 'daz' in diplomatic
+
+    standalone = _tei_line('<w xml:id="w_1">a<del>b</del>c<add>d</add>e</w>')
+    assert ">ac<span class='syn-add'>d</span>e<" in process_synoptic_unit_for_comparison(standalone, prefer_reg=True)
+    assert ("a<span class='syn-del'>b</span>c<span class='syn-add'>d</span>e"
+            in process_synoptic_unit_for_comparison(standalone))
+
+    empty = _tei_line('<w xml:id="w_1">bi<subst><del unit="character" quantity="1"/><add>d</add></subst>er</w>')
+    diplomatic = process_synoptic_unit_for_comparison(empty)
+    assert 'syn-del' not in diplomatic and "bi<span class='syn-add'>d</span>er" in diplomatic
