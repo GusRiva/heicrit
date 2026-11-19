@@ -4,6 +4,9 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+
+## v0.3.0 - 2026-11-19
+
 ### Emendations in the critical text
 - Base-text emendations (`<choice><sic/><corr/></choice>`, `<supplied>`,
   `<surplus>`, also spanning whole tokens) are now handled: the lemma shows
@@ -35,6 +38,18 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   in text order; word order and adjacency no longer depend on the ids.
 - The lemma shows the normalized form (`<reg>`, ſ as s).
 - The desktop app's "Open Project" dialog starts at the last opened project.
+
+### Scribal corrections
+- `<del>`/`<add>` (inside `<subst>` or on their own, also spanning whole
+  words) are displayed instead of being run together ("doas"): the
+  regularized base-text row shows the addition underlined without the
+  deletion; the diplomatic row and other witnesses show the deletion struck
+  through and the addition underlined. The apparatus follows the same rules
+  (lemma: addition only; readings: both marked).
+
+### Packaging
+- Debug pipeline output (`backend/tmp/`) and `__pycache__` are no longer
+  included in the installers.
 
 
 ## v0.2.0 - 2026-09-03
