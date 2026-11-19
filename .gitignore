@@ -39,3 +39,4 @@ Thumbs.db
 *.xml.backup
 temp_files/
 /token.txt
+backend/tmp/

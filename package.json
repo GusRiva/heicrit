@@ -43,7 +43,12 @@
     "extraResources": [
       {
         "from": "backend",
-        "to": "backend"
+        "to": "backend",
+        "filter": [
+          "**/*",
+          "!tmp/**",
+          "!**/__pycache__/**"
+        ]
       },
       {
         "from": "venv",
