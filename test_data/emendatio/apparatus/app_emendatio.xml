@@ -125,8 +125,7 @@
                 <!-- V. 8: deliberately NO <app> - both emendations in this line are
                      shown as generated, unsaved entries:
                      *K*atzen] Tatzen A   and   *vor* grau] sehr A -->
-
-            <app target="a:w_8_4"><rdg wit="#b #c #d" ana="hc:SubstitutionVariant hc:CorrectionVariant"><ptr target="b:w_8_4"/><ptr target="c:w_8_4"/><ptr target="d:w_8_4"/></rdg></app></listApp>
+            </listApp>
         </body>
     </text>
 </TEI>
