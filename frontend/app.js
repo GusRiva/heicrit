@@ -823,11 +823,24 @@ class HeiCritApp {
         }
     }
 
+    confirmLeaveEditMode(tabId, action = 'move to a new location') {
+        // Moving to another location (or entry) while editing an entry would
+        // leave the edit layout on the old entry's selection. Ask first; on
+        // yes, discard the edit (like Cancel) so the move can go ahead.
+        if (!this.editMode) return true;
+        if (!confirm(`You are currently editing an entry. If you ${action} you will lose unsaved changes. Do you want to proceed?`)) {
+            return false;
+        }
+        this.cancelEntryMode(tabId);
+        return true;
+    }
+
     showPreviousEntry(tabId) {
         const tab = this.tabs.get(tabId);
         if (!tab) return;
 
         if (tab.currentEntryIndex > 0) {
+            if (!this.confirmLeaveEditMode(tabId)) return;
             tab.currentEntryIndex--;
             
             // Set to first non-placeholder entry, or -1 if all are placeholders
@@ -844,6 +857,7 @@ class HeiCritApp {
         if (!tab) return;
 
         if (tab.currentEntryIndex < tab.entryKeys.length - 1) {
+            if (!this.confirmLeaveEditMode(tabId)) return;
             tab.currentEntryIndex++;
             
             // Set to first non-placeholder entry, or -1 if all are placeholders
@@ -875,6 +889,7 @@ class HeiCritApp {
         });
 
         if (targetIndex !== -1) {
+            if (targetIndex !== tab.currentEntryIndex && !this.confirmLeaveEditMode(tabId)) return;
             tab.currentEntryIndex = targetIndex;
             
             // Set to first non-placeholder entry, or -1 if all are placeholders
@@ -907,6 +922,15 @@ class HeiCritApp {
     setActiveSubentry(tabId, corresp, subentryIndex) {
         const tab = this.tabs.get(tabId);
         if (!tab) return;
+
+        if (this.editMode && subentryIndex !== tab.activeSubentryIndex) {
+            if (!this.confirmLeaveEditMode(tabId, 'select another entry')) return;
+            // Leaving edit mode re-renders the location (list, details and
+            // highlighting) for tab.activeSubentryIndex - so set it first.
+            tab.activeSubentryIndex = subentryIndex;
+            this.cancelEntryMode(tabId);
+            return;
+        }
 
         // Update active subentry index for current corresp
         tab.activeSubentryIndex = subentryIndex;
@@ -3591,6 +3615,10 @@ class HeiCritApp {
 
     async showLocationDetailsForTab(tabId, corresp) {
         const detailsContent = document.getElementById(`apparatus-details-content-${tabId}`);
+        // Only the latest call may render: when moving on quickly (or
+        // cancelling an edit and then moving), an earlier location's slower
+        // response must not overwrite the new one.
+        const request = this.locationDetailsRequest = (this.locationDetailsRequest || 0) + 1;
         
         // Find the synoptic map data for this corresp to get data-link
         const synopticMap = this.synopticMapData ? this.synopticMapData.synoptic_map : {};
@@ -3689,6 +3717,8 @@ class HeiCritApp {
             message += '<strong>Synoptic Comparison:</strong> No synoptic data available for this location<br>';
         }
         
+        if (request !== this.locationDetailsRequest) return;
+
         if (detailsContent) {
             detailsContent.innerHTML = message;
 
@@ -3737,6 +3767,7 @@ class HeiCritApp {
         });
         
         if (targetIndex !== -1) {
+            if (targetIndex !== activeTab.currentEntryIndex && !this.confirmLeaveEditMode(activeTab.id)) return;
             activeTab.currentEntryIndex = targetIndex;
             
             // Set to first non-placeholder entry, or -1 if all are placeholders
