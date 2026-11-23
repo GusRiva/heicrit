@@ -14,8 +14,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   text's own uncorrected reading (`*K*atzen] Tatzen A B, Katzen C, om. D`).
   Previously both sides of a sic/corr pair were concatenated ("TKatzen").
 - New reading types `hc:CorrectionVariant` (marker) and
-  `hc:BaseTextSupportingVariant`, selectable when creating/editing entries
-  and suggested automatically at emended lemmas.
+  `hc:BaseTextSupportingVariant`, set by hand when creating/editing entries;
+  offered only when the lemma is an emended span.
 - Emendations in the base text that have no apparatus entry yet appear as
   generated, unsaved entries (`Nachts[ ] ] Nachtss A`); "Create Entry" turns
   one into a real entry with the lemma preselected.

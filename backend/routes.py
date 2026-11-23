@@ -1120,7 +1120,6 @@ def create_apparatus_entry_new_format():
 
         if not is_transposition and not is_verse_entry and apparatus is not None:
             target = apparatus.lift_emendation_target(target)
-            apparatus.apply_emendation_ana_suggestions(target, readings)
         new_app = build_new_format_app_element(target, readings)
         parent.append(new_app)
 
@@ -1230,7 +1229,6 @@ def update_apparatus_entry_new_format():
 
         if apparatus is not None and not is_verse_entry:
             target = apparatus.lift_emendation_target(target)
-            apparatus.apply_emendation_ana_suggestions(target, readings)
         for child in list(app_element):
             app_element.remove(child)
         app_element.set('target', target)

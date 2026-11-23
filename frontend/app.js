@@ -1,6 +1,9 @@
 const API_PORT = new URLSearchParams(window.location.search).get('apiPort') || '5000';
 const API_BASE = `http://127.0.0.1:${API_PORT}/api`;
 
+// Reading types that only make sense at an emended lemma (docs/data.md).
+const EMENDATION_MARKERS = ['hc:CorrectionVariant', 'hc:BaseTextSupportingVariant'];
+
 class HeiCritApp {
     constructor() {
         this.currentFile = null;
@@ -41,6 +44,11 @@ class HeiCritApp {
         // reading group's tokens are numbered by click order per witness -
         // see updateTranspositionNumbering/buildTranspositionSavePayload.
         this.selectedReadingAna = {};
+        // Whether the current lemma selection contains a base-text emendation
+        // (see refreshLemmaEmendation). Only then are the emendation markers
+        // offered in the variant-type select.
+        this.lemmaIsEmendation = false;
+        this.lemmaEmendationRequest = 0;
 
         // Project tracking for save functionality
         this.currentProjectDirectory = null;
@@ -253,9 +261,8 @@ class HeiCritApp {
                                             </select>
                                             <select id="reading-ana-select-${tabId}" class="reading-ana-select" style="display: none;">
                                                 <option value="">Addition / Omission / Substitution (auto)</option>
-                                                <option value="hc:CorrectionVariant">Auto type + source of emendation</option>
+                                                <option value="hc:CorrectionVariant">Source of emendation</option>
                                                 <option value="hc:BaseTextSupportingVariant">Supports uncorrected base text</option>
-                                                <option value="plain">Auto type, no emendation marker</option>
                                                 <option value="hc:TranspositionVariant">Transposition</option>
                                             </select>
                                         </div>
@@ -4115,6 +4122,8 @@ class HeiCritApp {
             this.currentReadingGroup = 'lemma';
             this.nextReadingGroupIndex = 2;
             this.selectedReadingAna = {};
+            this.lemmaIsEmendation = false;
+            this.lemmaEmendationRequest++;
             this.updateAnaSelectForGroup(tabId, 'lemma');
 
             // Set up token click handlers and event delegation
@@ -4593,6 +4602,7 @@ class HeiCritApp {
                 if (Object.values(this.selectedReadingAna).includes('hc:TranspositionVariant')) {
                     this.updateTranspositionNumbering(tabId);
                 }
+                if (readingGroup === 'lemma') this.refreshLemmaEmendation(tabId);
                 return;
             }
         }
@@ -4644,10 +4654,12 @@ class HeiCritApp {
 
             token.classList.add(`selected-${readingGroup}`);
         }
-        
 
+        // The lemma changed: re-check whether it is an emended span.
+        if (readingGroup === 'lemma' || currentGroup === 'lemma') {
+            this.refreshLemmaEmendation(tabId);
+        }
 
-        
         // New-format entries are only persisted once, at Finish, via
         // saveNewEntryToServer; the selection highlighting above already
         // provides live feedback without needing any client-side buffering.
@@ -4949,6 +4961,10 @@ class HeiCritApp {
         this.selectedVerses = {};
         this.nextReadingGroupIndex = 2;
         this.selectedReadingAna = {};
+        // Known from the entry itself - set it right away so the select shows
+        // the loaded markers without waiting for refreshLemmaEmendation.
+        this.lemmaIsEmendation = !!entry.is_emendation && !entry.is_verse_entry;
+        this.lemmaEmendationRequest++;
 
         if (entry.is_verse_entry) {
             this.populateSelectedVersesFromEntry(tabId, entry);
@@ -4977,8 +4993,7 @@ class HeiCritApp {
                     this.selectedTokens[readingGroup] = readingTokens;
 
                     // New-format only: seed this reading group's variant-type
-                    // select from its @ana. Existing entries never fall back
-                    // to auto emendation markers - "plain" keeps them as is.
+                    // select from its @ana (no marker -> auto).
                     const anaTokens = this.anaTokens(reading);
                     if (anaTokens.includes('hc:TranspositionVariant')) {
                         this.selectedReadingAna[readingGroup] = 'hc:TranspositionVariant';
@@ -4986,8 +5001,6 @@ class HeiCritApp {
                         this.selectedReadingAna[readingGroup] = 'hc:BaseTextSupportingVariant';
                     } else if (anaTokens.includes('hc:CorrectionVariant')) {
                         this.selectedReadingAna[readingGroup] = 'hc:CorrectionVariant';
-                    } else if (anaTokens.length > 0) {
-                        this.selectedReadingAna[readingGroup] = 'plain';
                     }
 
                     // Update next reading group index
@@ -5370,6 +5383,8 @@ class HeiCritApp {
             this.selectedVerses[group].push({ witnessId: witnessInfo.witnessId, prefix: witnessInfo.prefix, lineToken });
         }
         this.applyVerseSelections(tabId);
+        // A base-row verse click clears the lemma's word tokens.
+        if (isBase) this.refreshLemmaEmendation(tabId);
     }
 
     populateSelectedVersesFromEntry(tabId, entry) {
@@ -5421,7 +5436,7 @@ class HeiCritApp {
             if (verses.length === 0) return;
             const wit = [...new Set(verses.map(v => v.witnessId))];
             const ptrs = [...new Set(verses.map(v => v.lineToken))];
-            readings.push({ wit, ana: 'hc:SubstitutionVariant', ptrs, ana_auto: false });
+            readings.push({ wit, ana: 'hc:SubstitutionVariant', ptrs });
         });
         if (readings.length === 0) {
             return { error: 'Select at least one other witness\'s verse (click its siglum).' };
@@ -5436,7 +5451,7 @@ class HeiCritApp {
         // selected as the lemma, and continue with the first reading group,
         // so the editor only has to pick the other witnesses' readings.
         // The backend lifts the selection back to the emendation container
-        // (e.g. surplus_1/choice_1) and suggests the emendation markers.
+        // (e.g. surplus_1/choice_1).
         this.toggleCreationMode(tabId);
         if (!this.creationMode) return;
 
@@ -5452,6 +5467,7 @@ class HeiCritApp {
         if (corresp) {
             this.selectedTokens.lemma = this.parseTokensFromCorresp(tabId, corresp);
             this.applyTokenSelections(tabId);
+            this.lemmaIsEmendation = !!entry.is_emendation;
         }
 
         const select = document.getElementById(`reading-group-select-${tabId}`);
@@ -5663,11 +5679,10 @@ class HeiCritApp {
                 ana = 'hc:SubstitutionVariant';
             }
 
-            // Emendation markers (see test_data/emendatio/spec/): chosen
-            // explicitly in the variant-type select, or - when left on auto -
-            // suggested by the backend by comparing this reading with the
-            // emended lemma / the uncorrected base text (ana_auto).
-            const anaChoice = this.selectedReadingAna[group] || '';
+            // Emendation markers (see test_data/emendatio/spec/): only ever
+            // set explicitly in the variant-type select, and only kept while
+            // the lemma is an emended span.
+            const anaChoice = this.lemmaIsEmendation ? (this.selectedReadingAna[group] || '') : '';
             if (anaChoice === 'hc:BaseTextSupportingVariant') {
                 ana = anaChoice;
             } else if (anaChoice === 'hc:CorrectionVariant') {
@@ -5688,7 +5703,7 @@ class HeiCritApp {
                 ptrs.push(...parts);
             });
 
-            readings.push({ wit, ana, ptrs, ana_auto: anaChoice === '' });
+            readings.push({ wit, ana, ptrs });
         }
 
         return { target, readings };
@@ -5944,17 +5959,58 @@ class HeiCritApp {
 
         // Addition/Omission/Substitution are auto-detected from the selection
         // shape; the manual choices are the emendation markers (creation and
-        // editing) and Transposition (creation only - existing entries can't
-        // be converted into or out of a transposition here; enterEditMode
-        // already refuses to edit transposition entries at all).
+        // editing, only when the lemma is an emended span) and Transposition
+        // (creation only - existing entries can't be converted into or out
+        // of a transposition here; enterEditMode already refuses to edit
+        // transposition entries at all).
         const transpositionOption = select.querySelector('option[value="hc:TranspositionVariant"]');
         if (transpositionOption) transpositionOption.hidden = !this.creationMode;
+        EMENDATION_MARKERS.forEach(value => {
+            const option = select.querySelector(`option[value="${value}"]`);
+            if (option) option.hidden = !this.lemmaIsEmendation;
+        });
         if ((this.creationMode || this.editMode) && group && group !== 'lemma') {
             select.style.display = '';
             select.value = this.selectedReadingAna[group] || '';
         } else {
             select.style.display = 'none';
         }
+    }
+
+    async refreshLemmaEmendation(tabId) {
+        // Ask the backend whether the current lemma selection is an emended
+        // span (/apparatus/emendation-check) - only then are the emendation
+        // markers offered. When it isn't, marker choices are dropped (the
+        // readings fall back to auto). Readings are never classified by
+        // their text: the markers are always the editor's choice.
+        const request = ++this.lemmaEmendationRequest;
+        const lemmaTokens = this.selectedTokens.lemma || [];
+        let isEmendation = false;
+        if (lemmaTokens.length > 0 && lemmaTokens.every(t => t.witnessInfo && t.witnessInfo.prefix === this.leithsPrefix)) {
+            const parts = this.buildCorrespPartsForTokens(this.leithsPrefix, lemmaTokens);
+            if (parts.length === 1) {
+                try {
+                    const response = await this.apiRequest('/apparatus/emendation-check', {
+                        method: 'POST',
+                        body: JSON.stringify({ target: parts[0] })
+                    });
+                    isEmendation = !!response.is_emendation;
+                } catch (error) {
+                    console.error('Emendation check failed:', error);
+                }
+            }
+        }
+        if (request !== this.lemmaEmendationRequest) return; // a newer check is under way
+
+        this.lemmaIsEmendation = isEmendation;
+        if (!isEmendation) {
+            Object.keys(this.selectedReadingAna).forEach(group => {
+                if (EMENDATION_MARKERS.includes(this.selectedReadingAna[group])) {
+                    delete this.selectedReadingAna[group];
+                }
+            });
+        }
+        this.updateAnaSelectForGroup(tabId, this.currentReadingGroup);
     }
 
 }

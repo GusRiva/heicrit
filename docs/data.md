@@ -231,7 +231,7 @@ A reading covering all remaining witnesses with text at the location (at least t
 
 An empty `<corr/>` (deleting its `<sic>`) is marked `[ ]` in the lemma, like an in-word `<surplus>`. A token-spanning `<choice>` without an `xml:id` is addressed as a range over both its sides.
 
-When creating an entry, selecting exactly the tokens of a whole-token `<surplus>` or of one side of a token-spanning `<choice>` stores the container's id as `@target`. Readings whose variant type is left on *auto* are classified automatically at an emended lemma: a reading identical to the uncorrected base text becomes `hc:BaseTextSupportingVariant`, and one identical to the emended lemma gets `hc:CorrectionVariant`.
+When creating an entry, selecting exactly the tokens of a whole-token `<surplus>` or of one side of a token-spanning `<choice>` stores the container's id as `@target`. A reading's variant type left on *auto* is Addition, Omission or Substitution, decided only by whether word tokens or gap positions are selected on either side; the readings' text is never compared. `hc:CorrectionVariant` and `hc:BaseTextSupportingVariant` are always set by hand, and the variant-type select only offers them when the lemma is an emended span (checked via `/api/apparatus/emendation-check`).
 
 ### Whole-verse entries
 

@@ -434,9 +434,9 @@ class Apparatus:
     def describe_emendation(self, target: str | None) -> dict[str, Any]:
         """
         For the entry-creation UI: whether target (after lifting) is an
-        emended span, and its emended (lemma) and uncorrected (base text)
-        renderings, used to pre-classify readings as hc:CorrectionVariant /
-        hc:BaseTextSupportingVariant.
+        emended span - only then does it offer the emendation markers
+        (hc:CorrectionVariant / hc:BaseTextSupportingVariant) - and its
+        emended (lemma) and uncorrected (base text) renderings.
         """
         lifted = self.lift_emendation_target(target)
         resolver = self.get_resolver()
@@ -452,35 +452,6 @@ class Apparatus:
             'base_text': base_text,
             'base_html': base_html,
         }
-
-    def apply_emendation_ana_suggestions(self, target: str | None, readings: list[dict]) -> None:
-        """
-        For readings sent with ana_auto (the editor left the variant type on
-        auto) at an emended target, add the emendation markers in place:
-        a reading identical to the uncorrected base text becomes
-        hc:BaseTextSupportingVariant, one identical to the emended lemma
-        gets hc:CorrectionVariant added. Other readings are left alone.
-        """
-        info = self.describe_emendation(target)
-        if not info.get('is_emendation'):
-            return
-
-        def norm(text):
-            return ' '.join((text or '').split())
-
-        base_text, emended_text = norm(info['base_text']), norm(info['emended_text'])
-        resolver = self.get_resolver()
-        for reading in readings:
-            ana = reading.get('ana') or ''
-            if not reading.get('ana_auto') or 'hc:TranspositionVariant' in ana.split():
-                continue
-            text = norm(resolver.resolve_text_html(reading.get('ptrs') or [])[0])
-            if not text:
-                continue
-            if base_text and text == base_text:
-                reading['ana'] = BASE_TEXT_SUPPORTING_ANA
-            elif text == emended_text and CORRECTION_ANA not in ana.split():
-                reading['ana'] = f'{ana} {CORRECTION_ANA}'.strip()
 
     def _extract_new_format_entry(self, index: int, app, resolver: WitnessFragmentResolver) -> dict[str, Any]:
         """
@@ -609,7 +580,6 @@ class Apparatus:
             reading['ana'] = ('hc:AdditionVariant' if base_absent
                               else 'hc:OmissionVariant' if reading_absent
                               else 'hc:SubstitutionVariant')
-            reading['ana_auto'] = False
         return target, None
 
     @staticmethod

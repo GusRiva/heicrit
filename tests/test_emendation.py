@@ -94,22 +94,6 @@ def test_lift_emendation_target(apparatus, selection, lifted):
     assert apparatus.lift_emendation_target(selection) == lifted
 
 
-def test_ana_suggestions_for_auto_readings(apparatus):
-    readings = [
-        {'ana': 'hc:SubstitutionVariant', 'ptrs': ['b:w_3_4'], 'ana_auto': True},   # Tatzen
-        {'ana': 'hc:SubstitutionVariant', 'ptrs': ['c:w_3_4'], 'ana_auto': True},   # Katzen
-        {'ana': 'hc:OmissionVariant', 'ptrs': ['d:right(w_3_3)'], 'ana_auto': True},
-        {'ana': 'hc:SubstitutionVariant', 'ptrs': ['c:w_3_4'], 'ana_auto': False},  # explicit
-    ]
-    apparatus.apply_emendation_ana_suggestions('a:w_3_4', readings)
-    assert [r['ana'] for r in readings] == [
-        'hc:BaseTextSupportingVariant',
-        'hc:SubstitutionVariant hc:CorrectionVariant',
-        'hc:OmissionVariant',
-        'hc:SubstitutionVariant',
-    ]
-
-
 @pytest.mark.parametrize('ana, valid', [
     ('hc:SubstitutionVariant', True),
     ('hc:SubstitutionVariant hc:CorrectionVariant', True),
@@ -231,10 +215,6 @@ def test_example_line_without_any_app(apparatus):
     # created from them ("Create Entry"), so the generated entry disappears
     assert generated[1]['lemma']['attributes']['corresp'] == 'a:w_8_5'
     assert apparatus.lift_emendation_target('a:w_8_5') == 'a:surplus_2'
-    # and the auto-classified readings of the other witnesses
-    readings = [{'ana': 'hc:OmissionVariant', 'ptrs': ['b:left(w_8_5)'], 'ana_auto': True}]
-    apparatus.apply_emendation_ana_suggestions('a:surplus_2', readings)
-    assert readings[0]['ana'] == 'hc:OmissionVariant hc:CorrectionVariant'
 
 
 def _tei_line(content: str):
