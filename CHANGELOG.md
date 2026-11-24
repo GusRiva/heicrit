@@ -5,6 +5,34 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## Unreleased
 
 
+## v0.3.1 - 2026-11-24
+
+### Locations other than verses
+- Apparatus entries at a heading (`<head>`) and any other element a synoptic
+  map can link (`<p>`, `<titlePart>`, `<s>`, `<seg>`, `<label>`, `<div>`)
+  are shown; before, only entries inside a verse (`<l>`) appeared. Elements
+  can nest (`div` > `l` > `seg`): an entry belongs to the nearest element
+  around it that the synoptic map links.
+- Locations without `@n` are labelled by their kind ("Head", "Label", ...),
+  and entries are listed in base-text order.
+- The base text panel shows these elements as units with their label in
+  the margin (clickable, highlighted like verses); headings no longer vanish.
+- Whole-location entries (click a row's siglum) work for all of them, not
+  only verses; consecutive elements of one kind form a span (`range(p_1, p_2)`).
+
+### Main witness of a reading
+- In a reading of several witnesses, the witness whose `<ptr>` comes first
+  is the main witness: the reading shows its text and lists its siglum first.
+- Click another siglum of a saved reading to make it the main witness; in
+  New/Edit Entry mode, the "Main" select chooses it.
+
+### Other
+- Emendation markers (`hc:CorrectionVariant`, `hc:BaseTextSupportingVariant`)
+  are only set by hand and only offered when the lemma is an emended span;
+  "auto" decides only Addition/Omission/Substitution.
+- Moving away from an entry being edited asks for confirmation first.
+
+
 ## v0.3.0 - 2026-11-19
 
 ### Emendations in the critical text
