@@ -20,10 +20,12 @@ from __future__ import annotations
 
 import hashlib
 from lxml import etree as et
-from load_functions import local_name
+from load_functions import local_name, LOCUS_TAGS
 from apparatus import XML_ID
 
-PUNCT_CONTAINER_TAGS = {'l', 'p', 'titlePart'}
+# Every locus that can be a base-text unit with a content column (see
+# create_html.xsl). A <div> only ever wraps other units, so it is left out.
+PUNCT_CONTAINER_TAGS = LOCUS_TAGS - {'div'}
 _STANDARD_REG_ANA = 'hc:StandardMHGRegularization'
 
 
@@ -241,7 +243,7 @@ def build_edit_tokens(container: et.Element) -> dict:
 
 
 def build_all_containers_tokens(root: et.Element) -> list[dict]:
-    """One build_edit_tokens() per addressable l|p|titlePart in the file
+    """One build_edit_tokens() per addressable PUNCT_CONTAINER_TAGS element in the file
     (those with no xml:id - a genuine pre-existing data gap, see
     Bn_32.xml:815-831 - are skipped: they simply never appear as an editable
     container, matching this feature's exclusion of unreachable content)."""
@@ -250,8 +252,21 @@ def build_all_containers_tokens(root: et.Element) -> list[dict]:
         if not isinstance(el.tag, str):
             continue
         if local_name(el) in PUNCT_CONTAINER_TAGS and el.get(XML_ID):
+            if local_name(el) not in _LINE_CONTAINER_TAGS and not _words_are_direct_children(el):
+                # build_edit_tokens only walks direct children: a heading
+                # whose words sit inside a <hi> (common in real data) would
+                # render empty in the overlay - leave it static instead.
+                continue
             result.append(build_edit_tokens(el))
     return result
+
+
+_LINE_CONTAINER_TAGS = {'l', 'p', 'titlePart'}
+
+
+def _words_are_direct_children(container: et.Element) -> bool:
+    return all(w.getparent() is container for w in container.iter()
+               if isinstance(w.tag, str) and local_name(w) == 'w')
 
 
 def _locate_gap(container: et.Element, after_w_id: str | None) -> dict:

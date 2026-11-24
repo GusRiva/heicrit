@@ -10,7 +10,8 @@ from io import BytesIO
 from html import escape as html_escape
 from lxml import etree as et
 from heipy.parsers import HeiEditionsParser
-from load_functions import resolve_relative_path, find_file_in_project, parse_location_token, local_name
+from load_functions import (resolve_relative_path, find_file_in_project, parse_location_token, local_name,
+                            LOCUS_TAGS, BLOCK_LOCUS_TAGS, locus_label)
 
 XML_ID = '{http://www.w3.org/XML/1998/namespace}id'
 
@@ -85,14 +86,14 @@ def is_emendation_element(el) -> bool:
 
 def _emendation_context(token) -> str | None:
     """
-    How a token's ancestors (up to its <l>) place it in an emendation:
+    How a token's ancestors (up to its line, heading, ...) place it in an emendation:
     'added' (inside a <corr> or emendation <supplied>: not transmitted),
     'removed' (inside a <sic> paired with a <corr>, or a <surplus>: not in
     the edited text), or None.
     """
     for ancestor in token.iterancestors():
         tag = local_name(ancestor)
-        if tag == 'l':
+        if tag in BLOCK_LOCUS_TAGS:
             break
         if tag == 'corr' and _in_correction_choice(ancestor):
             return 'added'
@@ -123,10 +124,10 @@ def _token_in_context(token, mode: str) -> list[tuple[et.Element, bool]]:
 
 
 def _scribal_context(token) -> str | None:
-    """'del'/'add' if a token lies inside a scribal <del>/<add> (up to its <l>)."""
+    """'del'/'add' if a token lies inside a scribal <del>/<add> (up to its line, heading, ...)."""
     for ancestor in token.iterancestors():
         tag = local_name(ancestor)
-        if tag == 'l':
+        if tag in BLOCK_LOCUS_TAGS:
             break
         if tag in ('del', 'add'):
             return tag
@@ -469,42 +470,71 @@ class WitnessFragmentResolver:
             return token
         return f"{spec['prefix']}:left({next_id})"
 
-    def resolve_line_locator(self, prefix: str, xml_id: str) -> tuple[str | None, str | None]:
-        """Return (line @n, line @xml:id) for the <l> containing (or being) xml_id."""
+    def resolve_line_locator(self, prefix: str, xml_id: str,
+                             locus_ids: set[str] | None = None) -> tuple[str | None, str | None]:
+        """
+        Return (location label, @xml:id) of the locus containing (or being)
+        xml_id - see load_functions.LOCUS_TAGS.
+
+        locus_ids (load_functions.base_locus_ids): the ids the synoptic map
+        links. Loci can nest (<div> > <l> > <seg>), so the locus is the
+        nearest element - xml_id's own or an ancestor - the map links. Without
+        a map, or when it links none of them: xml_id itself if it is a locus
+        element, else the enclosing <l>, else the nearest other locus element
+        except a <div>.
+        """
         el = self.resolve_element(prefix, xml_id)
         if el is None:
             return None, None
-        if local_name(el) == 'l':
-            line_el = el
-        else:
-            line_el = next((a for a in el.iterancestors() if local_name(a) == 'l'), None)
-        if line_el is None:
+        chain = [el, *el.iterancestors()]
+        locus = None
+        if locus_ids:
+            locus = next((a for a in chain if a.get(XML_ID) in locus_ids), None)
+        if locus is None and local_name(el) in LOCUS_TAGS:
+            locus = el  # a whole unit addressed directly is its own locus
+        if locus is None:
+            locus = next((a for a in chain if local_name(a) == 'l'), None)
+        if locus is None:
+            locus = next((a for a in chain
+                          if local_name(a) in LOCUS_TAGS and local_name(a) != 'div'), None)
+        if locus is None:
             return None, None
-        return line_el.get('n'), line_el.get(XML_ID)
+        return locus_label(locus), locus.get(XML_ID)
 
-    # --- Whole-verse addressing ---------------------------------------------
-    # An entry can address whole verses (<l>) instead of word tokens: a single
-    # "prefix:l_5", a span "prefix:range(l_5, l_6)", or - for a verse the
+    # --- Whole-unit addressing ----------------------------------------------
+    # An entry can address whole units - verses (<l>), but just as well any
+    # other element a synoptic map links as a location (<head>, <p>, <seg>,
+    # ..., see load_functions.LOCUS_TAGS) - instead of word tokens: a single
+    # "prefix:l_5", a span "prefix:range(l_5, l_6)", or - for a unit the
     # witness lacks - the synoptic map's own anchor "prefix:right(l_4)" /
-    # "prefix:left(l_7)". See docs/data.md.
+    # "prefix:left(l_7)". See docs/data.md. The methods keep their "verse"
+    # names. Units can nest (a <seg> inside an <l>), so a span runs over
+    # units of ONE kind: range(l_5, l_6) covers the verses between, never
+    # the <seg>s inside them.
 
-    def _lines(self, prefix: str) -> tuple[list, dict]:
-        """All <l> elements of a fragment in document order, and id -> index."""
+    def _lines(self, prefix: str, tag: str = 'l') -> tuple[list, dict]:
+        """All <tag> units of a fragment in document order, and id -> index."""
         fragment = self._get_fragment(prefix)
         if not fragment:
             return [], {}
-        if 'lines' not in fragment:
-            lines = [el for el in fragment['root'].iter() if isinstance(el.tag, str) and local_name(el) == 'l']
-            fragment['lines'] = lines
-            fragment['line_index'] = {el.get(XML_ID): i for i, el in enumerate(lines) if el.get(XML_ID)}
-        return fragment['lines'], fragment['line_index']
+        units = fragment.setdefault('units', {})
+        if tag not in units:
+            lines = [el for el in fragment['root'].iter() if isinstance(el.tag, str) and local_name(el) == tag]
+            units[tag] = (lines, {el.get(XML_ID): i for i, el in enumerate(lines) if el.get(XML_ID)})
+        return units[tag]
+
+    def _unit_tag(self, prefix: str, xml_id: str | None) -> str | None:
+        """The element kind of xml_id if it is a whole unit (a locus element)."""
+        el = self.resolve_element(prefix, xml_id) if xml_id else None
+        if el is None or local_name(el) not in LOCUS_TAGS:
+            return None
+        return local_name(el)
 
     def _is_line(self, prefix: str, xml_id: str | None) -> bool:
-        el = self.resolve_element(prefix, xml_id) if xml_id else None
-        return el is not None and local_name(el) == 'l'
+        return self._unit_tag(prefix, xml_id) is not None
 
     def is_verse_spec(self, spec: dict | None) -> bool:
-        """True if spec addresses whole verses (or the gap of a missing verse)."""
+        """True if spec addresses whole units (or the gap of a missing unit)."""
         if not spec:
             return False
         anchor = spec['start'] if spec['kind'] == 'range' else spec.get('id')
@@ -514,17 +544,21 @@ class WitnessFragmentResolver:
         return bool(token) and self.is_verse_spec(parse_location_token(token))
 
     def is_absent_verse_token(self, token: str | None) -> bool:
-        """left()/right() of an <l>: the witness has no verse at this position."""
+        """left()/right() of a unit: the witness has no such unit at this position."""
         spec = parse_location_token(token) if token else None
         return bool(spec) and spec['kind'] in ('left', 'right') and self.is_verse_spec(spec)
 
     def verse_elements(self, spec: dict) -> list:
-        """The <l> elements a single/range verse spec covers, in document order."""
-        lines, index = self._lines(spec['prefix'])
+        """The units a single/range spec covers, in document order."""
+        prefix = spec['prefix']
         if spec['kind'] == 'single':
-            i = index.get(spec['id'])
-            return [lines[i]] if i is not None else []
+            tag = self._unit_tag(prefix, spec['id'])
+            return [self.resolve_element(prefix, spec['id'])] if tag else []
         if spec['kind'] == 'range':
+            tag = self._unit_tag(prefix, spec['start'])
+            if tag is None or self._unit_tag(prefix, spec['end']) != tag:
+                return []
+            lines, index = self._lines(prefix, tag)
             i, j = index.get(spec['start']), index.get(spec['end'])
             if i is None or j is None:
                 return []
@@ -534,7 +568,7 @@ class WitnessFragmentResolver:
         return []
 
     def verse_ids(self, token: str) -> list[str]:
-        """xml:ids of the verses a verse token covers ([] for an absent verse)."""
+        """xml:ids of the units a unit token covers ([] for an absent unit)."""
         spec = parse_location_token(token)
         if not spec:
             return []
@@ -542,38 +576,39 @@ class WitnessFragmentResolver:
 
     def collapse_verse_ptrs(self, ptrs: list[str]) -> list[str]:
         """
-        Merge one-per-verse pointers into ranges: per prefix, <l> ids that
-        follow each other in the witness's document become one
+        Merge one-per-unit pointers into ranges: per prefix and unit kind,
+        ids that follow each other in the witness's document become one
         "prefix:range(l_a, l_b)". Duplicate tokens are dropped (e.g. the same
         "h3:right(l_4)" collected at two locations of one omitted span).
-        Non-verse pointers pass through unchanged, in their original order.
+        Non-unit pointers pass through unchanged, in their original order.
         """
         slots: list[list[str]] = []
-        verse_ids_by_prefix: dict[str, list[str]] = {}
-        slot_of_prefix: dict[str, int] = {}
+        unit_ids: dict[tuple[str, str], list[str]] = {}
+        slot_of_group: dict[tuple[str, str], int] = {}
         seen: set[str] = set()
         for token in ptrs:
             spec = parse_location_token(token)
             if spec and spec['kind'] in ('single', 'range') and self.is_verse_spec(spec):
-                prefix = spec['prefix']
-                if prefix not in slot_of_prefix:
-                    slot_of_prefix[prefix] = len(slots)
-                    slots.append([])  # filled with this prefix's runs below
-                ids = verse_ids_by_prefix.setdefault(prefix, [])
+                anchor = spec['start'] if spec['kind'] == 'range' else spec['id']
+                group = (spec['prefix'], self._unit_tag(spec['prefix'], anchor))
+                if group not in slot_of_group:
+                    slot_of_group[group] = len(slots)
+                    slots.append([])  # filled with this group's runs below
+                ids = unit_ids.setdefault(group, [])
                 ids.extend(i for i in self.verse_ids(token) if i not in ids)
             elif token not in seen:
                 seen.add(token)
                 slots.append([token])
 
-        for prefix, ids in verse_ids_by_prefix.items():
-            _lines, index = self._lines(prefix)
+        for (prefix, tag), ids in unit_ids.items():
+            _lines, index = self._lines(prefix, tag)
             runs: list[list[str]] = []
             for xml_id in sorted(ids, key=lambda i: index.get(i, 0)):
                 if runs and index.get(xml_id) == index.get(runs[-1][-1], -2) + 1:
                     runs[-1].append(xml_id)
                 else:
                     runs.append([xml_id])
-            slots[slot_of_prefix[prefix]] = [
+            slots[slot_of_group[(prefix, tag)]] = [
                 f'{prefix}:range({run[0]}, {run[-1]})' if len(run) > 1 else f'{prefix}:{run[0]}'
                 for run in runs]
         return [part for slot in slots for part in slot]
@@ -627,9 +662,10 @@ class WitnessFragmentResolver:
     def _neighbour_token(self, el, direction: int):
         """
         The nearest <w>/<pc> before (direction=-1) or after (+1) el in
-        document order within the same <l>, skipping tokens inside el itself.
+        document order within the same line (or heading, label, ...),
+        skipping tokens inside el itself.
         """
-        line_el = next((a for a in el.iterancestors() if local_name(a) == 'l'), None)
+        line_el = next((a for a in el.iterancestors() if local_name(a) in BLOCK_LOCUS_TAGS), None)
         scope = line_el if line_el is not None else el.getparent()
         if scope is None:
             return None
@@ -953,7 +989,7 @@ class WitnessFragmentResolver:
             return None
         for container in selected[0].iterancestors():
             tag = local_name(container)
-            if tag == 'l':
+            if tag in BLOCK_LOCUS_TAGS:
                 break
             if tag == 'surplus':
                 candidates = [container]

@@ -7,6 +7,10 @@ from heipy.heipipe.step_library import container2milestone, whitespaces, number_
 from heipy.heipipe.step_library.synoptic import move_layout_milestones, append_synoptic_links
 from heipy.heipipe.pipeline_library.synoptic import milestone_element_map
 
+from load_functions import base_locus_ids, parse_location_token
+
+HEI_LOCUS = '{https://digi.ub.uni-heidelberg.de/schema/tei/heiEDITIONS}locus'
+
 _xslt_dir = os.path.join(os.path.dirname(__file__), 'xslt')
 
 reduce_markup = XsltStep(files=[os.path.join(_xslt_dir, 'reduce_markup.xsl')],
@@ -52,6 +56,16 @@ def append_synoptic_links_funct(root, parameters):
         xml_id = element.get('{http://www.w3.org/XML/1998/namespace}id')
         if xml_id:
             elements_by_id[xml_id] = element
+
+    # Mark the elements the synoptic map links as loci (<l>, <head>, <seg>,
+    # ...) for create_html.xsl, which makes each one a synoptic unit. Every
+    # locus key anchors on the base text, so its prefix is the base prefix.
+    first_spec = parse_location_token(next(iter(synoptic_map)).split('#', 1)[0])
+    if first_spec:
+        for locus_id in base_locus_ids(synoptic_map, first_spec['prefix']):
+            element = elements_by_id.get(locus_id)
+            if element is not None:
+                element.set(HEI_LOCUS, 'true')
 
     # Several synoptic_map keys can share one anchor (SynopticMap.parse_content
     # gives each verse missing at the same base-text position its own

@@ -7,6 +7,53 @@ def local_name(el):
     return tag.split('}')[-1] if isinstance(tag, str) and '}' in tag else tag
 
 
+# Elements a synoptic map can link as a location (locus) of the text. They can
+# nest (a <div> holding <l>s, a <seg> inside an <l>), so which one a token
+# belongs to is decided by the synoptic map: its nearest ancestor that the map
+# links (see base_locus_ids and WitnessFragmentResolver.resolve_line_locator).
+LOCUS_TAGS = frozenset({'l', 'head', 'p', 'titlePart', 's', 'seg', 'label', 'div'})
+
+# Loci that bound a token's surroundings (its neighbour tokens, the emendation
+# it sits in). <s>/<seg> lie inside these and <div> around them, so neither
+# narrows that scope.
+BLOCK_LOCUS_TAGS = frozenset({'l', 'head', 'p', 'titlePart', 'label'})
+
+# Location label for a locus without @n (an <l> without @n stays unlabelled).
+LOCUS_LABELS = {
+    'head': 'Head',
+    'label': 'Label',
+    'seg': 'Seg',
+    's': 'S',
+    'div': 'Div',
+    'p': 'P',
+    'titlePart': 'Title',
+}
+
+
+def locus_label(el):
+    """A locus element's location label: its @n, else a label for its kind."""
+    if el is None:
+        return None
+    return el.get('n') or LOCUS_LABELS.get(local_name(el))
+
+
+def base_locus_ids(loci, base_prefix):
+    """
+    The xml:ids of the base-text elements that synoptic loci (SynopticMap.
+    get_loci(), keyed by their base-text anchor) address directly, e.g.
+    {"l_5", "head_71_1"} for keys "b:l_5", "b:head_71_1". Anchors of units
+    the base text lacks ("b:right(l_4)") address no element and are skipped.
+    """
+    ids = set()
+    if not loci or not base_prefix:
+        return ids
+    for key in loci:
+        spec = parse_location_token(key.split('#', 1)[0])
+        if spec and spec['kind'] == 'single' and spec['prefix'] == base_prefix:
+            ids.add(spec['id'])
+    return ids
+
+
 def parse_location_token(token):
     """
     Parse a "prefix:spec" location token (e.g. "a:w_5_1", "a:range(w_5_1,w_5_4)",

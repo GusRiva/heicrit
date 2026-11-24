@@ -44,6 +44,7 @@ class HeiCritApp {
         // reading group's tokens are numbered by click order per witness -
         // see updateTranspositionNumbering/buildTranspositionSavePayload.
         this.selectedReadingAna = {};
+        this.selectedMainWitness = {};
         // Whether the current lemma selection contains a base-text emendation
         // (see refreshLemmaEmendation). Only then are the emendation markers
         // offered in the variant-type select.
@@ -265,6 +266,8 @@ class HeiCritApp {
                                                 <option value="hc:BaseTextSupportingVariant">Supports uncorrected base text</option>
                                                 <option value="hc:TranspositionVariant">Transposition</option>
                                             </select>
+                                            <select id="reading-main-select-${tabId}" class="reading-main-select" style="display: none;"
+                                                    title="Main witness: the reading's text is taken from it, and its siglum is listed first"></select>
                                         </div>
                                     </div>
                                 </div>
@@ -472,6 +475,13 @@ class HeiCritApp {
                     }
                 }
 
+                const siglumEl = e.target.closest('.apparatus-siglum.clickable[data-witness-id]');
+                if (siglumEl) {
+                    e.stopPropagation();
+                    this.setMainWitness(tabId, siglumEl);
+                    return;
+                }
+
                 const subentry = e.target.closest('.classical-subentry[data-subentry-index]');
                 if (subentry) {
                     const subentryIndex = parseInt(subentry.getAttribute('data-subentry-index'));
@@ -530,6 +540,13 @@ class HeiCritApp {
             readingGroupSelect.addEventListener('change', (e) => this.handleReadingGroupChange(tabId, e.target.value));
         }
 
+        const readingMainSelect = document.getElementById(`reading-main-select-${tabId}`);
+        if (readingMainSelect) {
+            readingMainSelect.addEventListener('change', (e) => {
+                this.selectedMainWitness[this.currentReadingGroup] = e.target.value;
+            });
+        }
+
         if (readingAnaSelect) {
             readingAnaSelect.addEventListener('change', (e) => this.handleAnaChange(tabId, this.currentReadingGroup, e.target.value));
         }
@@ -561,13 +578,7 @@ class HeiCritApp {
             tab.entryKeys = Object.keys(tab.groupedEntries);
 
             // Sort entry keys by location
-            tab.entryKeys.sort((a, b) => {
-                const locA = tab.groupedEntries[a][0]?.loc || '';
-                const locB = tab.groupedEntries[b][0]?.loc || '';
-                const numA = parseInt(locA) || 0;
-                const numB = parseInt(locB) || 0;
-                return numA - numB;
-            });
+            tab.entryKeys.sort(this.entryKeyComparator(tab));
             
             // Set initial activeSubentryIndex to first non-placeholder entry
             if (tab.entryKeys.length > 0) {
@@ -2718,9 +2729,9 @@ class HeiCritApp {
         if (entry.is_emendation && entry.base_reading) {
             readings.push({ reading: entry.base_reading, isBase: true });
         }
-        (entry.readings || []).forEach(reading => {
+        (entry.readings || []).forEach((reading, readingIndex) => {
             if (this.anaTokens(reading).includes('hc:BaseTextSupportingVariant')) return;
-            readings.push({ reading, isBase: false });
+            readings.push({ reading, isBase: false, readingIndex });
         });
 
         const witnessIdsOf = r => this.witnessIdsFromWit(r.attributes?.wit || r.wit);
@@ -2751,17 +2762,67 @@ class HeiCritApp {
             ? [...readings.filter((_, i) => i !== relIndex), readings[relIndex]]
             : readings;
 
-        return ordered.map(({ reading }) => {
+        // A reading of several witnesses shows its main witness's text, and
+        // that siglum comes first (the backend lists it first in wit). In a
+        // saved entry, clicking another siglum makes that witness the main
+        // one (see setMainWitness).
+        const canChooseMain = !entry.is_generated && !entry.is_placeholder && !isTransposition && entry.id;
+
+        return ordered.map(({ reading, isBase, readingIndex }) => {
             const readingHtml = reading.html ?? this.escapeHtml(reading.text);
-            const sigla = (relIndex >= 0 && reading === readings[relIndex].reading)
-                ? 'rel.'
-                : this.formatSigla(witnessIdsOf(reading));
+            const isRel = relIndex >= 0 && reading === readings[relIndex].reading;
+            const ids = witnessIdsOf(reading);
+            let siglaHtml;
+            if (isRel) {
+                siglaHtml = 'rel.';
+            } else if (canChooseMain && !isBase && ids.length > 1) {
+                siglaHtml = ids.map((id, i) => {
+                    const siglum = this.escapeHtml(this.formatSigla([id]));
+                    if (i === 0) {
+                        return `<span class="apparatus-siglum apparatus-siglum-main" title="Main witness: the reading's text is taken from it">${siglum}</span>`;
+                    }
+                    return `<span class="apparatus-siglum clickable" title="Make main witness"
+                                  data-entry-id="${entry.id}" data-reading-index="${readingIndex}"
+                                  data-witness-id="${this.escapeHtml(id)}">${siglum}</span>`;
+                }).join(' ');
+            } else {
+                siglaHtml = this.escapeHtml(this.formatSigla(ids));
+            }
             let readingPart = ` ${readingHtml}`;
-            if (sigla) {
-                readingPart += ` <em class="apparatus-witnesses">${this.escapeHtml(sigla)}</em>`;
+            if (siglaHtml) {
+                readingPart += ` <em class="apparatus-witnesses">${siglaHtml}</em>`;
             }
             return readingPart;
         });
+    }
+
+    async setMainWitness(tabId, siglumEl) {
+        // Viewer shortcut: make a witness of a saved multi-witness reading
+        // its main witness - its <ptr> moves first in the <rdg>, so the
+        // reading shows its text and lists its siglum first.
+        if (this.creationMode || this.editMode) return;
+        const tab = this.tabs.get(tabId);
+        if (!tab || !tab.data) return;
+        try {
+            const response = await this.apiRequest('/apparatus/reading/main-witness', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apparatus_file: tab.data.apparatusFile,
+                    project_directory: tab.data.projectDirectory,
+                    entry_index: parseInt(siglumEl.dataset.entryId) - 1,
+                    reading_index: parseInt(siglumEl.dataset.readingIndex),
+                    witness_id: siglumEl.dataset.witnessId
+                })
+            });
+            if (!response.success) {
+                this.showErrorPopup('Main Witness', response.error || 'Failed to set the main witness.');
+                return;
+            }
+            this.refreshApparatusEntriesInTab(tabId, response.apparatus_entries);
+        } catch (error) {
+            this.showErrorPopup('Main Witness', `Error setting the main witness: ${error.message}`);
+        }
     }
 
     renderNoteArea(entry) {
@@ -2977,6 +3038,24 @@ class HeiCritApp {
         }
         
         return completeEntries;
+    }
+
+    // Orders a tab's entry keys (loci) in reading order: by the base-text
+    // position the synoptic map gives each locus ('order'), falling back to
+    // the numeric location label - labels like "Head" don't sort, and the
+    // map's <link>s can come in any order.
+    entryKeyComparator(tab) {
+        const loci = tab.synopticMapData?.synoptic_map || this.synopticMapData?.synoptic_map || {};
+        const orderOf = key => loci[key]?.order;
+        const numOf = key => parseInt(tab.groupedEntries[key][0]?.loc || '') || 0;
+        return (a, b) => {
+            const orderA = orderOf(a);
+            const orderB = orderOf(b);
+            if (typeof orderA === 'number' && typeof orderB === 'number') {
+                return orderA - orderB;
+            }
+            return numOf(a) - numOf(b);
+        };
     }
 
     groupEntriesByCorresp(apparatusEntries) {
@@ -4153,6 +4232,7 @@ class HeiCritApp {
             this.currentReadingGroup = 'lemma';
             this.nextReadingGroupIndex = 2;
             this.selectedReadingAna = {};
+            this.selectedMainWitness = {};
             this.lemmaIsEmendation = false;
             this.lemmaEmendationRequest++;
             this.updateAnaSelectForGroup(tabId, 'lemma');
@@ -4235,6 +4315,8 @@ class HeiCritApp {
         readingGroupSelect.style.display = 'none';
         const readingAnaSelect = document.getElementById(`reading-ana-select-${tabId}`);
         if (readingAnaSelect) readingAnaSelect.style.display = 'none';
+        const readingMainSelect = document.getElementById(`reading-main-select-${tabId}`);
+        if (readingMainSelect) readingMainSelect.style.display = 'none';
 
         // The Edit Entry button's visibility is recalculated below by
         // updateApparatusDisplay -> updateEditButtonVisibility.
@@ -4634,6 +4716,7 @@ class HeiCritApp {
                     this.updateTranspositionNumbering(tabId);
                 }
                 if (readingGroup === 'lemma') this.refreshLemmaEmendation(tabId);
+                this.updateMainWitnessSelect(tabId);
                 return;
             }
         }
@@ -4702,6 +4785,8 @@ class HeiCritApp {
         if (Object.values(this.selectedReadingAna).includes('hc:TranspositionVariant')) {
             this.updateTranspositionNumbering(tabId);
         }
+
+        this.updateMainWitnessSelect(tabId);
 
         // Check if event handlers are still attached
         const tokens = document.querySelectorAll('.syn-token');
@@ -4992,6 +5077,7 @@ class HeiCritApp {
         this.selectedVerses = {};
         this.nextReadingGroupIndex = 2;
         this.selectedReadingAna = {};
+        this.selectedMainWitness = {};
         // Known from the entry itself - set it right away so the select shows
         // the loaded markers without waiting for refreshLemmaEmendation.
         this.lemmaIsEmendation = !!entry.is_emendation && !entry.is_verse_entry;
@@ -5022,6 +5108,7 @@ class HeiCritApp {
 
                     const readingTokens = this.parseTokensFromCorresp(tabId, reading.attributes.corresp);
                     this.selectedTokens[readingGroup] = readingTokens;
+                    if (reading.main_wit) this.selectedMainWitness[readingGroup] = reading.main_wit;
 
                     // New-format only: seed this reading group's variant-type
                     // select from its @ana (no marker -> auto).
@@ -5258,6 +5345,8 @@ class HeiCritApp {
         }
         const readingAnaSelect = document.getElementById(`reading-ana-select-${tabId}`);
         if (readingAnaSelect) readingAnaSelect.style.display = 'none';
+        const readingMainSelect = document.getElementById(`reading-main-select-${tabId}`);
+        if (readingMainSelect) readingMainSelect.style.display = 'none';
         
         // Clear all selected tokens
         this.clearSelectedTokens(tabId);
@@ -5354,6 +5443,7 @@ class HeiCritApp {
     }
 
     applyVerseSelections(tabId) {
+        this.updateMainWitnessSelect(tabId);
         const root = document.getElementById(`panel-${tabId}`) || document;
         this.clearVerseClasses(root, 'verse-selected');
         Object.entries(this.selectedVerses).forEach(([group, verses]) => {
@@ -5436,6 +5526,7 @@ class HeiCritApp {
             const group = `reading-${index + 1}`;
             this.selectedTokens[group] = this.selectedTokens[group] || [];
             this.selectedVerses[group] = versesFrom(reading.attributes?.corresp);
+            if (reading.main_wit) this.selectedMainWitness[group] = reading.main_wit;
             this.nextReadingGroupIndex = Math.max(this.nextReadingGroupIndex, index + 2);
         });
         this.applyVerseSelections(tabId);
@@ -5465,8 +5556,8 @@ class HeiCritApp {
             if (group === 'lemma') return;
             const verses = this.selectedVerses[group] || [];
             if (verses.length === 0) return;
-            const wit = [...new Set(verses.map(v => v.witnessId))];
-            const ptrs = [...new Set(verses.map(v => v.lineToken))];
+            const wit = this.mainFirst([...new Set(verses.map(v => v.witnessId))], this.mainWitnessOf(group));
+            const ptrs = [...new Set(wit.flatMap(id => verses.filter(v => v.witnessId === id).map(v => v.lineToken)))];
             readings.push({ wit, ana: 'hc:SubstitutionVariant', ptrs });
         });
         if (readings.length === 0) {
@@ -5727,9 +5818,11 @@ class HeiCritApp {
                 witGroups[witId].push(token);
             });
 
-            const wit = Object.keys(witGroups);
+            // The main witness's <ptr>s go first: the reading shows its text.
+            const wit = this.mainFirst(Object.keys(witGroups), this.mainWitnessOf(group));
             const ptrs = [];
-            Object.values(witGroups).forEach(witTokens => {
+            wit.forEach(witId => {
+                const witTokens = witGroups[witId];
                 const parts = this.buildCorrespPartsForTokens(witTokens[0].witnessInfo.prefix, witTokens);
                 ptrs.push(...parts);
             });
@@ -5832,13 +5925,7 @@ class HeiCritApp {
         tab.apparatusEntries = mergedEntries;
         tab.groupedEntries = this.groupEntriesByCorresp(mergedEntries);
         tab.entryKeys = Object.keys(tab.groupedEntries);
-        tab.entryKeys.sort((a, b) => {
-            const locA = tab.groupedEntries[a][0]?.loc || '';
-            const locB = tab.groupedEntries[b][0]?.loc || '';
-            const numA = parseInt(locA) || 0;
-            const numB = parseInt(locB) || 0;
-            return numA - numB;
-        });
+        tab.entryKeys.sort(this.entryKeyComparator(tab));
 
         const restoredIndex = previousCorresp ? tab.entryKeys.indexOf(previousCorresp) : -1;
         tab.currentEntryIndex = restoredIndex >= 0 ? restoredIndex : 0;
@@ -5982,6 +6069,7 @@ class HeiCritApp {
         // first reading-token click, the lemma is typically already selected
         // by the time Transposition is chosen here.
         this.updateTranspositionNumbering(tabId);
+        this.updateMainWitnessSelect(tabId);
     }
 
     updateAnaSelectForGroup(tabId, group) {
@@ -6006,6 +6094,54 @@ class HeiCritApp {
         } else {
             select.style.display = 'none';
         }
+        this.updateMainWitnessSelect(tabId);
+    }
+
+    // The witness ids a reading group's selection covers, in selection order.
+    witnessesInGroup(group) {
+        const ids = [];
+        (this.selectedTokens[group] || []).forEach(t => {
+            const id = t.witnessInfo && t.witnessInfo.witnessId;
+            if (id && !ids.includes(id)) ids.push(id);
+        });
+        (this.selectedVerses[group] || []).forEach(v => {
+            if (v.witnessId && !ids.includes(v.witnessId)) ids.push(v.witnessId);
+        });
+        return ids;
+    }
+
+    // A reading group's main witness: the chosen one while it is still part
+    // of the selection, else the first witness selected.
+    mainWitnessOf(group) {
+        const ids = this.witnessesInGroup(group);
+        const chosen = this.selectedMainWitness[group];
+        return ids.includes(chosen) ? chosen : ids[0];
+    }
+
+    // ids reordered so the main witness comes first (others keep their order).
+    mainFirst(ids, main) {
+        return ids.includes(main) ? [main, ...ids.filter(id => id !== main)] : ids;
+    }
+
+    // The "Main witness" select: shown in creation/edit mode for the current
+    // reading group once it covers two or more witnesses (not for the lemma
+    // or a transposition, whose readings have no main witness).
+    updateMainWitnessSelect(tabId) {
+        const select = document.getElementById(`reading-main-select-${tabId}`);
+        if (!select) return;
+        const group = this.currentReadingGroup;
+        const ids = group && group !== 'lemma' ? this.witnessesInGroup(group) : [];
+        const show = (this.creationMode || this.editMode) && ids.length > 1
+            && this.selectedReadingAna[group] !== 'hc:TranspositionVariant';
+        if (!show) {
+            select.style.display = 'none';
+            return;
+        }
+        select.innerHTML = ids.map(id =>
+            `<option value="${this.escapeHtml(id)}">Main: ${this.escapeHtml(this.formatSigla([id]))}</option>`
+        ).join('');
+        select.value = this.mainWitnessOf(group);
+        select.style.display = '';
     }
 
     async refreshLemmaEmendation(tabId) {

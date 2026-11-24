@@ -729,6 +729,17 @@ main {
     margin-left: 0.2rem;
 }
 
+/* Sigla of a multi-witness reading: the first is the main witness (the
+   reading's text is taken from it); clicking another makes it the main one. */
+.apparatus-siglum.clickable {
+    cursor: pointer;
+}
+
+.apparatus-siglum.clickable:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
 .placeholder-entry {
     opacity: 0.6;
 }
@@ -1060,6 +1071,23 @@ main {
     flex: 1;
     line-height: 1.6;
     margin-left: 0.5rem; /* Add some space between line number and content */
+}
+
+/* Loci other than verses (see create_html.xsl): a heading reads as one. */
+.synoptic-unit-head .tei-container-content,
+.tei-head {
+    font-weight: bold;
+}
+
+/* A locus holding other loci (e.g. a linked <div> around linked verses):
+   its label on top, the inner units below it. */
+.synoptic-unit-outer {
+    flex-wrap: wrap;
+}
+
+.synoptic-unit.synoptic-unit-outer > div.synoptic-unit-outer-body {
+    flex: 1 1 100%;
+    margin-left: 0;
 }
 
 /* Base text column: a line reconstructed from other witnesses (not present

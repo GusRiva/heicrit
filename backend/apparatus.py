@@ -15,7 +15,7 @@ from lxml import etree as et
 from lxml import html as lxml_html
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns, prefix_format
-from load_functions import resolve_relative_path, find_file_in_project, parse_location_token, local_name
+from load_functions import resolve_relative_path, find_file_in_project, parse_location_token, local_name, base_locus_ids
 from location_resolver import WitnessFragmentResolver, EMENDED, NORMALIZED, EMENDED_NORMALIZED
 
 XML_ID = '{http://www.w3.org/XML/1998/namespace}id'
@@ -168,6 +168,31 @@ def build_transposition_rdg_element(wit_ids: list[str], link_pairs: list[dict]) 
     for pair in link_pairs:
         rdg_element.append(build_link_element(pair['base'], pair['witnesses']))
     return rdg_element
+
+
+def set_main_witness(rdg_element: et.Element, witness_id: str, prefix: str) -> bool:
+    """
+    Make witness_id the main witness of a <ptr> reading: its <ptr>s (those
+    addressing "prefix:...") move to the front of the <rdg> - the first
+    <ptr> names the main witness, whose text the reading shows - and its
+    "#id" to the front of @wit. Other children keep their order. Returns
+    False (changing nothing) if the reading has no <ptr> of that witness,
+    e.g. a transposition (<link>s) or a witness it doesn't record.
+    """
+    ptrs = rdg_element.findall('tei:ptr', namespaces=ns)
+    main_ptrs = [p for p in ptrs if (p.get('target') or '').startswith(f'{prefix}:')]
+    if not main_ptrs:
+        return False
+    first_ptr_index = rdg_element.index(ptrs[0])
+    for ptr in main_ptrs:
+        rdg_element.remove(ptr)
+    for offset, ptr in enumerate(main_ptrs):
+        rdg_element.insert(first_ptr_index + offset, ptr)
+    wit_ids = (rdg_element.get('wit') or '').split()
+    if f'#{witness_id}' in wit_ids:
+        wit_ids.remove(f'#{witness_id}')
+    rdg_element.set('wit', ' '.join([f'#{witness_id}', *wit_ids]))
+    return True
 
 
 def build_new_format_app_element(target: str | None, readings: list[dict]) -> et.Element:
@@ -410,7 +435,44 @@ class Apparatus:
         entries = [self._fix_verse_addition_entry(e, synoptic_loci)
                    if e.get('is_verse_entry') and resolver.is_absent_verse_token(e.get('target')) else e
                    for e in entries]
-        return entries + self.get_generated_entries() + self._generate_verse_entries(synoptic_loci, entries)
+        located = self._locate_at_synoptic_loci(entries + self.get_generated_entries(), synoptic_loci)
+        return located + self._generate_verse_entries(synoptic_loci, entries)
+
+    def _locate_at_synoptic_loci(self, entries: list[dict], synoptic_loci: dict) -> list[dict]:
+        """
+        Re-derive each token-addressed entry's loc/corresp against the loci the
+        synoptic map links: a token belongs to the nearest element around it
+        that the map links (a heading, a <seg> inside a verse, ...), which
+        without the map can only be guessed (see resolve_line_locator). The
+        location label is the locus's own @n from the map when it has one, so
+        an entry and its locus's placeholder read the same. Whole-unit
+        entries are located at the unit they address - except additions
+        (the unit is absent from the base), placed by _fix_verse_addition_entry.
+        """
+        locus_ids = base_locus_ids(synoptic_loci, self._base_prefix())
+        if not locus_ids:
+            return entries
+        resolver = self.get_resolver()
+        app_elements = self._root.xpath('.//tei:app', namespaces=ns) if self._root is not None else []
+        located = []
+        for entry in entries:
+            if entry.get('is_verse_entry') and resolver.is_absent_verse_token(entry.get('target')):
+                # placed at its added locus by _fix_verse_addition_entry
+                located.append(entry)
+                continue
+            token = entry.get('target')
+            entry_id = entry.get('id')
+            if not token and entry_id and 0 < entry_id <= len(app_elements):
+                token = self._anchor_token(app_elements[entry_id - 1])
+            loc, corresp = self._loc_and_corresp_for_token(token, resolver, locus_ids)
+            if corresp is None:
+                located.append(entry)
+                continue
+            entry = dict(entry)
+            entry['corresp'] = corresp
+            entry['loc'] = (synoptic_loci.get(corresp) or {}).get('n') or loc
+            located.append(entry)
+        return located
 
     def get_resolver(self) -> WitnessFragmentResolver:
         """The (cached) resolver for this apparatus's witness fragments."""
@@ -562,17 +624,18 @@ class Apparatus:
         if any(not t.startswith(f'{base_prefix}:') for t in target_verses):
             return None, 'The lemma verse must be selected on the base text row.'
         if any(not resolver.is_verse_token(t) for t in target_verses):
-            return None, 'The lemma selection is not a verse.'
+            return None, 'The lemma selection is not a whole location (a verse, heading, paragraph, ...).'
         parts = resolver.collapse_verse_ptrs(target_verses)
         if len(parts) != 1:
-            return None, 'The lemma verses must be consecutive (or a single verse the base text lacks).'
+            return None, ('The lemma locations must be consecutive and of one kind (or a single '
+                          'location the base text lacks).')
         target = parts[0]
         base_absent = resolver.is_absent_verse_token(target)
 
         for reading in readings:
             ptrs = reading.get('ptrs') or []
             if any(not resolver.is_verse_token(p) for p in ptrs):
-                return None, 'A reading in a verse entry must select whole verses (click the siglum).'
+                return None, 'A reading in a whole-location entry must select whole locations (click the siglum).'
             reading['ptrs'] = resolver.collapse_verse_ptrs(ptrs)
             reading_absent = all(resolver.is_absent_verse_token(p) for p in reading['ptrs'])
             if base_absent and reading_absent:
@@ -961,34 +1024,50 @@ class Apparatus:
             if derived_wit:
                 attributes['wit'] = derived_wit
 
+        # The main witness of a reading is the one whose <ptr> comes first:
+        # its text is the reading's (resolve_text_html takes the first
+        # prefix), and its siglum is listed first - so put it first in wit.
+        main_wit = self._witness_for_target(ptrs[0].get('target')) if ptrs else None
+        if main_wit and attributes.get('wit'):
+            wit_ids = attributes['wit'].split()
+            if f'#{main_wit}' in wit_ids:
+                wit_ids.remove(f'#{main_wit}')
+                attributes['wit'] = ' '.join([f'#{main_wit}', *wit_ids])
+
         result = {
             'text': text,
             'html': html,
             'attributes': attributes
         }
+        if main_wit:
+            result['main_wit'] = main_wit
         if entry_links:
             result['links'] = entry_links
 
         return result
 
-    def _derive_wit_from_targets(self, ptrs, links) -> str | None:
-        """
-        Derive a reading's witnesses from the "prefix:" of its <ptr> (or
-        <link> witness-side) targets, for a <rdg> written without @wit.
-        """
+    def _witness_for_target(self, target: str | None) -> str | None:
+        """The witness id whose synoptic prefix a "prefix:..." target uses."""
         if not hasattr(self, '_prefix_to_witness'):
             self._prefix_to_witness = {
                 info['synoptic_prefix']: wit_id
                 for wit_id, info in self.get_witness_to_prefix_mapping().items()
                 if info.get('synoptic_prefix')
             }
+        spec = parse_location_token(target) if target else None
+        return self._prefix_to_witness.get(spec['prefix']) if spec else None
+
+    def _derive_wit_from_targets(self, ptrs, links) -> str | None:
+        """
+        Derive a reading's witnesses from the "prefix:" of its <ptr> (or
+        <link> witness-side) targets, for a <rdg> written without @wit.
+        """
         targets = [p.get('target') or '' for p in ptrs]
         for link_el in links:
             targets.extend((link_el.get('target') or '').split()[1:])
         wit_ids = []
         for target in targets:
-            spec = parse_location_token(target)
-            wit_id = self._prefix_to_witness.get(spec['prefix']) if spec else None
+            wit_id = self._witness_for_target(target)
             if wit_id and wit_id not in wit_ids:
                 wit_ids.append(wit_id)
         return ' '.join(f'#{w}' for w in wit_ids) or None
@@ -1001,6 +1080,12 @@ class Apparatus:
         (transposition entries) anchors on the first <link>'s first (base-side)
         token.
         """
+        return self._loc_and_corresp_for_token(self._anchor_token(app), resolver)
+
+    @staticmethod
+    def _anchor_token(app) -> str | None:
+        """The token an <app> is located by: @target, else (transpositions) the
+        first <link>'s first (base-side) token."""
         token = app.get('target')
         if not token:
             first_link = app.find('.//tei:rdg/tei:link', namespaces=ns)
@@ -1008,11 +1093,13 @@ class Apparatus:
                 link_targets = (first_link.get('target') or '').split()
                 if link_targets:
                     token = link_targets[0]
-        return self._loc_and_corresp_for_token(token, resolver)
+        return token
 
     def _loc_and_corresp_for_token(self, token: str | None,
-                                   resolver: WitnessFragmentResolver) -> tuple[str | None, str | None]:
-        """(line @n, "prefix:line_xml_id") of the line a location token lies in."""
+                                   resolver: WitnessFragmentResolver,
+                                   locus_ids: set[str] | None = None) -> tuple[str | None, str | None]:
+        """(location label, "prefix:locus_xml_id") of the locus a location token
+        lies in - see WitnessFragmentResolver.resolve_line_locator."""
         try:
             if not token:
                 return None, None
@@ -1022,7 +1109,7 @@ class Apparatus:
                 return None, None
 
             anchor_id = spec['start'] if spec['kind'] == 'range' else spec['id']
-            line_n, line_xml_id = resolver.resolve_line_locator(spec['prefix'], anchor_id)
+            line_n, line_xml_id = resolver.resolve_line_locator(spec['prefix'], anchor_id, locus_ids)
             if line_xml_id is None:
                 return line_n, None
             return line_n, f"{spec['prefix']}:{line_xml_id}"

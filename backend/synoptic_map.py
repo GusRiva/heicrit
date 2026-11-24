@@ -11,7 +11,7 @@ from io import BytesIO
 from lxml import etree as et
 from heipy.parsers import HeiEditionsParser
 from heipy.namespaces import ns
-from load_functions import resolve_relative_path, find_file_in_project, parse_location_token
+from load_functions import resolve_relative_path, find_file_in_project, parse_location_token, locus_label
 from apparatus import compute_editorial_addition_ids
 
 
@@ -326,6 +326,7 @@ class SynopticMap:
                                 wit_info['elements'] = parse_result['elements']
                                 wit_info['siglum'] = parse_result.get('siglum')
                                 wit_info['editorial_addition_ids'] = parse_result.get('editorial_addition_ids', set())
+                                wit_info['positions'] = parse_result.get('positions', {})
                             else:
                                 # Backward compatibility for old return format
                                 wit_info['elements'] = parse_result
@@ -429,7 +430,27 @@ class SynopticMap:
                         continue
                     line_element = wits_map.get(spec['prefix'], {}).get('elements', {}).get(anchor_id)
                     if line_element is not None:
-                        info['n'] = line_element.get('n')
+                        # Loci other than verses (<head>, <label>, ...)
+                        # usually have no @n - label them by their kind.
+                        info['n'] = locus_label(line_element)
+
+            # Base-text document order of every locus, for listing them in
+            # reading order (the <link>s themselves can come in any order,
+            # and labels like "Head" don't sort). A unit the base lacks sits
+            # just after (right) / before (left) its anchor; several at one
+            # anchor ("#N" keys) keep their order.
+            base_positions = wits_map.get(leiths_prefix, {}).get('positions', {})
+            for loci_key, info in loci_map.items():
+                anchor, _sep, index = loci_key.partition('#')
+                spec = parse_location_token(anchor)
+                if not spec:
+                    continue
+                anchor_id = spec['start'] if spec['kind'] == 'range' else spec.get('id')
+                position = base_positions.get(anchor_id)
+                if position is None:
+                    continue
+                offset = {'right': 0.5, 'left': -0.5}.get(spec['kind'], 0)
+                info['order'] = position + offset + (int(index) / 1000 if index.isdigit() else 0)
 
             self._loci = loci_map
             self._wits = wits_map
@@ -484,17 +505,22 @@ class SynopticMap:
                 siglum_text = siglum.text if siglum is not None else None
 
             elements_map = {}
+            positions = {}  # xml:id -> document position, tokens included
             for el in root.iter():
-                if "{http://www.w3.org/XML/1998/namespace}id" not in el.attrib or el.tag == "{http://www.tei-c.org/ns/1.0}w":
+                if "{http://www.w3.org/XML/1998/namespace}id" not in el.attrib:
                     continue
                 xml_id = el.get("{http://www.w3.org/XML/1998/namespace}id")
+                positions.setdefault(xml_id, len(positions))
+                if el.tag == "{http://www.tei-c.org/ns/1.0}w":
+                    continue
                 elements_map[xml_id] = el
 
             # Precomputed once here (not per Location Details request) - see
             # apparatus.compute_editorial_addition_ids.
             editorial_addition_ids = compute_editorial_addition_ids(root)
 
-            return {'elements': elements_map, 'siglum': siglum_text, 'editorial_addition_ids': editorial_addition_ids}
+            return {'elements': elements_map, 'siglum': siglum_text, 'editorial_addition_ids': editorial_addition_ids,
+                    'positions': positions}
 
         except Exception as e:
             print(f"ERROR: Could not parse witness file {file_name}: {str(e)}")

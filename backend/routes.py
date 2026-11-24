@@ -14,7 +14,7 @@ from heicrit_pipeline import HeiCritPipe, append_synoptic_links_funct
 from synoptic_map import SynopticMap
 from apparatus import (
     Apparatus, process_synoptic_unit_for_comparison, html_note_to_tei,
-    build_new_format_app_element, build_rdg_element, is_valid_reading_ana
+    build_new_format_app_element, build_rdg_element, is_valid_reading_ana, set_main_witness
 )
 from punctuation import build_all_containers_tokens, build_edit_tokens, find_container_by_id, apply_punctuation_edit
 
@@ -1251,6 +1251,69 @@ def update_apparatus_entry_new_format():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to update entry: {str(e)}'}), 500
+
+
+@api.route('/apparatus/reading/main-witness', methods=['POST'])
+def set_reading_main_witness():
+    """
+    Make one witness of a multi-witness reading its main witness - the one
+    whose <ptr> comes first in the <rdg>: the reading shows its text and
+    lists its siglum first (see apparatus.set_main_witness).
+    Expected JSON: {
+        apparatus_file, project_directory,
+        entry_index (0-based, document order among <app> elements),
+        reading_index (0-based among the <app>'s <rdg> elements),
+        witness_id
+    }
+    Response: { success, apparatus_entries: [...] }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        apparatus_file = data.get('apparatus_file')
+        project_directory = data.get('project_directory', '')
+        entry_index = data.get('entry_index')
+        reading_index = data.get('reading_index')
+        witness_id = data.get('witness_id')
+
+        if not apparatus_file:
+            return jsonify({'error': 'No apparatus file specified'}), 400
+        if entry_index is None or reading_index is None or not witness_id:
+            return jsonify({'error': 'entry_index, reading_index and witness_id are required'}), 400
+        if apparatus is None:
+            return jsonify({'error': 'No apparatus loaded'}), 400
+
+        prefix = apparatus.get_witness_to_prefix_mapping().get(witness_id, {}).get('synoptic_prefix')
+        if not prefix:
+            return jsonify({'error': f'Unknown witness: {witness_id}'}), 400
+
+        resolved_file, root, app_elements = _load_app_elements_for_write(apparatus_file, project_directory)
+        if not resolved_file:
+            return jsonify({'error': f'Apparatus file not found: {apparatus_file}'}), 404
+        if entry_index < 0 or entry_index >= len(app_elements):
+            return jsonify({'error': f'No apparatus entry at index {entry_index}'}), 404
+
+        rdg_elements = app_elements[entry_index].findall('tei:rdg', namespaces=ns)
+        if reading_index < 0 or reading_index >= len(rdg_elements):
+            return jsonify({'error': f'No reading at index {reading_index}'}), 400
+        if not set_main_witness(rdg_elements[reading_index], witness_id, prefix):
+            return jsonify({'error': 'This reading has no pointer of that witness '
+                                     '(transposition readings have no main witness)'}), 400
+
+        updated_apparatus = write_apparatus_file_and_refresh(resolved_file, apparatus_file, root)
+
+        return jsonify({
+            'success': True,
+            'apparatus_entries': updated_apparatus.get_display_entries(synoptic_map.get_loci())
+        })
+
+    except Exception as e:
+        print(f"ERROR: Could not set main witness: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to set main witness: {str(e)}'}), 500
 
 
 @api.route('/apparatus/entry/delete', methods=['POST'])
